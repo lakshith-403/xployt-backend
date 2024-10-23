@@ -7,6 +7,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.annotation.WebFilter;
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -24,7 +25,16 @@ public class RequestLoggingFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        logger.log(Level.INFO, "Incoming request: " + request.toString());
+        if (request instanceof HttpServletRequest) {
+            HttpServletRequest httpRequest = (HttpServletRequest) request;
+            String method = httpRequest.getMethod();
+            String requestURI = httpRequest.getRequestURI();
+            String queryString = httpRequest.getQueryString();
+            String fullURL = requestURI + (queryString != null ? "?" + queryString : "");
+            logger.log(Level.INFO, "Incoming request: " + method + " " + fullURL);
+        } else {
+            logger.log(Level.INFO, "Incoming request: " + request.toString());
+        }
         chain.doFilter(request, response);
     }
 

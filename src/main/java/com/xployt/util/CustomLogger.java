@@ -20,7 +20,7 @@ public class CustomLogger {
         // Create console handler with color formatter
         ConsoleHandler consoleHandler = new ConsoleHandler();
         consoleHandler.setFormatter(new ColoredFormatter());
-        consoleHandler.setLevel(Level.ALL);
+        // consoleHandler.setLevel(Level.ALL);
 
         // Set up file handler
         String logFilePath = "app.log";
@@ -35,7 +35,7 @@ public class CustomLogger {
 
         FileHandler fileHandler = new FileHandler(logFilePath, false); // false to overwrite
         fileHandler.setFormatter(new ColoredFormatter());
-        fileHandler.setLevel(Level.ALL);
+        // fileHandler.setLevel(Level.ALL);
 
         // Add handlers to the root logger
         Logger rootLogger = Logger.getLogger("");

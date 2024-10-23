@@ -18,15 +18,9 @@ public class AppContextListener implements ServletContextListener {
     try {
       CustomLogger.setup();
       logger.info("Logging system initialized");
-
-      // Example log statements at different levels
+      logger.info("This is an INFO message");
       logger.severe("This is a SEVERE message");
       logger.warning("This is a WARNING message");
-      logger.info("This is an INFO message");
-      logger.config("This is a CONFIG message");
-      logger.fine("This is a FINE message");
-      logger.finer("This is a FINER message");
-      logger.finest("This is a FINEST message");
 
     } catch (IOException e) {
       e.printStackTrace();
