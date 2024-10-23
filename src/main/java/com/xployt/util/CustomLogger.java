@@ -13,9 +13,9 @@ public class CustomLogger {
         // Clear existing handlers
         LogManager.getLogManager().reset();
 
-        // Load the logging properties file from resources
-        LogManager.getLogManager().readConfiguration(
-                CustomLogger.class.getClassLoader().getResourceAsStream("logging.properties"));
+        // // Load the logging properties file from resources
+        // LogManager.getLogManager().readConfiguration(
+        // CustomLogger.class.getClassLoader().getResourceAsStream("logging.properties"));
 
         // Create console handler with color formatter
         ConsoleHandler consoleHandler = new ConsoleHandler();
@@ -34,11 +34,12 @@ public class CustomLogger {
         }
 
         FileHandler fileHandler = new FileHandler(logFilePath, false); // false to overwrite
-        fileHandler.setFormatter(new SimpleFormatter());
+        fileHandler.setFormatter(new ColoredFormatter());
         fileHandler.setLevel(Level.ALL);
 
         // Add handlers to the root logger
         Logger rootLogger = Logger.getLogger("");
+        // rootLogger.setLevel(Level.ALL); // Set the root logger level to ALL
         rootLogger.addHandler(consoleHandler);
         rootLogger.addHandler(fileHandler);
     }

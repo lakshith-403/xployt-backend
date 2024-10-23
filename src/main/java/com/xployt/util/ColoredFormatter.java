@@ -29,14 +29,14 @@ public class ColoredFormatter extends Formatter {
       case "INFO":
         color = BLUE;
         break;
-      case "CONFIG":
-        color = GREEN;
-        break;
-      case "FINE":
-      case "FINER":
-      case "FINEST":
-        color = CYAN;
-        break;
+       case "CONFIG":
+       color = GREEN;
+       break;
+       case "FINE":
+       case "FINER":
+       case "FINEST":
+       color = CYAN;
+       break;
       default:
         color = RESET;
         break;
