@@ -29,7 +29,7 @@ public class DatabaseConnectionListener implements ServletContextListener {
 
       String contextName = "DBConnection";
       ContextManager.registerContext(contextName, servletContext);
-      logger.log(Level.INFO, "\"DBConnection initialized and stored in ServletContext.");
+      logger.log(Level.INFO, "DBConnection initialized and stored in ServletContext.");
 
     } catch (SQLException e) {
       logger.log(Level.SEVERE, "Failed to initialize database connection: " + e.getMessage(), e);
