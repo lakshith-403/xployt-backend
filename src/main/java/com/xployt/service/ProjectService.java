@@ -1,8 +1,10 @@
 package com.xployt.service;
 
 import com.xployt.dao.ProjectDAO;
+import com.xployt.model.GenericResponse;
 import com.xployt.model.Project;
 import com.xployt.util.CustomLogger;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -17,7 +19,7 @@ public class ProjectService {
         this.projectDAO = new ProjectDAO();
     }
 
-    public List<List<Project>> fetchProjects(String userId) {
+    public GenericResponse fetchProjects(String userId) {
         logger.info(userId);
         List<Project> allProjects = projectDAO.getAllProjects(userId);
 
@@ -32,10 +34,11 @@ public class ProjectService {
             }
         }
 
-        logger.info(" Filtered projects: " + filteredProjects.size());
+        logger.info("Filtered projects: " + filteredProjects.size());
         List<List<Project>> result = new ArrayList<>();
         result.add(filteredProjects);
         result.add(remainingProjects);
-        return result;
+
+        return new GenericResponse(result, true, null, null);
     }
 }

@@ -1,10 +1,9 @@
 package com.xployt.util;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.Map;
-//import java.lang.reflect.Field;
 import java.util.Collection;
+import java.util.Map;
 
 public class JsonUtil {
 
@@ -16,19 +15,105 @@ public class JsonUtil {
      */
     public static String toJson(Object object) {
         if (object == null) {
-            return "{}"; // Return empty JSON object for null
+            return "null"; // Handle null case
         }
 
-        if (object instanceof Collection<?>) {
-            return toJsonArray((Collection<?>) object);
+        if (object instanceof String) {
+            return "\"" + object + "\""; // Handle strings
+        } else if (object instanceof Number || object instanceof Boolean) {
+            return object.toString(); // Handle numbers and booleans
+        } else if (object instanceof Collection<?>) {
+            return toJsonArray((Collection<?>) object); // Handle collections
+        } else if (object instanceof Map<?, ?>) {
+            return toJsonMap((Map<?, ?>) object); // Handle maps
+        } else if (object.getClass().isArray()) {
+            return toJsonArray(object); // Handle arrays
         } else {
-            return toJsonObject(object);
+            return toJsonObject(object); // Handle custom objects
         }
     }
 
+    /**
+     * Converts a Java array to a JSON array string.
+     *
+     * @param array The Java array to convert.
+     * @return JSON string representation of the array.
+     */
+    private static String toJsonArray(Object array) {
+        StringBuilder jsonBuilder = new StringBuilder();
+        jsonBuilder.append("["); // Start of JSON array
+
+        int length = Array.getLength(array);
+        for (int i = 0; i < length; i++) {
+            Object element = Array.get(array, i);
+            jsonBuilder.append(toJson(element)); // Convert each array element to JSON
+            if (i < length - 1) {
+                jsonBuilder.append(","); // Add comma between elements
+            }
+        }
+
+        jsonBuilder.append("]"); // End of JSON array
+        return jsonBuilder.toString();
+    }
+
+    /**
+     * Converts a Java collection (List, Set, etc.) to a JSON array string.
+     *
+     * @param collection The Java collection to convert.
+     * @return JSON string representation of the collection.
+     */
+    private static String toJsonArray(Collection<?> collection) {
+        StringBuilder jsonBuilder = new StringBuilder();
+        jsonBuilder.append("["); // Start of JSON array
+
+        int size = collection.size();
+        int index = 0;
+        for (Object obj : collection) {
+            jsonBuilder.append(toJson(obj)); // Convert each collection element to JSON
+            if (index < size - 1) {
+                jsonBuilder.append(","); // Add comma between elements
+            }
+            index++;
+        }
+
+        jsonBuilder.append("]"); // End of JSON array
+        return jsonBuilder.toString();
+    }
+
+    /**
+     * Converts a Java map to a JSON object string.
+     *
+     * @param map The Java map to convert.
+     * @return JSON string representation of the map.
+     */
+    private static String toJsonMap(Map<?, ?> map) {
+        StringBuilder jsonBuilder = new StringBuilder();
+        jsonBuilder.append("{"); // Start of JSON object
+
+        int size = map.size();
+        int index = 0;
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
+            jsonBuilder.append("\"").append(entry.getKey()).append("\":");
+            jsonBuilder.append(toJson(entry.getValue())); // Convert map value to JSON
+            if (index < size - 1) {
+                jsonBuilder.append(","); // Add comma between elements
+            }
+            index++;
+        }
+
+        jsonBuilder.append("}"); // End of JSON object
+        return jsonBuilder.toString();
+    }
+
+    /**
+     * Converts a custom Java object to a JSON object string.
+     *
+     * @param object The Java object to convert.
+     * @return JSON string representation of the object.
+     */
     private static String toJsonObject(Object object) {
         StringBuilder jsonBuilder = new StringBuilder();
-        jsonBuilder.append("{");
+        jsonBuilder.append("{"); // Start of JSON object
 
         Field[] fields = object.getClass().getDeclaredFields();
         for (int i = 0; i < fields.length; i++) {
@@ -38,84 +123,17 @@ public class JsonUtil {
             try {
                 jsonBuilder.append("\"").append(field.getName()).append("\":");
                 Object value = field.get(object);
-
-                if (value instanceof String) {
-                    jsonBuilder.append("\"").append(value).append("\"");
-                } else {
-                    jsonBuilder.append(value);
-                }
+                jsonBuilder.append(toJson(value)); // Recursively convert field value to JSON
 
                 if (i < fields.length - 1) {
-                    jsonBuilder.append(","); // Add comma if not the last element
+                    jsonBuilder.append(","); // Add comma between fields
                 }
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
         }
 
-        jsonBuilder.append("}");
+        jsonBuilder.append("}"); // End of JSON object
         return jsonBuilder.toString();
-    }
-
-    private static String toJsonArray(Collection<?> collection) {
-        StringBuilder jsonBuilder = new StringBuilder();
-        jsonBuilder.append("[");
-
-        int size = collection.size();
-        int index = 0;
-        for (Object obj : collection) {
-            jsonBuilder.append(toJson(obj));
-            if (index < size - 1) {
-                jsonBuilder.append(","); // Add comma if not the last element
-            }
-            index++;
-        }
-
-        jsonBuilder.append("]");
-        return jsonBuilder.toString();
-    }
-
-    /**
-     * Converts a JSON string to a Java object of the specified class.
-     *
-     * @param json  The JSON string to convert.
-     * @param clazz The class of the object to convert to.
-     * @param <T>   The type of the object.
-     * @return The converted Java object.
-     */
-    public static <T> T fromJson(String json, Class<T> clazz) {
-        try {
-            // Remove braces and split by comma
-            json = json.trim().replaceAll("^\\{|\\}$", "");
-            String[] keyValuePairs = json.split(",");
-
-            Map<String, String> map = new HashMap<>();
-            for (String pair : keyValuePairs) {
-                String[] keyValue = pair.split(":", 2);
-                String key = keyValue[0].trim().replaceAll("^\"|\"$", ""); // Remove quotes
-                String value = keyValue[1].trim().replaceAll("^\"|\"$", ""); // Remove quotes
-                map.put(key, value);
-            }
-
-            T instance = clazz.getDeclaredConstructor().newInstance(); // Create new instance
-            for (Map.Entry<String, String> entry : map.entrySet()) {
-                Field field = clazz.getDeclaredField(entry.getKey());
-                field.setAccessible(true); // Allow access to private fields
-
-                // Attempt to set the field value based on its type
-                if (field.getType() == String.class) {
-                    field.set(instance, entry.getValue());
-                } else if (field.getType() == int.class) {
-                    field.set(instance, Integer.parseInt(entry.getValue()));
-                }
-                // Add other types as needed (e.g., boolean, double)
-            }
-
-            return instance;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null; // Handle error cases
-        }
     }
 }
-

@@ -2,7 +2,7 @@ package com.xployt.listener;
 
 import com.xployt.middleware.CORSFilter;
 import com.xployt.middleware.RequestLoggingFilter;
-import com.xployt.middleware.ResponseLoggingFilter;
+// import com.xployt.middleware.ResponseLoggingFilter;
 
 import javax.servlet.*;
 import javax.servlet.annotation.WebListener;
@@ -24,9 +24,10 @@ public class FilterOrderingListener implements ServletContextListener {
       loggingFilter.addMappingForUrlPatterns(null, false, "/*");
 
       // Register ResponseLoggingFilter last
-      FilterRegistration.Dynamic responseLoggingFilter = servletContext.addFilter("ResponseLoggingFilter",
-          ResponseLoggingFilter.class);
-      responseLoggingFilter.addMappingForUrlPatterns(null, false, "/*");
+      // FilterRegistration.Dynamic responseLoggingFilter =
+      // servletContext.addFilter("ResponseLoggingFilter",
+      // ResponseLoggingFilter.class);
+      // responseLoggingFilter.addMappingForUrlPatterns(null, false, "/*");
 
     } catch (Exception e) {
       System.err.println("Error registering filters: " + e.getMessage());
