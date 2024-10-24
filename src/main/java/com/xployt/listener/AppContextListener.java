@@ -11,12 +11,13 @@ import java.util.logging.Logger;
 @WebListener
 public class AppContextListener implements ServletContextListener {
 
-  private static final Logger logger = CustomLogger.getLogger();
+  private Logger logger;
 
   @Override
   public void contextInitialized(ServletContextEvent sce) {
     try {
       CustomLogger.setup();
+      this.logger = CustomLogger.getLogger();
       logger.info("Logging system initialized");
       logger.info("This is an INFO message");
       logger.severe("This is a SEVERE message");

@@ -11,10 +11,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
+import java.util.logging.Logger;
+
+import com.xployt.util.CustomLogger;
 
 @WebServlet("/api/validator/projects/*") // Matches /api/validator/projects/{userId}
 public class ProjectServlet extends HttpServlet {
     private ProjectService projectService;
+    private static final Logger logger = CustomLogger.getLogger();
 
     @Override
     public void init() throws ServletException {
@@ -22,7 +26,9 @@ public class ProjectServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        logger.info("Fetching projects for user");
         String pathInfo = request.getPathInfo();
         if (pathInfo == null || pathInfo.isEmpty()) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "User ID not provided");
@@ -30,7 +36,7 @@ public class ProjectServlet extends HttpServlet {
         }
 
         String userId = pathInfo.substring(1); // Get userId from URL
-        List<Project> projects;
+        List<List<Project>> projects;
 
         try {
             projects = projectService.fetchProjects(userId);

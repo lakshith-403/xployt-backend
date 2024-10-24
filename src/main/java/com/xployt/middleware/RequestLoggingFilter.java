@@ -1,18 +1,10 @@
 package com.xployt.middleware;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.annotation.WebFilter;
+import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@WebFilter("/*")
 public class RequestLoggingFilter implements Filter {
 
     private static final Logger logger = Logger.getLogger(RequestLoggingFilter.class.getName());
@@ -31,9 +23,7 @@ public class RequestLoggingFilter implements Filter {
             String requestURI = httpRequest.getRequestURI();
             String queryString = httpRequest.getQueryString();
             String fullURL = requestURI + (queryString != null ? "?" + queryString : "");
-            logger.log(Level.INFO, "Incoming request: " + method + " " + fullURL);
-        } else {
-            logger.log(Level.INFO, "Incoming request: " + request.toString());
+            logger.info("Incoming request: " + method + " " + fullURL);
         }
         chain.doFilter(request, response);
     }
