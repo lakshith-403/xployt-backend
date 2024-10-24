@@ -20,9 +20,13 @@ public class CORSFilter implements Filter {
       throws IOException, ServletException {
 
     logger.info("Adding CORS headers");
-
+    HttpServletRequest httpRequest = (HttpServletRequest) request;
     HttpServletResponse httpResponse = (HttpServletResponse) response;
-    httpResponse.setHeader("Access-Control-Allow-Origin", "*");
+
+    String origin = httpRequest.getHeader("Origin");
+    if (origin != null) {
+      httpResponse.setHeader("Access-Control-Allow-Origin", origin);
+    }
     httpResponse.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     httpResponse.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
     httpResponse.setHeader("Access-Control-Allow-Credentials", "true");
