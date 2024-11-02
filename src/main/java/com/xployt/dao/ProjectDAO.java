@@ -22,17 +22,19 @@ public class ProjectDAO {
     // }
 
     public List<Project> getAllProjects(String userId) {
+        logger.info("ProjectDAO: Inside getAllProjects");
         List<Project> projects = new ArrayList<>();
         String sql = "SELECT * FROM test_project WHERE user_id = ?"; // Assuming a user_id column
 
         // Access the specific ServletContext by its name
         ServletContext servletContext = ContextManager.getContext("DBConnection");
         Connection conn = (Connection) servletContext.getAttribute("DBConnection");
+        logger.info("ProjectDAO: Connection established");
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, userId);
             ResultSet rs = stmt.executeQuery();
-            logger.info("DAO: Fetching projects for user");
+            logger.info("ProjectDAO: Fetching projects for user");
             while (rs.next()) {
                 Project project = new Project(
                         rs.getInt("id"),
@@ -42,10 +44,10 @@ public class ProjectDAO {
                         rs.getInt("pending_reports"));
                 projects.add(project);
             }
-            logger.info("DAO: Projects fetched successfully");
-            logger.info("DAO: Number of projects fetched: " + projects.size());
+            logger.info("ProjectDAO: Projects fetched successfully");
+            logger.info("ProjectDAO: Number of projects fetched: " + projects.size());
         } catch (SQLException e) {
-            logger.severe("DAO: Error fetching projects: " + e.getMessage());
+            logger.severe("ProjectDAO: Error fetching projects: " + e.getMessage());
         }
         return projects;
     }

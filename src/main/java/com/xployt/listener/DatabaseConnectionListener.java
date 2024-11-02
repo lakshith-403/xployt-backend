@@ -1,7 +1,7 @@
 package com.xployt.listener;
 
 import com.xployt.util.ContextManager;
-
+import com.xployt.util.CustomLogger;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -14,14 +14,15 @@ import java.util.logging.Logger;
 
 @WebListener
 public class DatabaseConnectionListener implements ServletContextListener {
-  private static final Logger logger = Logger.getLogger(DatabaseConnectionListener.class.getName());
+  private static final Logger logger = CustomLogger.getLogger();
   private static final String URL = "jdbc:mysql://xployt-xployt.b.aivencloud.com:17847/xployt?ssl-mode=REQUIRED";
   private static final String USER = "avnadmin";
-  private static final String PASSWORD = "AVNS_nwmduVxzhIqTj911GGT";
+  private static final String PASSWORD = "AVNS_5G4ol30FyzBOm-NNf6x";
   private Connection connection;
 
   @Override
   public void contextInitialized(ServletContextEvent sce) {
+    logger.info("DatabaseConnectionListener: Initializing");
     try {
       connection = DriverManager.getConnection(URL, USER, PASSWORD);
       ServletContext servletContext = sce.getServletContext();

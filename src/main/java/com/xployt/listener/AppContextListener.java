@@ -18,10 +18,9 @@ public class AppContextListener implements ServletContextListener {
     try {
       CustomLogger.setup();
       this.logger = CustomLogger.getLogger();
-      logger.info("Logging system initialized");
-      logger.info("This is an INFO message");
-      logger.severe("This is a SEVERE message");
-      logger.warning("This is a WARNING message");
+      logger.info("AppContextListener: Logging system initialized");
+      // logger.severe("This is a SEVERE message");
+      // logger.warning("This is a WARNING message");
 
     } catch (IOException e) {
       e.printStackTrace();

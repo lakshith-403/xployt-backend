@@ -20,7 +20,7 @@ public class ProjectService {
     }
 
     public GenericResponse fetchProjects(String userId) {
-        logger.info(userId);
+        logger.info("Fetching projects for userId: " + userId);
         List<Project> allProjects = projectDAO.getAllProjects(userId);
 
         List<Project> filteredProjects = new ArrayList<>();
