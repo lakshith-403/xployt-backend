@@ -2,6 +2,7 @@ package com.xployt.listener;
 
 import com.xployt.middleware.CORSFilter;
 import com.xployt.middleware.RequestLoggingFilter;
+import com.xployt.middleware.RequestBodyParsingFilter;
 // import com.xployt.middleware.ResponseLoggingFilter;
 
 import javax.servlet.*;
@@ -22,6 +23,11 @@ public class FilterOrderingListener implements ServletContextListener {
       FilterRegistration.Dynamic loggingFilter = servletContext.addFilter("RequestLoggingFilter",
           RequestLoggingFilter.class);
       loggingFilter.addMappingForUrlPatterns(null, false, "/*");
+
+      // Register RequestBodyParsingFilter third
+      FilterRegistration.Dynamic bodyParsingFilter = servletContext.addFilter("RequestBodyParsingFilter",
+          RequestBodyParsingFilter.class);
+      bodyParsingFilter.addMappingForUrlPatterns(null, false, "/*");
 
       // Register ResponseLoggingFilter last
       // FilterRegistration.Dynamic responseLoggingFilter =
