@@ -6,14 +6,7 @@
   version="2.5"
 >
     <!-- Add the new servlet configuration here -->
-    <servlet>
-        <servlet-name>ProfileServlet</servlet-name>
-        <servlet-class>com.xployt.controller.ProfileServlet</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>ProfileServlet</servlet-name>
-        <url-pattern>/api/profile/*</url-pattern>
-    </servlet-mapping>
+
 
     <!-- Existing error page configuration -->
     <error-page>
