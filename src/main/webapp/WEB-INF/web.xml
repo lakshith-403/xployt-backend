@@ -11,4 +11,32 @@
       <location>/404.jsp</location>
     </error-page>
 
+    <!-- Register the error handling servlet -->
+    <servlet>
+        <servlet-name>GlobalExceptionHandler</servlet-name>
+        <servlet-class>com.xployt.middleware.GlobalExceptionHandler</servlet-class>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>GlobalExceptionHandler</servlet-name>
+        <url-pattern>/error</url-pattern>
+    </servlet-mapping>
+
+    <!-- Handle all Throwable exceptions -->
+    <error-page>
+        <exception-type>java.lang.Throwable</exception-type>
+        <location>/error</location>
+    </error-page>
+
+    <!-- Handle specific HTTP error codes -->
+    <error-page>
+        <error-code>404</error-code>
+        <location>/error</location>
+    </error-page>
+
+    <error-page>
+        <error-code>500</error-code>
+        <location>/error</location>
+    </error-page>
+
 </web-app>
