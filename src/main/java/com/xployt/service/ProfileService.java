@@ -2,18 +2,24 @@ package com.xployt.service;
 
 import com.xployt.dao.ProfileDAO;
 import com.xployt.model.Profile;
-import com.xployt.util.ContextManager;
+import com.xployt.util.CustomLogger;
+
+import java.util.logging.Logger;
 
 public class ProfileService {
     private ProfileDAO profileDAO;
-
+    private static final Logger logger = CustomLogger.getLogger();
+    
+     
     public ProfileService() {
-        this.profileDAO = new ProfileDAO(ContextManager.getConnection());
+        this.profileDAO = new ProfileDAO();
     }
 
     public Profile getProfile(int userId) throws Exception {
         try {
+            logger.info("ProfileService: Fetching profile for userId: " + userId);
             return profileDAO.getProfile(userId);
+            
         } catch (Exception e) {
             throw new Exception("Error fetching profile: " + e.getMessage());
         }

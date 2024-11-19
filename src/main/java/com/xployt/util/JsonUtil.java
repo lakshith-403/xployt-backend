@@ -136,4 +136,58 @@ public class JsonUtil {
         jsonBuilder.append("}"); // End of JSON object
         return jsonBuilder.toString();
     }
+
+    /**
+     * Converts a JSON string to a Java object of the specified class.
+     *
+     * @param json The JSON string to convert
+     * @param clazz The class type to convert to
+     * @return An instance of the specified class
+     * @throws Exception if parsing fails
+     */
+    public static <T> T fromJson(String json, Class<T> clazz) throws Exception {
+        try {
+            T instance = clazz.getDeclaredConstructor().newInstance();
+            
+            // Remove curly braces and split by commas
+            json = json.trim();
+            if (!json.startsWith("{") || !json.endsWith("}")) {
+                throw new Exception("Invalid JSON format");
+            }
+            
+            json = json.substring(1, json.length() - 1);
+            String[] pairs = json.split(",");
+            
+            for (String pair : pairs) {
+                String[] keyValue = pair.split(":");
+                if (keyValue.length != 2) continue;
+                
+                String key = keyValue[0].trim().replace("\"", "");
+                String value = keyValue[1].trim().replace("\"", "");
+                
+                try {
+                    Field field = clazz.getDeclaredField(key);
+                    field.setAccessible(true);
+                    
+                    // Convert value to appropriate type
+                    if (field.getType() == String.class) {
+                        field.set(instance, value);
+                    } else if (field.getType() == int.class || field.getType() == Integer.class) {
+                        field.set(instance, Integer.parseInt(value));
+                    } else if (field.getType() == boolean.class || field.getType() == Boolean.class) {
+                        field.set(instance, Boolean.parseBoolean(value));
+                    }
+                    // Add more type conversions as needed
+                    
+                } catch (NoSuchFieldException | IllegalAccessException e) {
+                    // Skip fields that don't exist or can't be accessed
+                    continue;
+                }
+            }
+            
+            return instance;
+        } catch (Exception e) {
+            throw new Exception("Error parsing JSON: " + e.getMessage());
+        }
+    }
 }
