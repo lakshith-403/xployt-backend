@@ -6,13 +6,15 @@ public class GenericResponse {
   private String error;
   private String trace;
 
-  public GenericResponse(Object data, boolean is_successful, String error, String trace) {
-    this.data = data;
-    this.is_successful = is_successful;
-    this.error = error;
-    this.trace = trace;
+  public GenericResponse() {
   }
 
+  public GenericResponse(Object data, boolean is_successful, String error, String trace) {
+      this.data = data;
+      this.is_successful = is_successful;
+      this.error = error;
+      this.trace = trace;
+  }
   public Object getData() {
     return data;
   }
