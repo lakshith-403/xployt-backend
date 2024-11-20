@@ -55,18 +55,17 @@
   </dependencies>
   <build>
     <finalName>Xployt</finalName>
-    <plugins>
+    <directory>E:\Program Files\Apache Software Foundation\Tomcat 10.1\webapps\Xployt\WEB-INF</directory>
+     <plugins>
         <plugin>
-            <groupId>org.apache.tomcat.maven</groupId>
-            <artifactId>tomcat7-maven-plugin</artifactId>
-            <version>2.2</version>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.8.1</version>
             <configuration>
-                <path>/</path>
-                <port>8080</port>
-                <address>0.0.0.0</address>
-                <contextReloadable>true</contextReloadable>
+              <source>11</source>
+              <target>11</target>
             </configuration>
-      </plugin>
+        </plugin>
     </plugins>
   </build>
 </project>
