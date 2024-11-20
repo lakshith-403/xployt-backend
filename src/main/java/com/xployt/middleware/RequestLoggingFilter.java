@@ -1,7 +1,7 @@
 package com.xployt.middleware;
 
-import javax.servlet.*;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.*;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;

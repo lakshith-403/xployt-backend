@@ -2,9 +2,9 @@ package com.xployt.listener;
 
 import com.xployt.util.CustomLogger;
 
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
-import javax.servlet.annotation.WebListener;
+import jakarta.servlet.ServletContextEvent;
+import jakarta.servlet.ServletContextListener;
+import jakarta.servlet.annotation.WebListener;
 import java.io.IOException;
 import java.util.logging.Logger;
 

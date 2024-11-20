@@ -5,8 +5,8 @@ import com.xployt.middleware.RequestLoggingFilter;
 import com.xployt.middleware.RequestBodyParsingFilter;
 // import com.xployt.middleware.ResponseLoggingFilter;
 
-import javax.servlet.*;
-import javax.servlet.annotation.WebListener;
+import jakarta.servlet.*;
+import jakarta.servlet.annotation.WebListener;
 
 @WebListener
 public class FilterOrderingListener implements ServletContextListener {

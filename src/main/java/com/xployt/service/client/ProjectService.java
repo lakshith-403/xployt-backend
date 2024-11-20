@@ -1,7 +1,7 @@
 package com.xployt.service.client;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import com.xployt.dao.client.ProjectDAO;
 import java.io.IOException;
 import com.xployt.util.CustomLogger;

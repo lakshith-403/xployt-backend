@@ -2,10 +2,10 @@ package com.xployt.listener;
 
 import com.xployt.util.ContextManager;
 import com.xployt.util.CustomLogger;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
-import javax.servlet.annotation.WebListener;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletContextEvent;
+import jakarta.servlet.ServletContextListener;
+import jakarta.servlet.annotation.WebListener;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -24,14 +24,17 @@ public class DatabaseConnectionListener implements ServletContextListener {
   public void contextInitialized(ServletContextEvent sce) {
     logger.info("DatabaseConnectionListener: Initializing");
     try {
+      Class.forName("com.mysql.cj.jdbc.Driver"); // Optional for modern apps
       connection = DriverManager.getConnection(URL, USER, PASSWORD);
+
       ServletContext servletContext = sce.getServletContext();
       servletContext.setAttribute("DBConnection", connection);
 
       String contextName = "DBConnection";
       ContextManager.registerContext(contextName, servletContext);
       logger.log(Level.INFO, "DBConnection initialized and stored in ServletContext.");
-
+    } catch (ClassNotFoundException e) {
+      logger.log(Level.SEVERE, "MySQL driver not found: " + e.getMessage(), e);
     } catch (SQLException e) {
       logger.log(Level.SEVERE, "Failed to initialize database connection: " + e.getMessage(), e);
     }
@@ -42,16 +45,10 @@ public class DatabaseConnectionListener implements ServletContextListener {
     if (connection != null) {
       try {
         connection.close();
-        ContextManager.removeContext("DBConnection");
         logger.log(Level.INFO, "Database connection closed.");
+        ContextManager.removeContext("DBConnection");
       } catch (SQLException e) {
         logger.log(Level.SEVERE, "Failed to close database connection: " + e.getMessage(), e);
-      } finally {
-        try {
-          DriverManager.deregisterDriver(DriverManager.getDriver(URL));
-        } catch (SQLException e) {
-          logger.log(Level.SEVERE, "Failed to deregister driver: " + e.getMessage(), e);
-        }
       }
     }
   }

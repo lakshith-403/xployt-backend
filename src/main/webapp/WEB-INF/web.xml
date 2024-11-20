@@ -10,5 +10,13 @@
       <error-code>404</error-code>
       <location>/404.jsp</location>
     </error-page>
+<servlet>
+    <servlet-name>ProjectServlet</servlet-name>
+    <servlet-class>your.package.ProjectServlet</servlet-class>
+</servlet>
 
+<servlet-mapping>
+    <servlet-name>ProjectServlet</servlet-name>
+    <url-pattern>/Xployt/api/validator/projects/*</url-pattern>
+</servlet-mapping>
 </web-app>
