@@ -6,10 +6,10 @@
   version="2.5"
 >
 
-    <error-page>
-      <error-code>404</error-code>
-      <location>/404.jsp</location>
-    </error-page>
+    <servlet>
+        <servlet-name>ProjectServlet</servlet-name>
+        <servlet-class>com.xployt.controller.ProjectServlet</servlet-class>
+    </servlet>
 
     <!-- Register the error handling servlet -->
     <servlet>

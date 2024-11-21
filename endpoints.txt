@@ -1,0 +1,35 @@
+Endpoint: /api/validator/projects/{userId}
+Description: Fetches projects for a specific user.
+Method: GET
+Users: authenticated users, project managers
+Example curl Request:
+curl -X GET 'http://localhost:8080/Xployt/api/validator/projects/1'
+
+---
+
+Endpoint: /api/client/project/config
+Description: Creates a new project for a client.
+Method: POST
+Users: clients
+Example curl Request:
+curl -X POST "http://localhost:8080/Xployt/api/client/project/config" \
+-H "Content-Type: application/json" \
+-d '
+{
+  "clientId": "1",
+  "projectTitle": "New Project",
+  "projectDescription": "Description of the project",
+  "startDate": "2024-01-01",
+  "endDate": "2024-12-31",
+  "url": "http://localhost:8080/Xployt/",
+  "technicalStack": "Java, Spring"
+}'
+
+---
+
+Endpoint: /Xployt/hello
+Description: A simple hello world endpoint.
+Method: GET
+Users: public
+Example curl Request:
+curl -X GET 'http://localhost:8080/Xployt/hello'

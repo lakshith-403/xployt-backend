@@ -9,6 +9,7 @@ import javax.servlet.annotation.WebListener;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,14 +25,17 @@ public class DatabaseConnectionListener implements ServletContextListener {
   public void contextInitialized(ServletContextEvent sce) {
     logger.info("DatabaseConnectionListener: Initializing");
     try {
+      Class.forName("com.mysql.cj.jdbc.Driver"); // Optional for modern apps
       connection = DriverManager.getConnection(URL, USER, PASSWORD);
+
       ServletContext servletContext = sce.getServletContext();
       servletContext.setAttribute("DBConnection", connection);
 
       String contextName = "DBConnection";
       ContextManager.registerContext(contextName, servletContext);
       logger.log(Level.INFO, "DBConnection initialized and stored in ServletContext.");
-
+    } catch (ClassNotFoundException e) {
+      logger.log(Level.SEVERE, "MySQL driver not found: " + e.getMessage(), e);
     } catch (SQLException e) {
       logger.log(Level.SEVERE, "Failed to initialize database connection: " + e.getMessage(), e);
     }
@@ -42,17 +46,31 @@ public class DatabaseConnectionListener implements ServletContextListener {
     if (connection != null) {
       try {
         connection.close();
-        ContextManager.removeContext("DBConnection");
         logger.log(Level.INFO, "Database connection closed.");
+        ContextManager.removeContext("DBConnection");
       } catch (SQLException e) {
         logger.log(Level.SEVERE, "Failed to close database connection: " + e.getMessage(), e);
-      } finally {
-        try {
-          DriverManager.deregisterDriver(DriverManager.getDriver(URL));
-        } catch (SQLException e) {
-          logger.log(Level.SEVERE, "Failed to deregister driver: " + e.getMessage(), e);
-        }
       }
+    }
+
+    // Unregister JDBC driver
+    try {
+      Enumeration<java.sql.Driver> drivers = DriverManager.getDrivers();
+      while (drivers.hasMoreElements()) {
+        java.sql.Driver driver = drivers.nextElement();
+        DriverManager.deregisterDriver(driver);
+        logger.log(Level.INFO, "Deregistering JDBC driver: " + driver);
+      }
+    } catch (SQLException e) {
+      logger.log(Level.SEVERE, "Error deregistering driver: " + e.getMessage(), e);
+    }
+
+    // Stop the abandoned connection cleanup thread
+    try {
+      com.mysql.cj.jdbc.AbandonedConnectionCleanupThread.checkedShutdown();
+      logger.log(Level.INFO, "Abandoned connection cleanup thread stopped.");
+    } catch (Exception e) {
+      logger.log(Level.SEVERE, "Error stopping abandoned connection cleanup thread: ");
     }
   }
 }
