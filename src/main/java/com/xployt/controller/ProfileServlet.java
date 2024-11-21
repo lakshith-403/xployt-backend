@@ -28,12 +28,26 @@ public class ProfileServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         logger.info("Fetching profile for user");
+        String pathInfo = request.getPathInfo();
         
+        // Validate path info
+        if (pathInfo == null || pathInfo.isEmpty()) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "User ID not provided");
+            return;
+        }
+
         try {
-            // TODO: Get userId from session/token
-            int userId = 1; // Temporary hardcoded value
-            Profile profile = profileService.getProfile(userId);
+            int userId = Integer.parseInt(pathInfo.substring(1));
+            logger.info("Parsed userId: " + userId);
             
+            Profile profile = profileService.getProfile(userId);
+            logger.info("Retrieved profile: " + profile);
+
+            if (profile == null) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Profile not found");
+                return;
+            }
+
             GenericResponse genericResponse = new GenericResponse(profile, true, null, null);
             
             response.setContentType("application/json");
@@ -43,12 +57,12 @@ public class ProfileServlet extends HttpServlet {
             logger.info("jsonResponse is: " + jsonResponse);
             response.getWriter().write(jsonResponse);
             
+        } catch (NumberFormatException e) {
+            logger.warning("Invalid user ID format: " + pathInfo);
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid user ID format");
         } catch (Exception e) {
             logger.severe("Error fetching profile: " + e.getMessage());
-            GenericResponse errorResponse = new GenericResponse(null, false, e.getMessage(), null);
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
-            response.getWriter().write(JsonUtil.toJson(errorResponse));
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error fetching profile");
         }
     }
 
@@ -58,14 +72,27 @@ public class ProfileServlet extends HttpServlet {
         logger.info("Updating profile");
         
         try {
+            // Read request body
             String requestBody = request.getReader().lines()
                 .reduce("", (accumulator, actual) -> accumulator + actual);
+            
+            if (requestBody.isEmpty()) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Request body is empty");
+                return;
+            }
+
+            // Parse profile from request body
             Profile profile = JsonUtil.fromJson(requestBody, Profile.class);
+            if (profile == null) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid profile data");
+                return;
+            }
             
             profileService.updateProfile(profile);
             
+              
+            // Send success response
             GenericResponse genericResponse = new GenericResponse(null, true, "Profile updated successfully", null);
-            
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
             
@@ -75,10 +102,7 @@ public class ProfileServlet extends HttpServlet {
             
         } catch (Exception e) {
             logger.severe("Error updating profile: " + e.getMessage());
-            GenericResponse errorResponse = new GenericResponse(null, false, e.getMessage(), null);
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
-            response.getWriter().write(JsonUtil.toJson(errorResponse));
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error updating profile");
         }
     }
 }
