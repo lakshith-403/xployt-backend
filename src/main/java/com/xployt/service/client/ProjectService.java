@@ -3,49 +3,63 @@ package com.xployt.service.client;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import com.xployt.dao.client.ProjectDAO;
-import java.io.IOException;
 import com.xployt.util.CustomLogger;
+import com.fasterxml.jackson.databind.ObjectMapper; // Add Jackson dependency for JSON parsing
+import java.io.IOException;
 import java.util.logging.Logger;
-
-class Options {
-  final String clientId;
-  final String projectTitle;
-  final String projectDescription;
-  final String startDate;
-  final String endDate;
-  final String url;
-  final String technicalStack;
-
-  Options(String clientId, String projectTitle, String projectDescription, String startDate, String endDate, String url,
-      String technicalStack) {
-    this.clientId = clientId;
-    this.projectTitle = projectTitle;
-    this.projectDescription = projectDescription;
-    this.startDate = startDate;
-    this.endDate = endDate;
-    this.url = url;
-    this.technicalStack = technicalStack;
-
-  }
-}
+import com.xployt.model.CreateProject;
 
 public class ProjectService {
 
   private static final Logger logger = CustomLogger.getLogger();
 
+  // Method to create a project from JSON data
   public void createProject(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    String clientId = request.getParameter("clientId");
-    String projectTitle = request.getParameter("projectTitle");
-    String projectDescription = request.getParameter("projectDescription");
-    String startDate = combineDate(request.getParameter("startDay"), request.getParameter("startMonth"),
-        request.getParameter("startYear"));
-    String endDate = combineDate(request.getParameter("endDay"), request.getParameter("endMonth"),
-        request.getParameter("endYear"));
-    String url = request.getParameter("url");
-    String technicalStack = request.getParameter("technicalStack");
+    // Read the JSON body from the request
+    StringBuilder jsonBody = new StringBuilder();
+    String line;
+    try (var reader = request.getReader()) {
+      while ((line = reader.readLine()) != null) {
+        jsonBody.append(line);
+      }
+    }
 
+    // Log the raw JSON data for debugging
+    logger.info("Received JSON: " + jsonBody.toString());
+
+    // Use ObjectMapper to parse the JSON into a Project object
+    ObjectMapper objectMapper = new ObjectMapper();
+    CreateProject projectRequest;
+    try {
+      projectRequest = objectMapper.readValue(jsonBody.toString(), CreateProject.class);
+    } catch (IOException e) {
+      logger.severe("Error parsing JSON: " + e.getMessage());
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid JSON format");
+      return;
+    }
+
+    // Now you have the data in the projectRequest object
+    String clientId = projectRequest.getClientId();
+    String projectTitle = projectRequest.getProjectTitle();
+    String projectDescription = projectRequest.getProjectDescription();
+    String startDate = projectRequest.getStartDate();
+    String endDate = projectRequest.getEndDate();
+    String url = projectRequest.getUrl();
+    String technicalStack = projectRequest.getTechnicalStack();
+
+    // Validation check for required parameters
+    if (clientId == null || projectTitle == null || projectDescription == null || startDate == null
+        || endDate == null) {
+      logger.severe("Missing required parameters in JSON payload.");
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing required parameters");
+      return;
+    }
+
+    // Proceed with project creation
     ProjectDAO projectDAO = new ProjectDAO();
     logger.info("ProjectService: Inside createProject");
+
+    // Logging the parsed data for debugging
     logger.info("clientId: " + clientId);
     logger.info("projectTitle: " + projectTitle);
     logger.info("projectDescription: " + projectDescription);
@@ -53,10 +67,13 @@ public class ProjectService {
     logger.info("endDate: " + endDate);
     logger.info("url: " + url);
     logger.info("technicalStack: " + technicalStack);
-    projectDAO.createProject(clientId, projectTitle, projectDescription, startDate, endDate, url, technicalStack);
-  }
 
-  private String combineDate(String day, String month, String year) {
-    return year + "-" + month + "-" + day;
+    try {
+      projectDAO.createProject(clientId, projectTitle, projectDescription, startDate, endDate, url, technicalStack);
+      logger.info("Project created successfully.");
+    } catch (Exception e) {
+      logger.severe("Error creating project: " + e.getMessage());
+      response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error creating project");
+    }
   }
 }

@@ -24,7 +24,7 @@ public class ProjectDAO {
     public List<Project> getAllProjects(String userId) {
         logger.info("ProjectDAO: Inside getAllProjects");
         List<Project> projects = new ArrayList<>();
-        String sql = "SELECT * FROM test_project WHERE user_id = ?"; // Assuming a user_id column
+        String sql = "SELECT * FROM Projects WHERE clientId = ?"; // Assuming a user_id column
 
         // Access the specific ServletContext by its name
         ServletContext servletContext = ContextManager.getContext("DBConnection");
@@ -37,11 +37,11 @@ public class ProjectDAO {
             logger.info("ProjectDAO: Fetching projects for user");
             while (rs.next()) {
                 Project project = new Project(
-                        rs.getInt("id"),
+                        rs.getInt("projectId"),
                         rs.getString("status"),
                         rs.getString("title"),
-                        rs.getString("client"),
-                        rs.getInt("pending_reports"));
+                        rs.getString("clientId"),
+                        rs.getInt("pendingReports"));
                 projects.add(project);
             }
             logger.info("ProjectDAO: Projects fetched successfully");

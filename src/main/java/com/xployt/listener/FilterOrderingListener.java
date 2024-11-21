@@ -2,7 +2,7 @@ package com.xployt.listener;
 
 import com.xployt.middleware.CORSFilter;
 import com.xployt.middleware.RequestLoggingFilter;
-import com.xployt.middleware.RequestBodyParsingFilter;
+// import com.xployt.middleware.RequestBodyParsingFilter;
 // import com.xployt.middleware.ResponseLoggingFilter;
 
 import jakarta.servlet.*;
@@ -19,21 +19,10 @@ public class FilterOrderingListener implements ServletContextListener {
       FilterRegistration.Dynamic corsFilter = servletContext.addFilter("CORSFilter", CORSFilter.class);
       corsFilter.addMappingForUrlPatterns(null, false, "/*");
 
-      // Register RequestLoggingFilter second
+      // // Register RequestLoggingFilter second
       FilterRegistration.Dynamic loggingFilter = servletContext.addFilter("RequestLoggingFilter",
           RequestLoggingFilter.class);
       loggingFilter.addMappingForUrlPatterns(null, false, "/*");
-
-      // Register RequestBodyParsingFilter third
-      FilterRegistration.Dynamic bodyParsingFilter = servletContext.addFilter("RequestBodyParsingFilter",
-          RequestBodyParsingFilter.class);
-      bodyParsingFilter.addMappingForUrlPatterns(null, false, "/*");
-
-      // Register ResponseLoggingFilter last
-      // FilterRegistration.Dynamic responseLoggingFilter =
-      // servletContext.addFilter("ResponseLoggingFilter",
-      // ResponseLoggingFilter.class);
-      // responseLoggingFilter.addMappingForUrlPatterns(null, false, "/*");
 
     } catch (Exception e) {
       System.err.println("Error registering filters: " + e.getMessage());

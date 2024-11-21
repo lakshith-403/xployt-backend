@@ -9,6 +9,7 @@ import jakarta.servlet.annotation.WebListener;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -50,6 +51,26 @@ public class DatabaseConnectionListener implements ServletContextListener {
       } catch (SQLException e) {
         logger.log(Level.SEVERE, "Failed to close database connection: " + e.getMessage(), e);
       }
+    }
+
+    // Unregister JDBC driver
+    try {
+      Enumeration<java.sql.Driver> drivers = DriverManager.getDrivers();
+      while (drivers.hasMoreElements()) {
+        java.sql.Driver driver = drivers.nextElement();
+        DriverManager.deregisterDriver(driver);
+        logger.log(Level.INFO, "Deregistering JDBC driver: " + driver);
+      }
+    } catch (SQLException e) {
+      logger.log(Level.SEVERE, "Error deregistering driver: " + e.getMessage(), e);
+    }
+
+    // Stop the abandoned connection cleanup thread
+    try {
+      com.mysql.cj.jdbc.AbandonedConnectionCleanupThread.checkedShutdown();
+      logger.log(Level.INFO, "Abandoned connection cleanup thread stopped.");
+    } catch (Exception e) {
+      logger.log(Level.SEVERE, "Error stopping abandoned connection cleanup thread: ");
     }
   }
 }
