@@ -1,8 +1,6 @@
-package com.xployt.controller;
+package com.xployt.controller.common;
 
-import com.xployt.model.GenericResponse;
-import com.xployt.service.ProjectService;
-import com.xployt.util.JsonUtil;
+import com.xployt.service.common.ProjectService;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -36,10 +34,8 @@ public class ProjectServlet extends HttpServlet {
         logger.info("pathInfo substring: " + pathInfo.substring(1));
 
         String userId = pathInfo.substring(1); // Get userId from URL
-        GenericResponse projects;
         try {
-            projects = projectService.fetchProjects(userId);
-            logger.info("project: " + projects);
+            projectService.fetchProjects(userId, response);
         } catch (Exception e) {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error fetching projects");
             return;
@@ -48,10 +44,5 @@ public class ProjectServlet extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        // Use the custom JsonUtil to convert projects to JSON
-        String jsonResponse = JsonUtil.toJson(projects);
-        logger.info("jsonResponse is: " + jsonResponse);
-        response.getWriter().write(jsonResponse);
-        // response.getWriter().write("");
     }
 }

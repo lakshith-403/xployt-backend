@@ -7,7 +7,7 @@ import com.xployt.util.CustomLogger;
 import com.fasterxml.jackson.databind.ObjectMapper; // Add Jackson dependency for JSON parsing
 import java.io.IOException;
 import java.util.logging.Logger;
-import com.xployt.model.CreateProject;
+import com.xployt.model.Project;
 import com.xployt.model.GenericResponse;
 import com.xployt.util.JsonUtil;
 
@@ -31,9 +31,9 @@ public class ProjectService {
 
     // Use ObjectMapper to parse the JSON into a Project object
     ObjectMapper objectMapper = new ObjectMapper();
-    CreateProject projectRequest;
+    Project projectRequest;
     try {
-      projectRequest = objectMapper.readValue(jsonBody.toString(), CreateProject.class);
+      projectRequest = objectMapper.readValue(jsonBody.toString(), Project.class);
     } catch (IOException e) {
       logger.severe("Error parsing JSON: " + e.getMessage());
       response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid JSON format");
@@ -62,15 +62,6 @@ public class ProjectService {
     // Proceed with project creation
     ProjectDAO projectDAO = new ProjectDAO();
     logger.info("ProjectService: Inside createProject");
-
-    // Logging the parsed data for debugging
-    // logger.info("clientId: " + clientId);
-    // logger.info("title: " + title);
-    // logger.info("description: " + description);
-    // logger.info("startDate: " + startDate);
-    // logger.info("endDate: " + endDate);
-    // logger.info("url: " + url);
-    // logger.info("technicalStack: " + technicalStack);
 
     try {
       projectDAO.createProject(clientId, title, description, startDate, endDate, url, technicalStack);
