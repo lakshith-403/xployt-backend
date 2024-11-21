@@ -29,9 +29,11 @@ public class ProjectServlet extends HttpServlet {
         logger.info("Fetching projects for user");
         String pathInfo = request.getPathInfo();
         if (pathInfo == null || pathInfo.isEmpty()) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "User ID not provided");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "User ID not provided hehe hoo");
             return;
         }
+        logger.info("pathInfo: " + pathInfo);
+        logger.info("pathInfo substring: " + pathInfo.substring(1));
 
         String userId = pathInfo.substring(1); // Get userId from URL
         GenericResponse projects;

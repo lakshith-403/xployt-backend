@@ -10,8 +10,14 @@
   <version>1.0-SNAPSHOT</version>
   <name>Xployt Maven Webapp</name>
   <url>http://maven.apache.org</url>
+
+  <properties>
+    <java.version>11</java.version>
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
+  </properties>
+
   <dependencies>
-      <!-- https://mvnrepository.com/artifact/junit/junit -->
       <dependency>
           <groupId>junit</groupId>
            <artifactId>junit</artifactId>
@@ -32,9 +38,9 @@
         <scope>provided</scope>
     </dependency>
     <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
-    <dependency>
-        <groupId>mysql</groupId>
-        <artifactId>mysql-connector-java</artifactId>
+  <dependency>
+        <groupId>com.mysql</groupId>
+        <artifactId>mysql-connector-j</artifactId>
         <version>8.0.33</version>
     </dependency>
     <dependency>
