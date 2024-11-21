@@ -3,8 +3,8 @@ package com.xployt.model;
 public class CreateProject {
 
   private String clientId;
-  private String projectTitle;
-  private String projectDescription;
+  private String title;
+  private String description;
   private String startDate;
   private String endDate;
   private String url;
@@ -19,20 +19,20 @@ public class CreateProject {
     this.clientId = clientId;
   }
 
-  public String getProjectTitle() {
-    return projectTitle;
+  public String getTitle() {
+    return title;
   }
 
-  public void setProjectTitle(String projectTitle) {
-    this.projectTitle = projectTitle;
+  public void setTitle(String title) {
+    this.title = title;
   }
 
-  public String getProjectDescription() {
-    return projectDescription;
+  public String getDescription() {
+    return description;
   }
 
-  public void setProjectDescription(String projectDescription) {
-    this.projectDescription = projectDescription;
+  public void setDescription(String description) {
+    this.description = description;
   }
 
   public String getStartDate() {

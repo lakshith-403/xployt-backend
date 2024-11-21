@@ -19,6 +19,7 @@ public class CORSFilter implements Filter {
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
       throws IOException, ServletException {
 
+    logger.info("\n-----------------------------------");
     logger.info("Adding CORS headers");
     HttpServletRequest httpRequest = (HttpServletRequest) request;
     HttpServletResponse httpResponse = (HttpServletResponse) response;

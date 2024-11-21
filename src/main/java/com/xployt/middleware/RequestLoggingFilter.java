@@ -28,7 +28,7 @@ public class RequestLoggingFilter implements Filter {
             String queryString = wrappedRequest.getQueryString();
             String fullURL = requestURI + (queryString != null ? "?" + queryString : "");
 
-            logger.info("Incoming request: " + method + " " + fullURL);
+            logger.info("Incoming request: " + method + " " + fullURL + "\n");
 
             // if ("POST".equalsIgnoreCase(method)) {
             // // Log the body of the POST request
