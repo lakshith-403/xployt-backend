@@ -8,6 +8,7 @@ import com.xployt.dao.lead.ProjectDAO;
 import com.xployt.util.JsonUtil;
 import com.xployt.model.GenericResponse;
 import com.xployt.util.ResponseUtil;
+import com.xployt.model.Project;
 
 public class ProjectService {
 
@@ -24,6 +25,12 @@ public class ProjectService {
     }
     String projectId = pathInfo.substring(1);
     ProjectDAO projectDAO = new ProjectDAO();
-    projectDAO.getProjectInfo(projectId);
+    try {
+      Project result = projectDAO.getProjectInfo(projectId);
+      ResponseUtil.writeResponse(response, JsonUtil.toJson(new GenericResponse(result, true, null, null)));
+
+    } catch (Exception e) {
+      ResponseUtil.writeResponse(response, JsonUtil.toJson(new GenericResponse(null, false, null, null)));
+    }
   }
 }

@@ -14,25 +14,28 @@ import java.util.logging.Logger;
 public class ProjectDAO {
     private Logger logger = CustomLogger.getLogger();
 
-    public Project getProjectInfo(String projectId) {
+    public Project getProjectInfo(String projectId) throws SQLException {
         logger.info("ProjectDAO: Inside getProjectInfo");
 
         String sql = "SELECT * FROM Projects WHERE projectId = ? LIMIT 1";
         Project project = null;
 
         ServletContext servletContext = ContextManager.getContext("DBConnection");
-        try (Connection conn = (Connection) servletContext.getAttribute("DBConnection");
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
+        Connection conn = (Connection) servletContext.getAttribute("DBConnection");
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, projectId);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     project = new Project();
+                    project.setClientId(rs.getString("clientId"));
                     project.setTitle(rs.getString("title"));
                     project.setEndDate(rs.getString("endDate"));
                     project.setStartDate(rs.getString("startDate"));
-
-                    // Set other fields as necessary
+                    project.setTechnicalStack(rs.getString("technicalStack"));
+                    project.setDescription(rs.getString("description"));
+                    project.setUrl(rs.getString("url"));
                 }
             }
         } catch (SQLException e) {
