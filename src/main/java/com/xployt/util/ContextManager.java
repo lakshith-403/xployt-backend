@@ -1,6 +1,6 @@
 package com.xployt.util;
 
-import jakarta.servlet.ServletContext;
+import javax.servlet.ServletContext;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 

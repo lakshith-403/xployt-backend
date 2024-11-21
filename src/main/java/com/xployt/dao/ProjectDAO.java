@@ -4,7 +4,7 @@ import com.xployt.model.Project;
 import com.xployt.util.ContextManager;
 import com.xployt.util.CustomLogger;
 
-import jakarta.servlet.ServletContext;
+import javax.servlet.ServletContext;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

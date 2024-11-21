@@ -3,7 +3,7 @@ package com.xployt.dao.client;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import jakarta.servlet.ServletContext;
+import javax.servlet.ServletContext;
 import com.xployt.util.CustomLogger;
 import java.util.logging.Logger;
 import com.xployt.util.ContextManager;

@@ -1,7 +1,7 @@
 package com.xployt.service.client;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import com.xployt.dao.client.ProjectDAO;
 import com.xployt.util.CustomLogger;
 import com.fasterxml.jackson.databind.ObjectMapper; // Add Jackson dependency for JSON parsing
