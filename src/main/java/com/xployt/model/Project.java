@@ -6,23 +6,6 @@ public class Project {
     private String title;
     private String client;
     private int pendingReports;
-    private String startDate;
-    private String endDate;
-    private String url;
-    private String technicalStack;
-
-    public Project(int id, String status, String title, String client, int pendingReports, String startDate,
-            String endDate, String url, String technicalStack) {
-        this.id = id;
-        this.status = status;
-        this.title = title;
-        this.client = client;
-        this.pendingReports = pendingReports;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.url = url;
-        this.technicalStack = technicalStack;
-    }
 
     public Project(int id, String status, String title, String client, int pendingReports) {
         this.id = id;
@@ -53,19 +36,4 @@ public class Project {
         return pendingReports;
     }
 
-    public String getStartDate() {
-        return startDate;
-    }
-
-    public String getEndDate() {
-        return endDate;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public String getTechnicalStack() {
-        return technicalStack;
-    }
 }

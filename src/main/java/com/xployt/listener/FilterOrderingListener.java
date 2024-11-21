@@ -17,7 +17,7 @@ public class FilterOrderingListener implements ServletContextListener {
       FilterRegistration.Dynamic corsFilter = servletContext.addFilter("CORSFilter", CORSFilter.class);
       corsFilter.addMappingForUrlPatterns(null, false, "/*");
 
-      // Register RequestLoggingFilter second
+      // // Register RequestLoggingFilter second
       FilterRegistration.Dynamic loggingFilter = servletContext.addFilter("RequestLoggingFilter",
           RequestLoggingFilter.class);
       loggingFilter.addMappingForUrlPatterns(null, false, "/*");

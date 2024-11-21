@@ -25,6 +25,11 @@
           <scope>test</scope>
       </dependency>
 
+  <properties>
+    <java.version>11</java.version>
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
+  </properties>
     <dependency>
         <groupId>javax.servlet</groupId>
         <artifactId>javax.servlet-api</artifactId>
@@ -37,42 +42,58 @@
         <version>2.3.3</version>
         <scope>provided</scope>
     </dependency>
-    <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
-  <dependency>
+
+    <!-- MySQL Connector -->
+    <dependency>
         <groupId>com.mysql</groupId>
         <artifactId>mysql-connector-j</artifactId>
         <version>8.0.33</version>
     </dependency>
+
+    <!-- Jackson dependencies (no change needed) -->
     <dependency>
-    <groupId>com.fasterxml.jackson.core</groupId>
-    <artifactId>jackson-databind</artifactId>
-    <version>2.9.10</version>
-</dependency>
-<dependency>
-    <groupId>com.fasterxml.jackson.core</groupId>
-    <artifactId>jackson-core</artifactId>
-    <version>2.9.10</version>
-</dependency>
-<dependency>
-    <groupId>com.fasterxml.jackson.core</groupId>
-    <artifactId>jackson-annotations</artifactId>
-    <version>2.9.10</version>
-  </dependency>
-  </dependencies>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>2.9.10</version>
+    </dependency>
+    <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
+        <version>2.9.10</version>
+    </dependency>
+    <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-annotations</artifactId>
+        <version>2.9.10</version>
+    </dependency>
+</dependencies>
+
   <build>
     <finalName>Xployt</finalName>
     <plugins>
-        <plugin>
-            <groupId>org.apache.tomcat.maven</groupId>
-            <artifactId>tomcat7-maven-plugin</artifactId>
-            <version>2.2</version>
+    
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <phase>install</phase>  <!-- Or package, depending on your needs -->
+            <goals>
+              <goal>exec</goal>
+            </goals>
             <configuration>
-                <path>/</path>
-                <port>8080</port>
-                <address>0.0.0.0</address>
-                <contextReloadable>true</contextReloadable>
+              <executable>bash</executable>
+              <arguments>
+                <argument>-c</argument>
+                <argument>./watch.sh</argument>
+              </arguments>
             </configuration>
+          </execution>
+        </executions>
       </plugin>
+
+        
     </plugins>
   </build>
 </project>
