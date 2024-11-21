@@ -26,7 +26,7 @@ public class ProjectServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        logger.info("Fetching projects for user test Hehe");
+        logger.info("Fetching projects for user Hehe");
         String pathInfo = request.getPathInfo();
         if (pathInfo == null || pathInfo.isEmpty()) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "User ID not provided");

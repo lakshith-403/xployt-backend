@@ -10,6 +10,13 @@
   <version>1.0-SNAPSHOT</version>
   <name>Xployt Maven Webapp</name>
   <url>http://maven.apache.org</url>
+
+  <properties>
+    <java.version>11</java.version>
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
+  </properties>
+
   <dependencies>
     <!-- Servlet API -->
     <dependency>
@@ -29,8 +36,8 @@
 
     <!-- MySQL Connector -->
     <dependency>
-        <groupId>mysql</groupId>
-        <artifactId>mysql-connector-java</artifactId>
+        <groupId>com.mysql</groupId>
+        <artifactId>mysql-connector-j</artifactId>
         <version>8.0.33</version>
     </dependency>
 
@@ -56,25 +63,25 @@
     <finalName>Xployt</finalName>
     <plugins>
     
-  <plugin>
-    <groupId>org.codehaus.mojo</groupId>
-    <artifactId>exec-maven-plugin</artifactId>
-    <version>3.1.0</version>
-    <executions>
-      <execution>
-        <phase>install</phase>  <!-- Or package, depending on your needs -->
-        <goals>
-          <goal>exec</goal>
-        </goals>
-        <configuration>
-          <executable>bash</executable>
-          <arguments>
-            <argument>-c</argument>
-            <argument>./watch.sh</argument>
-          </arguments>
-        </configuration>
-      </execution>
-    </executions>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <phase>install</phase>  <!-- Or package, depending on your needs -->
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>bash</executable>
+              <arguments>
+                <argument>-c</argument>
+                <argument>./watch.sh</argument>
+              </arguments>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
 
         
