@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 import com.xployt.model.Project;
 import com.xployt.model.GenericResponse;
 import com.xployt.util.JsonUtil;
+import java.io.BufferedReader;
 
 public class ProjectService {
 
@@ -20,7 +21,7 @@ public class ProjectService {
     // Read the JSON body from the request
     StringBuilder jsonBody = new StringBuilder();
     String line;
-    try (var reader = request.getReader()) {
+    try (BufferedReader reader = request.getReader()) {
       while ((line = reader.readLine()) != null) {
         jsonBody.append(line);
       }

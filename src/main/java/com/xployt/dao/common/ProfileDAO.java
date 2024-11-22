@@ -1,4 +1,4 @@
-package com.xployt.dao;
+package com.xployt.dao.common;
 import com.xployt.util.ContextManager;
 import com.xployt.util.CustomLogger;
 import com.xployt.model.Profile;
@@ -11,9 +11,9 @@ public class ProfileDAO {
 
     public Profile getProfile(int userId) {
         logger.info("ProfileDAO: Inside getProfile");
-        String query = "SELECT u.*, c.funds_remaining, c.funds_spent FROM users u " +
-                      "LEFT JOIN clients c ON u.user_id = c.client_id " +
-                      "WHERE u.user_id = ?";
+        String query = "SELECT u.userId, u.name, u.email, up.phone FROM Users u " +
+                      "LEFT JOIN UserProfiles up ON u.userId = up.userId " +
+                      "WHERE u.userId = ?";
                       
         ServletContext servletContext = ContextManager.getContext("DBConnection");
         try (Connection conn = (Connection) servletContext.getAttribute("DBConnection");
@@ -26,13 +26,13 @@ public class ProfileDAO {
             
             if (rs.next()) {
                 Profile profile = new Profile();
-                profile.setUserId(rs.getInt("user_id"));
+                profile.setUserId(rs.getInt("userId"));
                 profile.setName(rs.getString("name"));
                 profile.setEmail(rs.getString("email"));
                 profile.setPhoneNumber(rs.getString("phone"));
-                profile.setProfilePicture(rs.getString("profile_picture"));
-                profile.setFundsRemaining(rs.getDouble("funds_remaining"));
-                profile.setFundsSpent(rs.getDouble("funds_spent"));
+                // profile.setProfilePicture(rs.getString("profile_picture"));
+                // profile.setFundsRemaining(rs.getDouble("funds_remaining"));
+                // profile.setFundsSpent(rs.getDouble("funds_spent"));
                 logger.info("ProfileDAO: Profile fetched successfully");
                 return profile;
             }
@@ -46,21 +46,25 @@ public class ProfileDAO {
 
     public boolean updateProfile(Profile profile) {
         logger.info("ProfileDAO: Inside updateProfile");
-        String query = "UPDATE users SET name = ?, email = ?, phone = ? WHERE user_id = ?";
+        String userQuery = "UPDATE Users SET name = ? WHERE userId = ?";
+        
+        String profileQuery = "UPDATE UserProfiles SET phone = ? WHERE userId = ?";
         
         ServletContext servletContext = ContextManager.getContext("DBConnection");
         try (Connection conn = (Connection) servletContext.getAttribute("DBConnection");
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+             PreparedStatement userStmt = conn.prepareStatement(userQuery);
+             PreparedStatement profileStmt = conn.prepareStatement(profileQuery)) {
             
-            logger.info("ProfileDAO: Connection established");
-            stmt.setString(1, profile.getName());
-            stmt.setString(2, profile.getEmail());
-            stmt.setString(3, profile.getPhoneNumber());
-            stmt.setInt(4, profile.getUserId());
+            userStmt.setString(1, profile.getName());
+            userStmt.setInt(2, profile.getUserId());
             
-            int rowsAffected = stmt.executeUpdate();
-            logger.info("ProfileDAO: Profile updated successfully. Rows affected: " + rowsAffected);
-            return rowsAffected > 0;
+            profileStmt.setString(1, profile.getPhoneNumber());
+            profileStmt.setInt(2, profile.getUserId());
+            
+            int userRowsAffected = userStmt.executeUpdate();
+            int profileRowsAffected = profileStmt.executeUpdate();
+            
+            return userRowsAffected > 0 || profileRowsAffected > 0;
         } catch (SQLException e) {
             logger.severe("ProfileDAO: Error updating profile: " + e.getMessage());
             return false;

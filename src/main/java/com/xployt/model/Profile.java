@@ -5,9 +5,9 @@ public class Profile {
     private String name;
     private String email;
     private String phoneNumber;
-    private String profilePicture;
-    private double fundsRemaining;
-    private double fundsSpent;
+
+    // private double fundsRemaining;
+    // private double fundsSpent;
 
     // Getters and Setters
     public int getUserId() { return userId; }
@@ -22,12 +22,12 @@ public class Profile {
     public String getPhoneNumber() { return phoneNumber; }
     public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
 
-    public String getProfilePicture() { return profilePicture; }
-    public void setProfilePicture(String profilePicture) { this.profilePicture = profilePicture; }
+    // public String getProfilePicture() { return profilePicture; }
+    // public void setProfilePicture(String profilePicture) { this.profilePicture = profilePicture; }
 
-    public double getFundsRemaining() { return fundsRemaining; }
-    public void setFundsRemaining(double fundsRemaining) { this.fundsRemaining = fundsRemaining; }
+    // public double getFundsRemaining() { return fundsRemaining; }
+    // public void setFundsRemaining(double fundsRemaining) { this.fundsRemaining = fundsRemaining; }
 
-    public double getFundsSpent() { return fundsSpent; }
-    public void setFundsSpent(double fundsSpent) { this.fundsSpent = fundsSpent; }
+    // public double getFundsSpent() { return fundsSpent; }
+    // public void setFundsSpent(double fundsSpent) { this.fundsSpent = fundsSpent; }
 }

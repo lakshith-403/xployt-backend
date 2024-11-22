@@ -1,6 +1,6 @@
 package com.xployt.service;
 
-import com.xployt.dao.ProfileDAO;
+import com.xployt.dao.common.ProfileDAO;
 import com.xployt.model.Profile;
 import com.xployt.util.CustomLogger;
 
