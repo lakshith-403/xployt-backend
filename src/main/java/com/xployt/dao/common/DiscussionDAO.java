@@ -1,4 +1,4 @@
-package com.xployt.dao;
+package com.xployt.dao.common;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -25,9 +25,9 @@ public class DiscussionDAO {
     public List<Discussion> getDiscussionsByProjectId(String projectId) throws SQLException {
         List<Discussion> discussions = new ArrayList<>();
         String sql = "SELECT d.*, u.* FROM discussions d " +
-                     "LEFT JOIN discussion_participants dp ON d.id = dp.discussion_id " +
-                     "LEFT JOIN users u ON dp.user_id = u.id " +
-                     "WHERE d.project_id = ?";
+                "LEFT JOIN discussion_participants dp ON d.id = dp.discussion_id " +
+                "LEFT JOIN users u ON dp.user_id = u.id " +
+                "WHERE d.project_id = ?";
 
         ServletContext servletContext = ContextManager.getContext("DBConnection");
         Connection conn = (Connection) servletContext.getAttribute("DBConnection");
@@ -49,7 +49,7 @@ public class DiscussionDAO {
 
     public Discussion createDiscussion(Discussion discussion) throws SQLException {
         String sql = "INSERT INTO discussions (id, title, project_id, created_at) VALUES (?, ?, ?, ?)";
-        
+
         ServletContext servletContext = ContextManager.getContext("DBConnection");
         Connection conn = (Connection) servletContext.getAttribute("DBConnection");
 
@@ -71,7 +71,8 @@ public class DiscussionDAO {
         return null;
     }
 
-    private void insertParticipants(Connection conn, String discussionId, List<PublicUser> participants) throws SQLException {
+    private void insertParticipants(Connection conn, String discussionId, List<PublicUser> participants)
+            throws SQLException {
         String sql = "INSERT INTO discussion_participants (discussion_id, user_id) VALUES (?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             for (PublicUser participant : participants) {
@@ -88,20 +89,19 @@ public class DiscussionDAO {
 
     private Discussion mapResultSetToDiscussion(ResultSet rs) throws SQLException {
         return new Discussion(
-            rs.getString("id"),
-            rs.getString("title"),
-            getParticipantsForDiscussion(rs.getString("id")),
-            rs.getTimestamp("created_at"),
-            rs.getString("project_id"),
-            getMessagesForDiscussion(rs.getString("id"))
-        );
+                rs.getString("id"),
+                rs.getString("title"),
+                getParticipantsForDiscussion(rs.getString("id")),
+                rs.getTimestamp("created_at"),
+                rs.getString("project_id"),
+                getMessagesForDiscussion(rs.getString("id")));
     }
 
     private List<PublicUser> getParticipantsForDiscussion(String discussionId) throws SQLException {
         List<PublicUser> participants = new ArrayList<>();
         String sql = "SELECT u.* FROM users u " +
-                     "JOIN discussion_participants dp ON u.id = dp.user_id " +
-                     "WHERE dp.discussion_id = ?";
+                "JOIN discussion_participants dp ON u.id = dp.user_id " +
+                "WHERE dp.discussion_id = ?";
 
         ServletContext servletContext = ContextManager.getContext("DBConnection");
         Connection conn = (Connection) servletContext.getAttribute("DBConnection");
@@ -111,9 +111,9 @@ public class DiscussionDAO {
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                PublicUser user = new PublicUser(rs.getString("id"), 
-                rs.getString("username"), 
-                rs.getString("email"));
+                PublicUser user = new PublicUser(rs.getString("id"),
+                        rs.getString("username"),
+                        rs.getString("email"));
                 participants.add(user);
             }
         } catch (SQLException e) {
@@ -126,7 +126,7 @@ public class DiscussionDAO {
     private List<Message> getMessagesForDiscussion(String discussionId) throws SQLException {
         List<Message> messages = new ArrayList<>();
         String sql = "SELECT m.*, u.* FROM messages m JOIN users u ON m.user_id = u.id " +
-                     "WHERE m.discussion_id = ?";
+                "WHERE m.discussion_id = ?";
 
         ServletContext servletContext = ContextManager.getContext("DBConnection");
         Connection conn = (Connection) servletContext.getAttribute("DBConnection");
@@ -137,13 +137,12 @@ public class DiscussionDAO {
 
             while (rs.next()) {
                 Message message = new Message(
-                    rs.getString("id"),
-                    new PublicUser(rs.getString("user_id"), rs.getString("username"), rs.getString("email")),
-                    rs.getString("content"),
-                    new ArrayList<>(), // todo fetch attachments
-                    new java.util.Date(rs.getTimestamp("created_at").getTime()),
-                    rs.getString("type")
-                );
+                        rs.getString("id"),
+                        new PublicUser(rs.getString("user_id"), rs.getString("username"), rs.getString("email")),
+                        rs.getString("content"),
+                        new ArrayList<>(), // todo fetch attachments
+                        new java.util.Date(rs.getTimestamp("created_at").getTime()),
+                        rs.getString("type"));
                 messages.add(message);
             }
         } catch (SQLException e) {
@@ -152,4 +151,4 @@ public class DiscussionDAO {
         }
         return messages;
     }
-} 
+}
