@@ -1,4 +1,4 @@
-package com.xployt.controller;
+package com.xployt.controller.common;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.xployt.model.Discussion;
 import com.xployt.model.GenericResponse;
 import com.xployt.model.PublicUser;
-import com.xployt.service.DiscussionService;
+import com.xployt.service.common.DiscussionService;
 import com.xployt.util.CustomLogger;
 import com.xployt.util.JsonUtil;
 
@@ -57,13 +57,13 @@ public class DiscussionServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         logger.info("Creating discussion");
-        // Discussion discussion = JsonUtil.fromJson(request.getReader(), Discussion.class);
-        Discussion discussion = 
-        new Discussion("1",
-         "Test Discussion", 
-         Arrays.asList(new PublicUser("1", "John Doe", "john.doe@example.com")), 
-         new Date(), "1", new ArrayList<>());
-        
+        // Discussion discussion = JsonUtil.fromJson(request.getReader(),
+        // Discussion.class);
+        Discussion discussion = new Discussion("1",
+                "Test Discussion",
+                Arrays.asList(new PublicUser("1", "John Doe", "john.doe@example.com")),
+                new Date(), "1", new ArrayList<>());
+
         GenericResponse result;
         try {
             result = discussionService.createDiscussion(discussion);
@@ -76,4 +76,4 @@ public class DiscussionServlet extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write(JsonUtil.toJson(result));
     }
-} 
+}

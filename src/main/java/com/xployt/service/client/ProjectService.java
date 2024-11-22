@@ -4,7 +4,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import com.xployt.dao.client.ProjectDAO;
 import com.xployt.util.CustomLogger;
-import com.fasterxml.jackson.databind.ObjectMapper; // Add Jackson dependency for JSON parsing
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.logging.Logger;
 import com.xployt.model.Project;
