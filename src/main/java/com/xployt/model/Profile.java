@@ -1,51 +1,33 @@
 package com.xployt.model;
 
 public class Profile {
-    private int id;
+    private int userId;
     private String name;
     private String email;
     private String phoneNumber;
     private String profilePicture;
-    private double remainingFunds;
-    private double spentFunds;
+    private double fundsRemaining;
+    private double fundsSpent;
 
-    public Profile(int id, String name, String email, String phoneNumber, 
-                  String profilePicture, double remainingFunds, double spentFunds) {
-        this.id = id;
-        this.name = name;
-        this.email = email;
-        this.phoneNumber = phoneNumber;
-        this.profilePicture = profilePicture;
-        this.remainingFunds = remainingFunds;
-        this.spentFunds = spentFunds;
-    }
+    // Getters and Setters
+    public int getUserId() { return userId; }
+    public void setUserId(int userId) { this.userId = userId; }
 
-    // Getters
-    public int getId() {
-        return id;
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public String getName() {
-        return name;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public String getEmail() {
-        return email;
-    }
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
 
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
+    public String getProfilePicture() { return profilePicture; }
+    public void setProfilePicture(String profilePicture) { this.profilePicture = profilePicture; }
 
-    public String getProfilePicture() {
-        return profilePicture;
-    }
+    public double getFundsRemaining() { return fundsRemaining; }
+    public void setFundsRemaining(double fundsRemaining) { this.fundsRemaining = fundsRemaining; }
 
-    public double getRemainingFunds() {
-        return remainingFunds;
-    }
-
-    public double getSpentFunds() {
-        return spentFunds;
-    }
+    public double getFundsSpent() { return fundsSpent; }
+    public void setFundsSpent(double fundsSpent) { this.fundsSpent = fundsSpent; }
 }

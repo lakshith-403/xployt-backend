@@ -5,11 +5,14 @@
                              http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
   version="2.5"
 >
+    <!-- Add the new servlet configuration here -->
 
-    <servlet>
-        <servlet-name>ProjectServlet</servlet-name>
-        <servlet-class>com.xployt.controller.ProjectServlet</servlet-class>
-    </servlet>
+
+    <!-- Existing error page configuration -->
+    <error-page>
+        <error-code>404</error-code>
+        <location>/404.jsp</location>
+    </error-page>
 
     <!-- Register the error handling servlet -->
     <servlet>
