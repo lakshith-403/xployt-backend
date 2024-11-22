@@ -4,7 +4,7 @@ public class Profile {
     private int userId;
     private String name;
     private String email;
-    private String phoneNumber;
+    private String phone;
 
     // private double fundsRemaining;
     // private double fundsSpent;
@@ -19,8 +19,8 @@ public class Profile {
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
-    public String getPhoneNumber() { return phoneNumber; }
-    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
 
     // public String getProfilePicture() { return profilePicture; }
     // public void setProfilePicture(String profilePicture) { this.profilePicture = profilePicture; }

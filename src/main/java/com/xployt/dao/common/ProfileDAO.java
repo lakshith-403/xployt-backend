@@ -5,7 +5,7 @@ import com.xployt.model.Profile;
 import java.sql.*;
 import javax.servlet.ServletContext;
 import java.util.logging.Logger;
-
+import com.xployt.util.JsonUtil;
 public class ProfileDAO {
     private Logger logger = CustomLogger.getLogger();
 
@@ -29,7 +29,7 @@ public class ProfileDAO {
                 profile.setUserId(rs.getInt("userId"));
                 profile.setName(rs.getString("name"));
                 profile.setEmail(rs.getString("email"));
-                profile.setPhoneNumber(rs.getString("phone"));
+                profile.setPhone(rs.getString("phone"));
                 // profile.setProfilePicture(rs.getString("profile_picture"));
                 // profile.setFundsRemaining(rs.getDouble("funds_remaining"));
                 // profile.setFundsSpent(rs.getDouble("funds_spent"));
@@ -46,7 +46,7 @@ public class ProfileDAO {
 
     public boolean updateProfile(Profile profile) {
         logger.info("ProfileDAO: Inside updateProfile");
-        String userQuery = "UPDATE Users SET name = ? WHERE userId = ?";
+        String userQuery = "UPDATE Users SET name = ?, email = ? WHERE userId = ?";
         
         String profileQuery = "UPDATE UserProfiles SET phone = ? WHERE userId = ?";
         
@@ -56,14 +56,16 @@ public class ProfileDAO {
              PreparedStatement profileStmt = conn.prepareStatement(profileQuery)) {
             
             userStmt.setString(1, profile.getName());
-            userStmt.setInt(2, profile.getUserId());
+            userStmt.setString(2, profile.getEmail());
+            userStmt.setInt(3, profile.getUserId());
             
-            profileStmt.setString(1, profile.getPhoneNumber());
+            profileStmt.setString(1, profile.getPhone());
             profileStmt.setInt(2, profile.getUserId());
             
             int userRowsAffected = userStmt.executeUpdate();
             int profileRowsAffected = profileStmt.executeUpdate();
-            
+            String response = JsonUtil.toJson(profile);
+            logger.info("ProfileDAO: Profile updated successfully: " + response);
             return userRowsAffected > 0 || profileRowsAffected > 0;
         } catch (SQLException e) {
             logger.severe("ProfileDAO: Error updating profile: " + e.getMessage());
