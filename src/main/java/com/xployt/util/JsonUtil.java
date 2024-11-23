@@ -90,15 +90,16 @@ public class JsonUtil {
         StringBuilder jsonBuilder = new StringBuilder();
         jsonBuilder.append("{"); // Start of JSON object
 
-        int size = map.size();
-        int index = 0;
+        int size = 0;
         for (Map.Entry<?, ?> entry : map.entrySet()) {
-            jsonBuilder.append("\"").append(entry.getKey()).append("\":");
-            jsonBuilder.append(toJson(entry.getValue())); // Convert map value to JSON
-            if (index < size - 1) {
-                jsonBuilder.append(","); // Add comma between elements
+            if (entry.getValue() != null) { // Ignore null values
+                if (size > 0) {
+                    jsonBuilder.append(","); // Add comma between elements
+                }
+                jsonBuilder.append("\"").append(entry.getKey()).append("\":");
+                jsonBuilder.append(toJson(entry.getValue())); // Convert map value to JSON
+                size++;
             }
-            index++;
         }
 
         jsonBuilder.append("}"); // End of JSON object
@@ -116,17 +117,19 @@ public class JsonUtil {
         jsonBuilder.append("{"); // Start of JSON object
 
         Field[] fields = object.getClass().getDeclaredFields();
-        for (int i = 0; i < fields.length; i++) {
-            Field field = fields[i];
+        int size = 0;
+        for (Field field : fields) {
             field.setAccessible(true); // Allow access to private fields
 
             try {
-                jsonBuilder.append("\"").append(field.getName()).append("\":");
                 Object value = field.get(object);
-                jsonBuilder.append(toJson(value)); // Recursively convert field value to JSON
-
-                if (i < fields.length - 1) {
-                    jsonBuilder.append(","); // Add comma between fields
+                if (value != null) { // Ignore null values
+                    if (size > 0) {
+                        jsonBuilder.append(","); // Add comma between fields
+                    }
+                    jsonBuilder.append("\"").append(field.getName()).append("\":");
+                    jsonBuilder.append(toJson(value)); // Recursively convert field value to JSON
+                    size++;
                 }
             } catch (IllegalAccessException e) {
                 e.printStackTrace();

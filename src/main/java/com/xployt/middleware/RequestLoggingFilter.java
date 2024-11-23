@@ -4,6 +4,7 @@ import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.logging.Logger;
+// import java.util.stream.Collectors;
 
 public class RequestLoggingFilter implements Filter {
 
@@ -15,17 +16,31 @@ public class RequestLoggingFilter implements Filter {
     }
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+    public void doFilter(ServletRequest request, ServletResponse response,
+            FilterChain chain)
             throws IOException, ServletException {
         if (request instanceof HttpServletRequest) {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
-            String method = httpRequest.getMethod();
-            String requestURI = httpRequest.getRequestURI();
-            String queryString = httpRequest.getQueryString();
+            CachedBodyHttpServletRequest wrappedRequest = new CachedBodyHttpServletRequest(httpRequest);
+
+            String method = wrappedRequest.getMethod();
+            String requestURI = wrappedRequest.getRequestURI();
+            String queryString = wrappedRequest.getQueryString();
             String fullURL = requestURI + (queryString != null ? "?" + queryString : "");
-            logger.info("Incoming request: " + method + " " + fullURL);
+
+            logger.info("Incoming request: " + method + " " + fullURL + "\n");
+
+            // if ("POST".equalsIgnoreCase(method)) {
+            // // Log the body of the POST request
+            // String requestBody = wrappedRequest.getReader().lines()
+            // .collect(Collectors.joining(System.lineSeparator()));
+            // logger.info("Request body: " + requestBody);
+            // }
+
+            chain.doFilter(wrappedRequest, response);
+        } else {
+            chain.doFilter(request, response);
         }
-        chain.doFilter(request, response);
     }
 
     @Override
