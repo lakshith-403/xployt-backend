@@ -1,3 +1,3 @@
 `mvn install`
 
-`mvn tomcat7:run`
+`mvn -e tomcat7:run`
