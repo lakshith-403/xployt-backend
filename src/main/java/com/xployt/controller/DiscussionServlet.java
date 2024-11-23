@@ -1,9 +1,6 @@
 package com.xployt.controller;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
@@ -14,10 +11,12 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.xployt.model.Discussion;
 import com.xployt.model.GenericResponse;
-import com.xployt.model.PublicUser;
 import com.xployt.service.DiscussionService;
 import com.xployt.util.CustomLogger;
 import com.xployt.util.JsonUtil;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder; 
 
 @WebServlet("/api/discussions/*")
 public class DiscussionServlet extends HttpServlet {
@@ -57,18 +56,41 @@ public class DiscussionServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         logger.info("Creating discussion");
-        // Discussion discussion = JsonUtil.fromJson(request.getReader(), Discussion.class);
-        Discussion discussion = 
-        new Discussion("1",
-         "Test Discussion", 
-         Arrays.asList(new PublicUser("1", "John Doe", "john.doe@example.com")), 
-         new Date(), "1", new ArrayList<>());
+
+        GsonBuilder builder = new GsonBuilder(); 
+        builder.setPrettyPrinting(); 
+        Gson gson = builder.create();
+
+        Discussion discussion = gson.fromJson(request.getReader(), Discussion.class);
         
         GenericResponse result;
         try {
             result = discussionService.createDiscussion(discussion);
         } catch (Exception e) {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error creating discussion");
+            return;
+        }
+
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(JsonUtil.toJson(result));
+    }
+
+    @Override
+    protected void doPut(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        logger.info("Updating discussion");
+
+        GsonBuilder builder = new GsonBuilder(); 
+        builder.setPrettyPrinting(); 
+        Gson gson = builder.create();
+
+        Discussion discussion = gson.fromJson(request.getReader(), Discussion.class);
+        GenericResponse result;
+        try {
+            result = discussionService.updateDiscussion(discussion);
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error updating discussion");
             return;
         }
 
