@@ -1,4 +1,4 @@
-package com.xployt.controller;
+package com.xployt.controller.hacker;
 
 import com.xployt.model.GenericResponse;
 import com.xployt.service.InvitationService;
@@ -15,7 +15,7 @@ import com.xployt.util.CustomLogger;
 
 @WebServlet("/api/invitations/hacker/*")
 
-public class InvitationServlet extends HttpServlet {
+public class HackerInvitationServlet extends HttpServlet {
     private InvitationService invitationService;
     private static final Logger logger = CustomLogger.getLogger();
 

@@ -1,4 +1,4 @@
-package com.xployt.dao;
+package com.xployt.dao.common;
 
 import com.xployt.model.Invitation;
 import com.xployt.util.ContextManager;

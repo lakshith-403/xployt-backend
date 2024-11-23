@@ -1,6 +1,6 @@
 package com.xployt.service;
 
-import com.xployt.dao.InvitationDAO;
+import com.xployt.dao.common.InvitationDAO;
 import com.xployt.model.GenericResponse;
 import com.xployt.model.Invitation;
 import com.xployt.util.CustomLogger;
