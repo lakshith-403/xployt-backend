@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 public class InvitationDAO {
     private final Logger logger = CustomLogger.getLogger();
 
-    public List<Invitation> getHackerInvitations(String userId) {
+    public List<Invitation> getHackerInvitations(String userId) throws SQLException {
         logger.info("InvitationDAO: executing getHackerInvitations");
         List<Invitation> invitations = new ArrayList<>();
         String sql = "SELECT * FROM Invitations WHERE hackerId = ?";
@@ -41,8 +41,30 @@ public class InvitationDAO {
             logger.info("InvitationDAO: Number of hackers fetched " + invitations.size());
         } catch (SQLException e) {
             logger.severe("InvitationDAO: Error fetching hackers" + e.getMessage());
+            throw e;
         }
 
         return invitations;
+    }
+
+    public Invitation createInvitation(Invitation invitation) throws SQLException{
+        logger.info("InvitationDAO: creating invitation");
+
+        String sql = "INSERT INTO Invitations (hackerId, projectId) VALUES (?, ?)";
+
+        ServletContext servletContext = ContextManager.getContext("DBConnection");
+        Connection conn = (Connection) servletContext.getAttribute("DBConnection");
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+            stmt.setInt(1, invitation.getHackerId());
+            stmt.setInt(2, invitation.getProjectId());
+            stmt.executeUpdate();
+            logger.info("InvitationDAO: Invitation created successfully");
+        } catch (SQLException e) {
+            logger.severe("InvitationDAO: Error creating invitation" + e.getMessage());
+            throw e;
+        }
+
+        return invitation;
     }
 }

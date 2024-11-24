@@ -11,6 +11,8 @@ public class Invitation {
         this.timestamp = timestamp;
     }
 
+    public Invitation() {}
+
     //    Getters and Setters
     public int getProjectId() {
         return projectId;
@@ -20,7 +22,13 @@ public class Invitation {
         return hackerId;
     }
 
-    public String getTimestamp() {
-        return timestamp;
+    public String getTimestamp() { return timestamp; }
+
+    public void setHackerId(String hackerId) {
+        this.hackerId = Integer.parseInt(hackerId);
+    }
+
+    public void setProjectId(String projectId) {
+        this.projectId = Integer.parseInt(projectId);
     }
 }
