@@ -1,5 +1,6 @@
 package com.xployt.dao;
 
+import java.beans.JavaBean;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -219,8 +220,8 @@ public class DiscussionDAO {
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                PublicUser user = new PublicUser(rs.getString("id"), 
-                rs.getString("username"), 
+                PublicUser user = new PublicUser(rs.getString("userId"), 
+                rs.getString("name"), 
                 rs.getString("email"));
                 participants.add(user);
             }
@@ -243,7 +244,7 @@ public class DiscussionDAO {
             while (rs.next()) {
                 Message message = new Message(
                     rs.getString("id"),
-                    new PublicUser(rs.getString("user_id"), rs.getString("username"), rs.getString("email")),
+                    new PublicUser(rs.getString("userId"), rs.getString("name"), rs.getString("email")),
                     rs.getString("content"),
                     getAttachmentsForMessage(rs.getString("id"), conn),
                     new java.util.Date(rs.getTimestamp("created_at").getTime()),
@@ -301,5 +302,22 @@ public class DiscussionDAO {
             logger.log(Level.SEVERE, "Error inserting or updating attachments: {0}", e.getMessage());
             throw e;
         }
+    }
+
+    public Discussion getDiscussionById(String discussionId) throws SQLException {
+        String sql = "SELECT * FROM Discussion WHERE id = ?";
+        ServletContext servletContext = ContextManager.getContext("DBConnection");
+        Connection conn = (Connection) servletContext.getAttribute("DBConnection");
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, discussionId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToDiscussion(rs, conn);
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error fetching discussion by ID: {0}", e.getMessage());
+            throw e;
+        }
+        return null;
     }
 } 

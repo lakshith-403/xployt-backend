@@ -1,5 +1,6 @@
 package com.xployt.service;
 
+import java.io.Console;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.logging.Level;
@@ -50,6 +51,12 @@ public class DiscussionService {
         logger.log(Level.INFO, "Sending message: {0}", message.getContent());
         discussionDAO.sendMessage(message);
         return new GenericResponse(message, true, null, null);
+    }
+
+    public GenericResponse fetchDiscussionById(String discussionId) throws SQLException {
+        logger.log(Level.INFO, "Fetching discussion by ID: {0}", discussionId);
+        Discussion discussion = discussionDAO.getDiscussionById(discussionId);
+        return new GenericResponse(discussion, true, null, null);
     }
 } 
 
