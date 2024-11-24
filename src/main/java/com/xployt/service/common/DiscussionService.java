@@ -1,12 +1,11 @@
-package com.xployt.service;
+package com.xployt.service.common;
 
-import java.io.Console;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.xployt.dao.DiscussionDAO;
+import com.xployt.dao.common.DiscussionDAO;
 import com.xployt.model.Discussion;
 import com.xployt.model.GenericResponse;
 import com.xployt.model.Message;
@@ -58,6 +57,4 @@ public class DiscussionService {
         Discussion discussion = discussionDAO.getDiscussionById(discussionId);
         return new GenericResponse(discussion, true, null, null);
     }
-} 
-
-
+}

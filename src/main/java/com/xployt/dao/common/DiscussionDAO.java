@@ -1,6 +1,5 @@
-package com.xployt.dao;
+package com.xployt.dao.common;
 
-import java.beans.JavaBean;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,10 +13,10 @@ import java.util.logging.Logger;
 
 import javax.servlet.ServletContext;
 
+import com.xployt.model.Attachment;
 import com.xployt.model.Discussion;
 import com.xployt.model.Message;
 import com.xployt.model.PublicUser;
-import com.xployt.model.Attachment;
 import com.xployt.util.ContextManager;
 import com.xployt.util.CustomLogger;
 
@@ -145,6 +144,7 @@ public class DiscussionDAO {
 
     public void insertParticipants(Connection conn, String discussionId, List<PublicUser> participants) throws SQLException {
         String sql = "INSERT INTO DiscussionParticipants (discussion_id, user_id) VALUES (?, ?)";
+
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             for (PublicUser participant : participants) {
                 stmt.setString(1, discussionId);
@@ -320,4 +320,4 @@ public class DiscussionDAO {
         }
         return null;
     }
-} 
+}

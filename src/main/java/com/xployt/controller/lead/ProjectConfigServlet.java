@@ -17,7 +17,15 @@ public class ProjectConfigServlet extends HttpServlet {
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     logger.info("ProjectConfigServlet doGet method called");
-    projectService.getProjectInfo(request, response);
+    projectService.getProjectConfigInfo(request, response);
+    response.setContentType("application/json");
+    response.setCharacterEncoding("UTF-8");
+  }
+
+  @Override
+  protected void doPost(HttpServletRequest request, HttpServletResponse response) {
+    logger.info("ProjectConfigServlet doPost method called");
+    projectService.updateProjectConfigInfo(request, response);
     response.setContentType("application/json");
     response.setCharacterEncoding("UTF-8");
   }
