@@ -1,6 +1,5 @@
-package com.xployt.controller;
+package com.xployt.controller.common;
 
-import java.io.Console;
 import java.io.IOException;
 import java.util.logging.Logger;
 
@@ -13,7 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.google.gson.Gson;
 import com.xployt.model.Discussion;
 import com.xployt.model.GenericResponse;
-import com.xployt.service.DiscussionService;
+import com.xployt.service.common.DiscussionService;
 import com.xployt.util.CustomLogger;
 import com.xployt.util.JsonUtil;
 
@@ -59,7 +58,7 @@ public class DiscussionServlet extends HttpServlet {
         Gson gson = JsonUtil.useGson();
 
         Discussion discussion = gson.fromJson(request.getReader(), Discussion.class);
-        
+
         GenericResponse result;
         try {
             result = discussionService.createDiscussion(discussion);
