@@ -2,8 +2,12 @@ package com.xployt.util;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Map;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 public class JsonUtil {
 
@@ -138,5 +142,11 @@ public class JsonUtil {
 
         jsonBuilder.append("}"); // End of JSON object
         return jsonBuilder.toString();
+    }
+
+    public static Gson useGson() {
+        GsonBuilder builder = new GsonBuilder();
+        builder.registerTypeAdapter(Timestamp.class, new TimestampAdapter());
+        return builder.create();
     }
 }

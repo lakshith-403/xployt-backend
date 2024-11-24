@@ -1,5 +1,6 @@
 package com.xployt.controller;
 
+import java.io.Console;
 import java.io.IOException;
 import java.util.logging.Logger;
 
@@ -9,14 +10,12 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.gson.Gson;
 import com.xployt.model.Discussion;
 import com.xployt.model.GenericResponse;
 import com.xployt.service.DiscussionService;
 import com.xployt.util.CustomLogger;
 import com.xployt.util.JsonUtil;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder; 
 
 @WebServlet("/api/discussions/*")
 public class DiscussionServlet extends HttpServlet {
@@ -31,35 +30,33 @@ public class DiscussionServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        logger.info("Fetching discussions");
+        logger.info("Fetching discussion by ID");
         String pathInfo = request.getPathInfo();
         if (pathInfo == null || pathInfo.isEmpty()) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Project ID not provided");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Discussion ID not provided");
             return;
         }
 
-        String projectId = pathInfo.substring(1);
-        GenericResponse discussions;
+        String discussionId = pathInfo.substring(1);
+        GenericResponse discussion;
         try {
-            discussions = discussionService.fetchDiscussions(projectId);
+            discussion = discussionService.fetchDiscussionById(discussionId);
         } catch (Exception e) {
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error fetching discussions");
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error fetching discussion");
             return;
         }
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(JsonUtil.toJson(discussions));
+        response.getWriter().write(JsonUtil.useGson().toJson(discussion));
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         logger.info("Creating discussion");
-
-        GsonBuilder builder = new GsonBuilder(); 
-        builder.setPrettyPrinting(); 
-        Gson gson = builder.create();
+ 
+        Gson gson = JsonUtil.useGson();
 
         Discussion discussion = gson.fromJson(request.getReader(), Discussion.class);
         
@@ -73,7 +70,7 @@ public class DiscussionServlet extends HttpServlet {
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(JsonUtil.toJson(result));
+        response.getWriter().write(JsonUtil.useGson().toJson(result));
     }
 
     @Override
@@ -81,9 +78,7 @@ public class DiscussionServlet extends HttpServlet {
             throws ServletException, IOException {
         logger.info("Updating discussion");
 
-        GsonBuilder builder = new GsonBuilder(); 
-        builder.setPrettyPrinting(); 
-        Gson gson = builder.create();
+        Gson gson = JsonUtil.useGson();
 
         Discussion discussion = gson.fromJson(request.getReader(), Discussion.class);
         GenericResponse result;
@@ -96,6 +91,6 @@ public class DiscussionServlet extends HttpServlet {
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(JsonUtil.toJson(result));
+        response.getWriter().write(JsonUtil.useGson().toJson(result));
     }
 } 
