@@ -25,6 +25,7 @@ public class GlobalExceptionHandler extends HttpServlet {
             throwable = (Throwable) request.getAttribute("javax.servlet.error.exception_type");
         }
         System.out.println(request);
+        System.out.println(throwable);
         // Get the root cause of the exception
         Throwable rootCause = getRootCause(throwable);
         
