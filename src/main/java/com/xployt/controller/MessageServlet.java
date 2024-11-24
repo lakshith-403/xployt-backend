@@ -9,14 +9,13 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.xployt.model.GenericResponse;
-import com.xployt.model.Message;
-import com.xployt.service.DiscussionService;
-import com.xployt.util.CustomLogger;
-import com.xployt.util.JsonUtil;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.xployt.model.GenericResponse;
+import com.xployt.model.Message;
+import com.xployt.service.common.DiscussionService;
+import com.xployt.util.CustomLogger;
+import com.xployt.util.JsonUtil;
 
 @WebServlet("/api/messages/*")
 public class MessageServlet extends HttpServlet {
