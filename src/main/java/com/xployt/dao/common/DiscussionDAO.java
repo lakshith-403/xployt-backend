@@ -188,10 +188,9 @@ public class DiscussionDAO {
             stmt.setTimestamp(5, new Timestamp(message.getTimestamp().getTime()));
             stmt.setString(6, message.getType());
 
-            int affectedRows = stmt.executeUpdate();
-            if (affectedRows > 0) {
-                insertAttachments(conn, message.getId(), message.getAttachments());
-            }
+            stmt.executeUpdate();
+
+            insertAttachments(conn, message.getId(), message.getAttachments());
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error sending message: {0}", e.getMessage());
             throw e;
@@ -286,17 +285,18 @@ public class DiscussionDAO {
 
     private void insertAttachments(Connection conn, String messageId, List<Attachment> attachments) throws SQLException {
         String sqlInsertMessageAttachments = "INSERT INTO MessageAttachments (message_id, attachment_id) VALUES (?, ?)";
-        String sqlUpdateAttachment = "UPDATE Attachment SET message_id = ? WHERE id = ?";
+        String sqlInsertAttachment = "INSERT INTO Attachment (id, name, url) VALUES (?, ?, ?)";
         try (PreparedStatement stmtInsert = conn.prepareStatement(sqlInsertMessageAttachments);
-             PreparedStatement stmtUpdate = conn.prepareStatement(sqlUpdateAttachment)) {
+             PreparedStatement stmtInsertAttachment = conn.prepareStatement(sqlInsertAttachment)) {
             for (Attachment attachment : attachments) {
+                stmtInsertAttachment.setString(1, attachment.getId());
+                stmtInsertAttachment.setString(2, attachment.getName());
+                stmtInsertAttachment.setString(3, attachment.getUrl());
+                stmtInsertAttachment.executeUpdate();
+
                 stmtInsert.setString(1, messageId);
                 stmtInsert.setString(2, attachment.getId());
                 stmtInsert.executeUpdate();
-
-                stmtUpdate.setString(1, messageId);
-                stmtUpdate.setString(2, attachment.getId());
-                stmtUpdate.executeUpdate();
             }
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error inserting or updating attachments: {0}", e.getMessage());

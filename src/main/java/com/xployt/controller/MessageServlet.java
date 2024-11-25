@@ -10,7 +10,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.xployt.model.GenericResponse;
 import com.xployt.model.Message;
 import com.xployt.service.common.DiscussionService;
@@ -32,22 +31,24 @@ public class MessageServlet extends HttpServlet {
             throws ServletException, IOException {
         logger.info("Sending message");
 
-        GsonBuilder builder = new GsonBuilder(); 
-        builder.setPrettyPrinting(); 
-        Gson gson = builder.create();
-
+        Gson gson = JsonUtil.useGson();
+        
+        logger.info("Request body: " + request.getReader().readLine());
         Message message = gson.fromJson(request.getReader(), Message.class);
+        logger.info("Message: " + message);
         
         GenericResponse result;
         try {
             result = discussionService.sendMessage(message);
         } catch (Exception e) {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error sending message");
+            logger.severe("Error sending message: " + e.getMessage());
+            e.printStackTrace();
             return;
         }
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(JsonUtil.toJson(result));
+        response.getWriter().write(JsonUtil.useGson().toJson(result));
     }
 }
