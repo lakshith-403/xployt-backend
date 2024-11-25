@@ -10,18 +10,22 @@ public class ProfileDAO {
     private Logger logger = CustomLogger.getLogger();
 
     public Profile getProfile(int userId) {
-        logger.info("ProfileDAO: Inside getProfile");
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
         String query = "SELECT u.userId, u.name, u.email, up.phone FROM Users u " +
                       "LEFT JOIN UserProfiles up ON u.userId = up.userId " +
                       "WHERE u.userId = ?";
-                      
-        ServletContext servletContext = ContextManager.getContext("DBConnection");
-        try (Connection conn = (Connection) servletContext.getAttribute("DBConnection");
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        
+        try {
+            ServletContext servletContext = ContextManager.getContext("DBConnection");
+            conn = (Connection) servletContext.getAttribute("DBConnection");
+            stmt = conn.prepareStatement(query);
             
             logger.info("ProfileDAO: Connection established");
             stmt.setInt(1, userId);
-            ResultSet rs = stmt.executeQuery();
+            rs = stmt.executeQuery();
             logger.info("ProfileDAO: Fetching profile for user: " + userId);
             
             if (rs.next()) {
@@ -38,9 +42,18 @@ public class ProfileDAO {
             }
             logger.info("ProfileDAO: No profile found for user: " + userId);
             return null;
+            
         } catch (SQLException e) {
             logger.severe("ProfileDAO: Error fetching profile: " + e.getMessage());
             return null;
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (stmt != null) stmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                logger.severe("ProfileDAO: Error closing resources: " + e.getMessage());
+            }
         }
     }
 
