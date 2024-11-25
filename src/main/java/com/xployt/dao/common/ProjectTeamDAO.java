@@ -3,12 +3,10 @@ package com.xployt.dao.common;
 import com.xployt.model.Project;
 import com.xployt.model.ProjectTeam;
 import com.xployt.model.PublicUser;
-import com.xployt.model.User;
 import com.xployt.util.ContextManager;
 import com.xployt.util.CustomLogger;
 
 import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -20,7 +18,7 @@ import java.util.logging.Logger;
 public class ProjectTeamDAO {
     private final Logger logger = CustomLogger.getLogger();
 
-    public ProjectTeam getProjectTeam(String projectId) throws ServletException {
+    public ProjectTeam getProjectTeam(String projectId) throws SQLException {
         logger.info("ProjectTeamDAO: executing getProjectTeam");
         ProjectTeam projectTeam = new ProjectTeam();
         Project project = new Project();
@@ -41,26 +39,26 @@ public class ProjectTeamDAO {
         return projectTeam;
     }
 
-    private PublicUser retrieveAndMapUser(Connection conn, String userId) throws ServletException {
-        String sql = "SELECT * FROM Users WHERE id = ?";
+    private PublicUser retrieveAndMapUser(Connection conn, String userId) throws SQLException {
+        String sql = "SELECT * FROM Users WHERE userId = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, userId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 return new PublicUser(
-                        rs.getString("id"),
-                        rs.getString("username"),
+                        rs.getString("userId"),
+                        rs.getString("name"),
                         rs.getString("email")
                 );
             }
         } catch (SQLException e) {
             logger.severe("ProjectTeamDAO: Error retrieving user data: " + e.getMessage());
-            throw new ServletException("Error retrieving user data", e);
+            throw new SQLException("Error retrieving user data", e);
         }
         return null;
     }
 
-    private List<PublicUser> getProjectHackers(Connection conn, String projectId) throws ServletException {
+    private List<PublicUser> getProjectHackers(Connection conn, String projectId) throws SQLException {
         List<PublicUser> hackers = new ArrayList<>();
         String sql = "SELECT hackerId FROM ProjectHackers WHERE projectId = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -75,12 +73,12 @@ public class ProjectTeamDAO {
             }
         } catch (SQLException e) {
             logger.severe("ProjectTeamDAO: Error retrieving hacker data: " + e.getMessage());
-            throw new ServletException("Error retrieving hacker data", e);
+            throw new SQLException("Error retrieving hacker data", e);
         }
         return hackers;
     }
 
-    public List<PublicUser> getProjectValidators(Connection conn, String projectId) throws ServletException {
+    public List<PublicUser> getProjectValidators(Connection conn, String projectId) throws SQLException {
         List<PublicUser> validators = new ArrayList<>();
         String sql = "SELECT validatorId FROM ProjectValidators WHERE projectId = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -95,7 +93,7 @@ public class ProjectTeamDAO {
             }
         } catch (SQLException e) {
             logger.severe("ProjectTeamDAO: Error retrieving validator data: " + e.getMessage());
-            throw new ServletException("Error retrieving validator data", e);
+            throw new SQLException("Error retrieving validator data", e);
         }
         return validators;
     }
