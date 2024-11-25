@@ -1,13 +1,14 @@
-package com.xployt.service;
+package com.xployt.service.common;
 
 import java.sql.SQLException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.xployt.dao.DiscussionDAO;
+import com.xployt.dao.common.DiscussionDAO;
 import com.xployt.model.Discussion;
 import com.xployt.model.GenericResponse;
+import com.xployt.model.Message;
 import com.xployt.util.CustomLogger;
 
 public class DiscussionService {
@@ -32,4 +33,28 @@ public class DiscussionService {
         }
         return new GenericResponse(null, false, "Failed to create discussion", null);
     }
-} 
+
+    public GenericResponse updateDiscussion(Discussion discussion) throws SQLException {
+        logger.log(Level.INFO, "Updating discussion: {0}", discussion.getId());
+        discussionDAO.updateDiscussion(discussion);
+        return new GenericResponse(discussion, true, null, null);
+    }
+
+    public GenericResponse deleteDiscussion(String discussionId) throws SQLException {
+        logger.log(Level.INFO, "Deleting discussion: {0}", discussionId);
+        discussionDAO.deleteDiscussion(discussionId);
+        return new GenericResponse(null, true, null, null);
+    }
+
+    public GenericResponse sendMessage(Message message) throws SQLException {
+        logger.log(Level.INFO, "Sending message: {0}", message.getContent());
+        discussionDAO.sendMessage(message);
+        return new GenericResponse(message, true, null, null);
+    }
+
+    public GenericResponse fetchDiscussionById(String discussionId) throws SQLException {
+        logger.log(Level.INFO, "Fetching discussion by ID: {0}", discussionId);
+        Discussion discussion = discussionDAO.getDiscussionById(discussionId);
+        return new GenericResponse(discussion, true, null, null);
+    }
+}

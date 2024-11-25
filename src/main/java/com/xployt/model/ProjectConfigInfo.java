@@ -1,17 +1,19 @@
 package com.xployt.model;
 
-public class Project {
-
-  private String clientId;
-  private String projectLeadId;
+public class ProjectConfigInfo {
   private String title;
   private String description;
   private String startDate;
   private String endDate;
   private String url;
   private String technicalStack;
+  private String status;
 
-  // Getters and setters
+  private String clientId;
+  private String clientName;
+  private String clientEmail;
+  private String clientUsername;
+
   public String getClientId() {
     return clientId;
   }
@@ -19,10 +21,6 @@ public class Project {
   public void setClientId(String clientId) {
     this.clientId = clientId;
   }
-
-  public String getProjectLeadId() { return projectLeadId; }
-
-  public void setProjectLeadId(String projectLeadId) { this.projectLeadId = projectLeadId; }
 
   public String getTitle() {
     return title;
@@ -70,5 +68,37 @@ public class Project {
 
   public void setTechnicalStack(String technicalStack) {
     this.technicalStack = technicalStack;
+  }
+
+  public String getClientName() {
+    return clientName;
+  }
+
+  public void setClientName(String clientName) {
+    this.clientName = clientName;
+  }
+
+  public String getClientEmail() {
+    return clientEmail;
+  }
+
+  public void setClientEmail(String clientEmail) {
+    this.clientEmail = clientEmail;
+  }
+
+  public String getClientUsername() {
+    return clientUsername;
+  }
+
+  public void setClientUsername(String clientUsername) {
+    this.clientUsername = clientUsername;
+  }
+
+  public String getStatus() {
+    return status;
+  }
+
+  public void setStatus(String status) {
+    this.status = status;
   }
 }

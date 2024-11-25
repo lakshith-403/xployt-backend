@@ -1,5 +1,6 @@
-package com.xployt.dao;
+package com.xployt.dao.common;
 
+import com.xployt.model.Project;
 import com.xployt.model.ProjectBrief;
 import com.xployt.util.ContextManager;
 import com.xployt.util.CustomLogger;
@@ -51,4 +52,35 @@ public class ProjectDAO {
         }
         return projects;
     }
+
+    public Project getProject(String projectId) {
+    logger.info("ProjectDAO: Inside getProject");
+    Project project = null;
+    String sql = "SELECT * FROM Projects WHERE projectId = ?";
+
+    ServletContext servletContext = ContextManager.getContext("DBConnection");
+    Connection conn = (Connection) servletContext.getAttribute("DBConnection");
+    logger.info("ProjectDAO: Connection established");
+
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+        stmt.setString(1, projectId);
+        ResultSet rs = stmt.executeQuery();
+        logger.info("ProjectDAO: Fetching project");
+        if (rs.next()) {
+            project = new Project();
+            project.setClientId(rs.getString("clientId"));
+            project.setProjectLeadId(rs.getString("leadId"));
+            project.setTitle(rs.getString("title"));
+            project.setDescription(rs.getString("description"));
+            project.setStartDate(rs.getString("startDate"));
+            project.setEndDate(rs.getString("endDate"));
+            project.setUrl(rs.getString("url"));
+            project.setTechnicalStack(rs.getString("technicalStack"));
+        }
+        logger.info("ProjectDAO: Project fetched successfully");
+    } catch (SQLException e) {
+        logger.severe("ProjectDAO: Error fetching project: " + e.getMessage());
+    }
+    return project;
+}
 }

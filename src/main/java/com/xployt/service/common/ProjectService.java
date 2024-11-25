@@ -1,6 +1,6 @@
 package com.xployt.service.common;
 
-import com.xployt.dao.ProjectDAO;
+import com.xployt.dao.common.ProjectDAO;
 import com.xployt.model.GenericResponse;
 import com.xployt.model.ProjectBrief;
 import com.xployt.util.CustomLogger;
