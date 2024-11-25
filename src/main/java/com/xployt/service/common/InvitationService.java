@@ -34,4 +34,13 @@ public class InvitationService {
         }
         return new GenericResponse(null, false, "Failed to create invitation", null);
     }
+
+    public GenericResponse acceptInvitation(Invitation invitation) throws SQLException {
+        logger.info("InvitationService: Accepting invitation for user " + invitation.getHackerId());
+        Invitation acceptedInvitation = invitationDAO.acceptInvitation(invitation);
+        if(acceptedInvitation != null) {
+            return new GenericResponse(invitation, true, null, null);
+        }
+        return new GenericResponse(null, false, "Failed to accept invitation", null);
+    }
 }

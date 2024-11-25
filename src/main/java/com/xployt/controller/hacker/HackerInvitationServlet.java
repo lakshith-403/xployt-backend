@@ -10,8 +10,12 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.Map;
 import java.util.logging.Logger;
+
+import com.google.gson.Gson;
 import com.xployt.util.CustomLogger;
 
 @WebServlet("/api/invitations/hacker/*")
@@ -54,13 +58,37 @@ public class HackerInvitationServlet extends HttpServlet {
         response.getWriter().write(jsonResponse);
     }
 
+    private Map<String, Object> parseRequestBody(HttpServletRequest request) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader reader = request.getReader()) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+        }
+        String requestBody = sb.toString();
+        Gson gson = new Gson();
+        return gson.fromJson(requestBody, Map.class);
+    }
+
+    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         logger.info("Creating Invitation");
 
-        String hackerId = request.getParameter("hackerId");
-        String projectId = request.getParameter("projectId");
+        Map<String, Object> jsonObject;
+        try {
+            jsonObject = parseRequestBody(request);
+        } catch (Exception e) {
+            logger.severe("Error parsing JSON: " + e.getMessage());
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid JSON format");
+            return;
+        }
 
-        if (hackerId == null || projectId == null ) {
+        String hackerId = jsonObject.get("hackerId") != null ? String.valueOf(jsonObject.get("hackerId")).replace(".0", "") : null;
+        String projectId = jsonObject.get("projectId") != null ? String.valueOf(jsonObject.get("projectId")).replace(".0", "") : null;
+
+        if (hackerId == null || projectId == null) {
+            logger.severe("Missing parameters: hackerId or projectId is null");
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing parameters");
             return;
         }
@@ -74,6 +102,43 @@ public class HackerInvitationServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_CREATED);
         } catch (Exception e) {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error creating invitation");
+        }
+
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(JsonUtil.toJson(invitation));
+    }
+
+    @Override
+    protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        logger.info("Accepting Invitation");
+
+        Map<String, Object> jsonObject;
+        try {
+            jsonObject = parseRequestBody(request);
+        } catch (Exception e) {
+            logger.severe("Error parsing JSON: " + e.getMessage());
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid JSON format");
+            return;
+        }
+
+        String hackerId = jsonObject.get("hackerId") != null ? String.valueOf(jsonObject.get("hackerId")).replace(".0", "") : null;
+        String projectId = jsonObject.get("projectId") != null ? String.valueOf(jsonObject.get("projectId")).replace(".0", "") : null;
+
+        if (hackerId == null || projectId == null) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing parameters");
+            return;
+        }
+
+        Invitation invitation = new Invitation();
+        invitation.setHackerId(hackerId);
+        invitation.setProjectId(projectId);
+
+        try {
+            invitationService.acceptInvitation(invitation);
+            response.setStatus(HttpServletResponse.SC_OK);
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error accepting invitation");
         }
 
         response.setContentType("application/json");

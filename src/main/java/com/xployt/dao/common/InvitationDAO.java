@@ -30,15 +30,18 @@ public class InvitationDAO {
             ResultSet rs = stmt.executeQuery();
             logger.info("InvitationDAO: Fetching hacker's invitations");
             while (rs.next()) {
-                Invitation invitation = new Invitation(
-                        rs.getInt("hackerId"),
-                        rs.getInt("projectId"),
-                        rs.getString("InvitedAt")
-                );
-                invitations.add(invitation);
+                if(rs.getString("status").equals("Pending")) {
+                    Invitation invitation = new Invitation(
+                            rs.getInt("hackerId"),
+                            rs.getInt("projectId"),
+                            rs.getString("status"),
+                            rs.getString("InvitedAt")
+                    );
+                    invitations.add(invitation);
+                }
             }
             logger.info("InvitationDAO: Hackers of a project fetched Successfully");
-            logger.info("InvitationDAO: Number of hackers fetched " + invitations.size());
+            logger.info("InvitationDAO: Number of invitations fetched " + invitations.size());
         } catch (SQLException e) {
             logger.severe("InvitationDAO: Error fetching hackers" + e.getMessage());
             throw e;
@@ -58,10 +61,32 @@ public class InvitationDAO {
         try (PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, invitation.getHackerId());
             stmt.setInt(2, invitation.getProjectId());
+//            stmt.setString(3, invitation.getStatus());
             stmt.executeUpdate();
             logger.info("InvitationDAO: Invitation created successfully");
         } catch (SQLException e) {
             logger.severe("InvitationDAO: Error creating invitation" + e.getMessage());
+            throw e;
+        }
+
+        return invitation;
+    }
+
+    public Invitation acceptInvitation(Invitation invitation) throws SQLException{
+        logger.info("InvitationDAO: accepting invitation");
+
+        String sql = "UPDATE Invitations SET status = 'Accepted' WHERE hackerId = ? AND projectId = ?";
+
+        ServletContext servletContext = ContextManager.getContext("DBConnection");
+        Connection conn = (Connection) servletContext.getAttribute("DBConnection");
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+            stmt.setInt(1, invitation.getHackerId());
+            stmt.setInt(2, invitation.getProjectId());
+            stmt.executeUpdate();
+            logger.info("InvitationDAO: Invitation accepted successfully");
+        } catch (SQLException e) {
+            logger.severe("InvitationDAO: Error accepting invitation" + e.getMessage());
             throw e;
         }
 
