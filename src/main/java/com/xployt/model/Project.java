@@ -3,6 +3,7 @@ package com.xployt.model;
 public class Project {
 
   private String clientId;
+  private String projectLeadId;
   private String title;
   private String description;
   private String startDate;
@@ -18,6 +19,10 @@ public class Project {
   public void setClientId(String clientId) {
     this.clientId = clientId;
   }
+
+  public String getProjectLeadId() { return projectLeadId; }
+
+  public void setProjectLeadId(String projectLeadId) { this.projectLeadId = projectLeadId; }
 
   public String getTitle() {
     return title;
