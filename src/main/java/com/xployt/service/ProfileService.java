@@ -17,7 +17,7 @@ public class ProfileService {
 
     public Profile getProfile(int userId) throws Exception {
         try {
-            logger.info("ProfileService: Fetching profile for userId: " + userId);
+            logger.info("Profile Service: Fetching profile for userId: " + userId);
             return profileDAO.getProfile(userId);
             
         } catch (Exception e) {
