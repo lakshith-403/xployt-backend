@@ -32,8 +32,8 @@ public class InvitationDAO {
             while (rs.next()) {
                 if(rs.getString("status").equals("Pending")) {
                     Invitation invitation = new Invitation(
-                            rs.getInt("hackerId"),
                             rs.getInt("projectId"),
+                            rs.getInt("hackerId"),
                             rs.getString("status"),
                             rs.getString("InvitedAt")
                     );
