@@ -16,6 +16,7 @@ import javax.servlet.http.HttpSession;
 import com.google.gson.Gson;
 import com.xployt.dao.common.UserDAO;
 import com.xployt.model.User;
+import com.xployt.util.AuthUtil;
 import com.xployt.util.JsonUtil;
 import com.xployt.util.PasswordUtil;
 
@@ -40,8 +41,8 @@ public class AuthServlet extends HttpServlet {
         UserDAO userDAO = new UserDAO();
         User user = new User(null, email, PasswordUtil.hashPassword(password), name, role, null, null);
         try {
-            userDAO.createUser(user);
-            response.getWriter().write("User created successfully");
+            User createdUser = userDAO.createUser(user);
+            response.getWriter().write(gson.toJson(createdUser));
         } catch (SQLException e) {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error creating user");
         }
@@ -68,7 +69,7 @@ public class AuthServlet extends HttpServlet {
             HttpSession session = request.getSession();
             session.setAttribute("userId", user.getUserId());
             sessions.put(session.getId(), session);
-            response.getWriter().write("Login successful");
+            response.getWriter().write(gson.toJson(user));
         } else {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid credentials");
         }
@@ -85,9 +86,10 @@ public class AuthServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        HttpSession session = request.getSession(false); // Get existing session
-        if (session != null && session.getAttribute("userId") != null) {
-            response.getWriter().write("This is a protected resource for " + session.getAttribute("user"));
+        User signedInUser = AuthUtil.getSignedInUser(request);
+        if (signedInUser != null) {
+            Gson gson = JsonUtil.useGson();
+            response.getWriter().write(gson.toJson(signedInUser));
         } else {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "You must log in first");
         }
