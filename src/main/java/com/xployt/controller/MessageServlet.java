@@ -6,10 +6,12 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
@@ -17,7 +19,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.Part;
 
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
@@ -58,7 +59,6 @@ public class MessageServlet extends HttpServlet {
         ServletFileUpload upload = new ServletFileUpload(factory);
         
         try {
-            Part part = request.getPart("files");
             List<FileItem> items = upload.parseRequest(request);
             String messageJson = null;
             List<File> uploadedFiles = new ArrayList<>();
@@ -73,7 +73,7 @@ public class MessageServlet extends HttpServlet {
                     
                     file.getParentFile().mkdirs();
 
-                    try (InputStream inputStream = part.getInputStream()) {
+                    try (InputStream inputStream = item.getInputStream()) {
                         Path outputPath = file.toPath();
                         Files.copy(inputStream, outputPath, StandardCopyOption.REPLACE_EXISTING);
                     } catch (IOException e) {
@@ -102,6 +102,60 @@ public class MessageServlet extends HttpServlet {
         } catch (Exception e) {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error processing request");
             logger.log(Level.SEVERE, "Error processing request: {0}", e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    @SuppressWarnings("CallToPrintStackTrace")
+    protected void doPut(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        logger.info("Updating message");
+
+        String messageId = request.getPathInfo().substring(1);
+        String messageJson = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+
+        if (messageId == null || messageId.isEmpty()) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Message ID is required");
+            return;
+        }
+
+        Gson gson = JsonUtil.useGson();
+        Message message = gson.fromJson(messageJson, Message.class);
+
+        try {
+            GenericResponse result = discussionService.updateMessage(message);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().write(JsonUtil.useGson().toJson(result));
+        } catch (SQLException e) {
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error updating message");
+            logger.log(Level.SEVERE, "Error updating message: {0}", e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    @SuppressWarnings("CallToPrintStackTrace")
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        logger.info("Deleting message");
+
+        String messageId = request.getPathInfo().substring(1);
+
+        if (messageId == null || messageId.isEmpty()) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Message ID is required");
+            return;
+        }
+
+        try {
+            GenericResponse result = discussionService.deleteMessage(messageId);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().write(JsonUtil.useGson().toJson(result));
+        } catch (SQLException e) {
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error deleting message");
+            logger.log(Level.SEVERE, "Error deleting message: {0}", e.getMessage());
             e.printStackTrace();
         }
     }
