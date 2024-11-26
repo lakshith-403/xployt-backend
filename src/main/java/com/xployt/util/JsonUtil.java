@@ -4,6 +4,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.sql.Timestamp;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Map;
 
 import com.google.gson.Gson;
@@ -147,6 +148,7 @@ public class JsonUtil {
     public static Gson useGson() {
         GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Timestamp.class, new TimestampAdapter());
+        builder.registerTypeAdapter(Date.class, new DateAdapter());
         return builder.create();
     }
 }
