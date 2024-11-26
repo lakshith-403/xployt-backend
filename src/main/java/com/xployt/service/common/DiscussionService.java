@@ -57,4 +57,22 @@ public class DiscussionService {
         Discussion discussion = discussionDAO.getDiscussionById(discussionId);
         return new GenericResponse(discussion, true, null, null);
     }
+
+    public GenericResponse updateMessage(Message message) throws SQLException {
+        logger.log(Level.INFO, "Updating message: {0}", message.getId());
+        Message updatedMessage = discussionDAO.updateMessage(message);
+        if (updatedMessage != null) {
+            return new GenericResponse(updatedMessage, true, null, null);
+        }
+        return new GenericResponse(null, false, "Failed to update message", null);
+    }
+
+    public GenericResponse deleteMessage(String messageId) throws SQLException {
+        logger.log(Level.INFO, "Deleting message: {0}", messageId);
+        boolean isDeleted = discussionDAO.deleteMessage(messageId);
+        if (isDeleted) {
+            return new GenericResponse(null, true, null, null);
+        }
+        return new GenericResponse(null, false, "Failed to delete message", null);
+    }
 }

@@ -188,10 +188,9 @@ public class DiscussionDAO {
             stmt.setTimestamp(5, new Timestamp(message.getTimestamp().getTime()));
             stmt.setString(6, message.getType());
 
-            int affectedRows = stmt.executeUpdate();
-            if (affectedRows > 0) {
-                insertAttachments(conn, message.getId(), message.getAttachments());
-            }
+            stmt.executeUpdate();
+
+            insertAttachments(conn, message.getId(), message.getAttachments());
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error sending message: {0}", e.getMessage());
             throw e;
@@ -286,17 +285,18 @@ public class DiscussionDAO {
 
     private void insertAttachments(Connection conn, String messageId, List<Attachment> attachments) throws SQLException {
         String sqlInsertMessageAttachments = "INSERT INTO MessageAttachments (message_id, attachment_id) VALUES (?, ?)";
-        String sqlUpdateAttachment = "UPDATE Attachment SET message_id = ? WHERE id = ?";
+        String sqlInsertAttachment = "INSERT INTO Attachment (id, name, url) VALUES (?, ?, ?)";
         try (PreparedStatement stmtInsert = conn.prepareStatement(sqlInsertMessageAttachments);
-             PreparedStatement stmtUpdate = conn.prepareStatement(sqlUpdateAttachment)) {
+             PreparedStatement stmtInsertAttachment = conn.prepareStatement(sqlInsertAttachment)) {
             for (Attachment attachment : attachments) {
+                stmtInsertAttachment.setString(1, attachment.getId());
+                stmtInsertAttachment.setString(2, attachment.getName());
+                stmtInsertAttachment.setString(3, attachment.getUrl());
+                stmtInsertAttachment.executeUpdate();
+
                 stmtInsert.setString(1, messageId);
                 stmtInsert.setString(2, attachment.getId());
                 stmtInsert.executeUpdate();
-
-                stmtUpdate.setString(1, messageId);
-                stmtUpdate.setString(2, attachment.getId());
-                stmtUpdate.executeUpdate();
             }
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error inserting or updating attachments: {0}", e.getMessage());
@@ -319,5 +319,66 @@ public class DiscussionDAO {
             throw e;
         }
         return null;
+    }
+
+    public Message updateMessage(Message message) throws SQLException {
+        String sql = "UPDATE Message SET content = ? WHERE id = ?";
+        ServletContext servletContext = ContextManager.getContext("DBConnection");
+        Connection conn = (Connection) servletContext.getAttribute("DBConnection");
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, message.getContent());
+            stmt.setString(2, message.getId());
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows == 0) {
+                throw new SQLException("Updating message failed, no rows affected.");
+            }
+            return message;
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error updating message: {0}", e.getMessage());
+            throw e;
+        }
+    }
+
+    public boolean deleteMessage(String messageId) throws SQLException {
+        String sqlDeleteMessage = "DELETE FROM Message WHERE id = ?";
+        String sqlDeleteMessageAttachments = "DELETE FROM MessageAttachments WHERE message_id = ?";
+        String sqlDeleteAttachments = "DELETE FROM Attachment WHERE id IN (SELECT attachment_id FROM MessageAttachments WHERE message_id = ?)";
+
+        ServletContext servletContext = ContextManager.getContext("DBConnection");
+        Connection conn = (Connection) servletContext.getAttribute("DBConnection");
+
+        try {
+            // Start a transaction
+            conn.setAutoCommit(false);
+
+            // Delete from MessageAttachments first
+            try (PreparedStatement stmtDeleteMessageAttachments = conn.prepareStatement(sqlDeleteMessageAttachments)) {
+                stmtDeleteMessageAttachments.setString(1, messageId);
+                stmtDeleteMessageAttachments.executeUpdate();
+            }
+
+            // Delete from Attachment
+            try (PreparedStatement stmtDeleteAttachments = conn.prepareStatement(sqlDeleteAttachments)) {
+                stmtDeleteAttachments.setString(1, messageId);
+                stmtDeleteAttachments.executeUpdate();
+            }
+
+            // Finally, delete the message
+            try (PreparedStatement stmtDeleteMessage = conn.prepareStatement(sqlDeleteMessage)) {
+                stmtDeleteMessage.setString(1, messageId);
+                stmtDeleteMessage.executeUpdate();
+            }
+
+            // Commit the transaction
+            conn.commit();
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error deleting message and its attachments: {0}", e.getMessage());
+            // Rollback in case of an error
+            conn.rollback();
+            throw e;
+        } finally {
+            conn.setAutoCommit(true); // Reset auto-commit to true
+        }
+        return true;
     }
 }
