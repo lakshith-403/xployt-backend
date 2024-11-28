@@ -4,6 +4,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.logging.Logger;
 import com.xployt.util.CustomLogger;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,6 +15,7 @@ import com.xployt.util.ResponseUtil;
 import com.xployt.model.ProjectConfigInfo;
 import com.xployt.model.ProjectConfig;
 import com.xployt.dao.lead.ProjectConfigDAO;
+import com.xployt.dao.common.ProjectDAO;
 
 public class ProjectService {
 
@@ -66,7 +68,15 @@ public class ProjectService {
       return;
     }
 
+    ProjectDAO projectDAO = new ProjectDAO();
     ProjectConfigDAO projectConfigDAO = new ProjectConfigDAO();
-    projectConfigDAO.updateProjectConfig(projectConfig);
+    try {
+      projectConfigDAO.updateProjectConfig(projectConfig);
+      projectDAO.updateProjectStatus(projectConfig.getProjectId(), "Active");
+    } catch (SQLException e) {
+      logger.severe("SQL Error in updateProjectConfigInfo: " + e.getMessage());
+      ResponseUtil.writeResponse(response, JsonUtil.toJson(new GenericResponse(null, false, e.getMessage(), null)));
+      return;
+    }
   }
 }

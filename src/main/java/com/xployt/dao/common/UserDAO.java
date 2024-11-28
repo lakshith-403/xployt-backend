@@ -15,11 +15,12 @@ import com.xployt.util.CustomLogger;
 
 public class UserDAO {
     private static final Logger logger = CustomLogger.getLogger();
-    
+
     public User createUser(User user) throws SQLException {
         String sql = "INSERT INTO Users (email, passwordHash, name, role) VALUES (?, ?, ?, ?)";
-        
+
         ServletContext servletContext = ContextManager.getContext("DBConnection");
+        @SuppressWarnings("resource")
         Connection conn = (Connection) servletContext.getAttribute("DBConnection");
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -63,14 +64,13 @@ public class UserDAO {
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 return new User(
-                    rs.getString("userId"),
-                    rs.getString("email"),
-                    rs.getString("passwordHash"),
-                    rs.getString("name"),
-                    rs.getString("role"),
-                    rs.getString("createdAt"),
-                    rs.getString("updatedAt")
-                );
+                        rs.getString("userId"),
+                        rs.getString("email"),
+                        rs.getString("passwordHash"),
+                        rs.getString("name"),
+                        rs.getString("role"),
+                        rs.getString("createdAt"),
+                        rs.getString("updatedAt"));
             }
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error fetching user by ID: {0}", e.getMessage());
@@ -89,14 +89,13 @@ public class UserDAO {
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 return new User(
-                    rs.getString("userId"),
-                    rs.getString("email"),
-                    rs.getString("passwordHash"),
-                    rs.getString("name"),
-                    rs.getString("role"),
-                    rs.getString("createdAt"),
-                    rs.getString("updatedAt")
-                );
+                        rs.getString("userId"),
+                        rs.getString("email"),
+                        rs.getString("passwordHash"),
+                        rs.getString("name"),
+                        rs.getString("role"),
+                        rs.getString("createdAt"),
+                        rs.getString("updatedAt"));
             }
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error fetching user by email: {0}", e.getMessage());

@@ -116,4 +116,17 @@ public class ProjectDAO {
         }
         return project;
     }
+
+    public void updateProjectStatus(String projectId, String status) throws SQLException {
+        String sql = "UPDATE Projects SET status = ? WHERE projectId = ?";
+        ServletContext servletContext = ContextManager.getContext("DBConnection");
+        Connection conn = (Connection) servletContext.getAttribute("DBConnection");
+        logger.info("ProjectDAO: Connection established");
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, status);
+            stmt.setString(2, projectId);
+            stmt.executeUpdate();
+        }
+    }
 }

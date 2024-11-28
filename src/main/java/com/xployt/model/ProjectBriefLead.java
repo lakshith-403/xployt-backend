@@ -1,17 +1,17 @@
 package com.xployt.model;
 
-public class ProjectBrief {
+public class ProjectBriefLead {
     private int id;
     private String status;
     private String title;
-    private String leadId;
+    private String clientId;
     private int pendingReports;
 
-    public ProjectBrief(int id, String status, String title, String leadId, int pendingReports) {
+    public ProjectBriefLead(int id, String status, String title, String clientId, int pendingReports) {
         this.id = id;
         this.status = status;
         this.title = title;
-        this.leadId = leadId;
+        this.clientId = clientId;
         this.pendingReports = pendingReports;
     }
 
@@ -28,8 +28,8 @@ public class ProjectBrief {
         return title;
     }
 
-    public String getLeadId() {
-        return leadId;
+    public String getClientId() {
+        return clientId;
     }
 
     public int getPendingReports() {
