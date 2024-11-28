@@ -33,8 +33,6 @@ public class UserDAO {
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error creating user: {0}", e.getMessage());
             throw e;
-        } finally {
-            conn.close();
         }
     }
 
@@ -52,8 +50,6 @@ public class UserDAO {
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error deleting user: {0}", e.getMessage());
             throw e;
-        } finally {
-            conn.close();
         }
     }
 
@@ -79,8 +75,6 @@ public class UserDAO {
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error fetching user by ID: {0}", e.getMessage());
             throw e;
-        } finally {
-            conn.close();
         }
         return null;
     }
@@ -107,8 +101,6 @@ public class UserDAO {
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error fetching user by email: {0}", e.getMessage());
             throw e;
-        } finally {
-            conn.close();
         }
         return null;
     }
