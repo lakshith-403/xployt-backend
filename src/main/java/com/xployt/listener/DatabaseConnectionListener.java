@@ -18,9 +18,9 @@ import com.xployt.util.CustomLogger;
 @WebListener
 public class DatabaseConnectionListener implements ServletContextListener {
   private static final Logger logger = CustomLogger.getLogger();
-  private static final String URL = "jdbc:mysql://localhost/xployt";
-  private static final String USER = "root";
-  private static final String PASSWORD = "root";
+  private static final String URL = "jdbc:mysql://xployt-xployt.b.aivencloud.com:17847/xployt?ssl-mode=REQUIRED";
+  private static final String USER = "avnadmin";
+  private static final String PASSWORD = "AVNS_5G4ol30FyzBOm-NNf6x";
   private Connection connection;
 
   @Override
