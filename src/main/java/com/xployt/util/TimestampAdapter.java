@@ -1,18 +1,15 @@
 package com.xployt.util;
 
+import java.lang.reflect.Type;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-import com.google.gson.JsonDeserializationContext;
-// import com.google.gson.Gson;
-// import com.google.gson.GsonBuilder;
-
-import java.lang.reflect.Type;
-import java.sql.Timestamp;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 public class TimestampAdapter implements JsonSerializer<Timestamp>, JsonDeserializer<Timestamp> {
 
