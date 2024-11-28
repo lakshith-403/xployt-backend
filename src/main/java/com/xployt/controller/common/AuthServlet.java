@@ -108,7 +108,11 @@ public class AuthServlet extends HttpServlet {
         if (session != null) {
             session.invalidate();
         }
-        response.getWriter().write("Logout successful");
+
+        Gson gson = JsonUtil.useGson();
+        Map<String, Object> responseMap = new HashMap<>();
+        responseMap.put("message", "Logout successful");
+        response.getWriter().write(gson.toJson(responseMap));
     }
 
     @Override
