@@ -117,7 +117,17 @@ public class AuthServlet extends HttpServlet {
         User signedInUser = AuthUtil.getSignedInUser(request);
         if (signedInUser != null) {
             Gson gson = JsonUtil.useGson();
-            response.getWriter().write(gson.toJson(signedInUser));
+            Map<String, Object> userDataMap = new HashMap<>();
+            userDataMap.put("id", signedInUser.getUserId());
+            userDataMap.put("username", signedInUser.getEmail());
+            userDataMap.put("name", signedInUser.getName());
+            userDataMap.put("email", signedInUser.getEmail());
+            userDataMap.put("type", signedInUser.getRole());
+            userDataMap.put("avatar", "");
+
+            Map<String, Object> responseMap = new HashMap<>();
+            responseMap.put("data", userDataMap);
+            response.getWriter().write(gson.toJson(responseMap));
         } else {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "You must log in first");
         }
