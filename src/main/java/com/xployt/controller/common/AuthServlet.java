@@ -44,7 +44,18 @@ public class AuthServlet extends HttpServlet {
         User user = new User(null, email, PasswordUtil.hashPassword(password), name, role, null, null);
         try {
             User createdUser = userDAO.createUser(user);
-            response.getWriter().write(gson.toJson(createdUser));
+
+            Map<String, Object> userDataMap = new HashMap<>();
+            userDataMap.put("id", createdUser.getUserId());
+            userDataMap.put("username", createdUser.getEmail());
+            userDataMap.put("name", createdUser.getName());
+            userDataMap.put("email", createdUser.getEmail());
+            userDataMap.put("type", createdUser.getRole());
+            userDataMap.put("avatar", "");
+            Map<String, Object> responseMap = new HashMap<>();
+            responseMap.put("data", userDataMap);
+            response.getWriter().write(gson.toJson(responseMap));
+
         } catch (SQLException e) {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error creating user");
         }
@@ -73,7 +84,18 @@ public class AuthServlet extends HttpServlet {
             HttpSession session = request.getSession();
             session.setAttribute("userId", user.getUserId());
             sessions.put(session.getId(), session);
-            response.getWriter().write(gson.toJson(user));
+
+            Map<String, Object> userDataMap = new HashMap<>();
+            userDataMap.put("id", user.getUserId());
+            userDataMap.put("username", user.getEmail());
+            userDataMap.put("name", user.getName());
+            userDataMap.put("email", user.getEmail());
+            userDataMap.put("type", user.getRole());
+            userDataMap.put("avatar", "");
+
+            Map<String, Object> responseMap = new HashMap<>();
+            responseMap.put("data", userDataMap);
+            response.getWriter().write(gson.toJson(responseMap));
         } else {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid credentials");
         }

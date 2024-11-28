@@ -1,11 +1,5 @@
 package com.xployt.listener;
 
-import com.xployt.util.ContextManager;
-import com.xployt.util.CustomLogger;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
-import javax.servlet.annotation.WebListener;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -13,12 +7,20 @@ import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+import javax.servlet.annotation.WebListener;
+
+import com.xployt.util.ContextManager;
+import com.xployt.util.CustomLogger;
+
 @WebListener
 public class DatabaseConnectionListener implements ServletContextListener {
   private static final Logger logger = CustomLogger.getLogger();
-  private static final String URL = "jdbc:mysql://xployt-xployt.b.aivencloud.com:17847/xployt?ssl-mode=REQUIRED";
-  private static final String USER = "avnadmin";
-  private static final String PASSWORD = "AVNS_5G4ol30FyzBOm-NNf6x";
+  private static final String URL = "jdbc:mysql://localhost/xployt";
+  private static final String USER = "root";
+  private static final String PASSWORD = "root";
   private Connection connection;
 
   @Override
