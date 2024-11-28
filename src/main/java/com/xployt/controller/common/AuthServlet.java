@@ -29,7 +29,9 @@ public class AuthServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    @SuppressWarnings("unchecked")
+    protected void doPut(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         String requestBody = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
         Gson gson = JsonUtil.useGson();
         Map<String, String> userData = gson.fromJson(requestBody, Map.class);
@@ -49,7 +51,9 @@ public class AuthServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    @SuppressWarnings("unchecked")
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         String requestBody = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
         Gson gson = JsonUtil.useGson();
         Map<String, String> credentials = gson.fromJson(requestBody, Map.class);
@@ -76,7 +80,8 @@ public class AuthServlet extends HttpServlet {
     }
 
     @Override
-    protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         if (session != null) {
             session.invalidate();
@@ -85,7 +90,8 @@ public class AuthServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         User signedInUser = AuthUtil.getSignedInUser(request);
         if (signedInUser != null) {
             Gson gson = JsonUtil.useGson();
