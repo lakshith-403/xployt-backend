@@ -26,9 +26,9 @@ public class DiscussionDAO {
     public List<Discussion> getDiscussionsByProjectId(String projectId) throws SQLException {
         List<Discussion> discussions = new ArrayList<>();
         String sql = "SELECT d.*, u.* FROM Discussion d " +
-                     "LEFT JOIN DiscussionParticipants dp ON d.id = dp.discussion_id " +
-                     "LEFT JOIN Users u ON dp.user_id = u.userId " +
-                     "WHERE d.project_id = ?";
+                "LEFT JOIN DiscussionParticipants dp ON d.id = dp.discussion_id " +
+                "LEFT JOIN Users u ON dp.user_id = u.userId " +
+                "WHERE d.project_id = ?";
 
         ServletContext servletContext = ContextManager.getContext("DBConnection");
         Connection conn = (Connection) servletContext.getAttribute("DBConnection");
@@ -50,7 +50,7 @@ public class DiscussionDAO {
 
     public Discussion createDiscussion(Discussion discussion) throws SQLException {
         String sql = "INSERT INTO Discussion (id, title, project_id, created_at) VALUES (?, ?, ?, ?)";
-        
+
         ServletContext servletContext = ContextManager.getContext("DBConnection");
         Connection conn = (Connection) servletContext.getAttribute("DBConnection");
 
@@ -126,7 +126,8 @@ public class DiscussionDAO {
         }
     }
 
-    private void updateParticipants(Connection conn, String discussionId, List<PublicUser> participants) throws SQLException {
+    private void updateParticipants(Connection conn, String discussionId, List<PublicUser> participants)
+            throws SQLException {
         deleteParticipants(conn, discussionId);
         insertParticipants(conn, discussionId, participants);
     }
@@ -142,7 +143,8 @@ public class DiscussionDAO {
         }
     }
 
-    public void insertParticipants(Connection conn, String discussionId, List<PublicUser> participants) throws SQLException {
+    public void insertParticipants(Connection conn, String discussionId, List<PublicUser> participants)
+            throws SQLException {
         String sql = "INSERT INTO DiscussionParticipants (discussion_id, user_id) VALUES (?, ?)";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -199,29 +201,28 @@ public class DiscussionDAO {
 
     private Discussion mapResultSetToDiscussion(ResultSet rs, Connection conn) throws SQLException {
         return new Discussion(
-            rs.getString("id"),
-            rs.getString("title"),
-            getParticipantsForDiscussion(rs.getString("id"), conn),
-            rs.getTimestamp("created_at"),
-            rs.getString("project_id"),
-            getMessagesForDiscussion(rs.getString("id"), conn)
-        );
+                rs.getString("id"),
+                rs.getString("title"),
+                getParticipantsForDiscussion(rs.getString("id"), conn),
+                rs.getTimestamp("created_at"),
+                rs.getString("project_id"),
+                getMessagesForDiscussion(rs.getString("id"), conn));
     }
 
     private List<PublicUser> getParticipantsForDiscussion(String discussionId, Connection conn) throws SQLException {
         List<PublicUser> participants = new ArrayList<>();
         String sql = "SELECT u.* FROM Users u " +
-                     "JOIN DiscussionParticipants dp ON u.userId = dp.user_id " +
-                     "WHERE dp.discussion_id = ?";
+                "JOIN DiscussionParticipants dp ON u.userId = dp.user_id " +
+                "WHERE dp.discussion_id = ?";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, discussionId);
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                PublicUser user = new PublicUser(rs.getString("userId"), 
-                rs.getString("name"), 
-                rs.getString("email"));
+                PublicUser user = new PublicUser(rs.getString("userId"),
+                        rs.getString("name"),
+                        rs.getString("email"));
                 participants.add(user);
             }
         } catch (SQLException e) {
@@ -234,7 +235,7 @@ public class DiscussionDAO {
     private List<Message> getMessagesForDiscussion(String discussionId, Connection conn) throws SQLException {
         List<Message> messages = new ArrayList<>();
         String sql = "SELECT m.*, u.* FROM Message m JOIN Users u ON m.sender_id = u.userId " +
-                     "WHERE m.discussion_id = ?";
+                "WHERE m.discussion_id = ?";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, discussionId);
@@ -242,14 +243,13 @@ public class DiscussionDAO {
 
             while (rs.next()) {
                 Message message = new Message(
-                    rs.getString("id"),
-                    new PublicUser(rs.getString("userId"), rs.getString("name"), rs.getString("email")),
-                    rs.getString("content"),
-                    getAttachmentsForMessage(rs.getString("id"), conn),
-                    new java.util.Date(rs.getTimestamp("created_at").getTime()),
-                    rs.getString("type"), 
-                    discussionId
-                );
+                        rs.getString("id"),
+                        new PublicUser(rs.getString("userId"), rs.getString("name"), rs.getString("email")),
+                        rs.getString("content"),
+                        getAttachmentsForMessage(rs.getString("id"), conn),
+                        new java.util.Date(rs.getTimestamp("created_at").getTime()),
+                        rs.getString("type"),
+                        discussionId);
                 messages.add(message);
             }
         } catch (SQLException e) {
@@ -262,7 +262,7 @@ public class DiscussionDAO {
     private List<Attachment> getAttachmentsForMessage(String messageId, Connection conn) throws SQLException {
         List<Attachment> attachments = new ArrayList<>();
         String sql = "SELECT a.* FROM Attachment a JOIN MessageAttachments ma ON a.id = ma.attachment_id " +
-                     "WHERE ma.message_id = ?";
+                "WHERE ma.message_id = ?";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, messageId);
@@ -270,10 +270,9 @@ public class DiscussionDAO {
 
             while (rs.next()) {
                 Attachment attachment = new Attachment(
-                    rs.getString("id"),
-                    rs.getString("name"),
-                    rs.getString("url")
-                );
+                        rs.getString("id"),
+                        rs.getString("name"),
+                        rs.getString("url"));
                 attachments.add(attachment);
             }
         } catch (SQLException e) {
@@ -283,11 +282,12 @@ public class DiscussionDAO {
         return attachments;
     }
 
-    private void insertAttachments(Connection conn, String messageId, List<Attachment> attachments) throws SQLException {
+    private void insertAttachments(Connection conn, String messageId, List<Attachment> attachments)
+            throws SQLException {
         String sqlInsertMessageAttachments = "INSERT INTO MessageAttachments (message_id, attachment_id) VALUES (?, ?)";
         String sqlInsertAttachment = "INSERT INTO Attachment (id, name, url) VALUES (?, ?, ?)";
         try (PreparedStatement stmtInsert = conn.prepareStatement(sqlInsertMessageAttachments);
-             PreparedStatement stmtInsertAttachment = conn.prepareStatement(sqlInsertAttachment)) {
+                PreparedStatement stmtInsertAttachment = conn.prepareStatement(sqlInsertAttachment)) {
             for (Attachment attachment : attachments) {
                 stmtInsertAttachment.setString(1, attachment.getId());
                 stmtInsertAttachment.setString(2, attachment.getName());
@@ -324,6 +324,7 @@ public class DiscussionDAO {
     public Message updateMessage(Message message) throws SQLException {
         String sql = "UPDATE Message SET content = ? WHERE id = ?";
         ServletContext servletContext = ContextManager.getContext("DBConnection");
+        @SuppressWarnings("resource")
         Connection conn = (Connection) servletContext.getAttribute("DBConnection");
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, message.getContent());

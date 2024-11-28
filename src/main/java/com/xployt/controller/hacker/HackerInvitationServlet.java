@@ -30,7 +30,8 @@ public class HackerInvitationServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         logger.info("Servlet: Fetching project invitations");
         String pathInfo = request.getPathInfo();
         if (pathInfo == null || !pathInfo.startsWith("/")) {
@@ -58,6 +59,7 @@ public class HackerInvitationServlet extends HttpServlet {
         response.getWriter().write(jsonResponse);
     }
 
+    @SuppressWarnings("unchecked")
     private Map<String, Object> parseRequestBody(HttpServletRequest request) throws IOException {
         StringBuilder sb = new StringBuilder();
         try (BufferedReader reader = request.getReader()) {
@@ -72,7 +74,8 @@ public class HackerInvitationServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         logger.info("Creating Invitation");
 
         Map<String, Object> jsonObject;
@@ -84,8 +87,12 @@ public class HackerInvitationServlet extends HttpServlet {
             return;
         }
 
-        String hackerId = jsonObject.get("hackerId") != null ? String.valueOf(jsonObject.get("hackerId")).replace(".0", "") : null;
-        String projectId = jsonObject.get("projectId") != null ? String.valueOf(jsonObject.get("projectId")).replace(".0", "") : null;
+        String hackerId = jsonObject.get("hackerId") != null
+                ? String.valueOf(jsonObject.get("hackerId")).replace(".0", "")
+                : null;
+        String projectId = jsonObject.get("projectId") != null
+                ? String.valueOf(jsonObject.get("projectId")).replace(".0", "")
+                : null;
 
         if (hackerId == null || projectId == null) {
             logger.severe("Missing parameters: hackerId or projectId is null");
@@ -110,7 +117,8 @@ public class HackerInvitationServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPut(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         logger.info("Accepting Invitation");
 
         Map<String, Object> jsonObject;
@@ -122,8 +130,12 @@ public class HackerInvitationServlet extends HttpServlet {
             return;
         }
 
-        String hackerId = jsonObject.get("hackerId") != null ? String.valueOf(jsonObject.get("hackerId")).replace(".0", "") : null;
-        String projectId = jsonObject.get("projectId") != null ? String.valueOf(jsonObject.get("projectId")).replace(".0", "") : null;
+        String hackerId = jsonObject.get("hackerId") != null
+                ? String.valueOf(jsonObject.get("hackerId")).replace(".0", "")
+                : null;
+        String projectId = jsonObject.get("projectId") != null
+                ? String.valueOf(jsonObject.get("projectId")).replace(".0", "")
+                : null;
 
         if (hackerId == null || projectId == null) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing parameters");
