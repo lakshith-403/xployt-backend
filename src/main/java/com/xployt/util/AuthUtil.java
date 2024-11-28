@@ -20,6 +20,11 @@ public class AuthUtil {
 
     public static User getSignedInUser(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
+
+        if (session == null) {
+            return null;
+        }
+
         String userId = (String) session.getAttribute("userId");
 
         if (userId == null) {
