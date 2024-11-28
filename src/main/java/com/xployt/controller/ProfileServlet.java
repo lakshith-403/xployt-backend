@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.logging.Logger;
-@WebServlet("/api/profile/*")
+@WebServlet("/api/user/profile/*")
 public class ProfileServlet extends HttpServlet {
    private ProfileService profileService;
    private static final Logger logger = CustomLogger.getLogger();
@@ -66,6 +66,15 @@ public class ProfileServlet extends HttpServlet {
        logger.info("ProfileServlet: PUT request received");
        
        try {
+           // Extract userId from path
+           String pathInfo = request.getPathInfo();
+           if (pathInfo == null || pathInfo.isEmpty()) {
+               logger.warning("ProfileServlet: User ID not provided in path");
+               response.sendError(HttpServletResponse.SC_BAD_REQUEST, "User ID not provided");
+               return;
+           }
+           int userId = Integer.parseInt(pathInfo.substring(1));
+           
            // Read request body
            String requestBody = request.getReader().lines()
                .reduce("", (accumulator, actual) -> accumulator + actual);
@@ -77,13 +86,17 @@ public class ProfileServlet extends HttpServlet {
                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Request body is empty");
                return;
            }
-            // Parse profile from request body
+           
+           // Parse profile from request body
            Profile profile = JsonUtil.fromJson(requestBody, Profile.class);
            if (profile == null) {
                logger.warning("ProfileServlet: Invalid profile data received");
                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid profile data");
                return;
            }
+           
+           // Set the userId from the path
+           profile.setUserId(userId);
            
            logger.info("ProfileServlet: Updating profile: " + profile);
            profileService.updateProfile(profile);

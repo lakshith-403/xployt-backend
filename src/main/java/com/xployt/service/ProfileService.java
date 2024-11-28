@@ -33,11 +33,11 @@ public class ProfileService {
         }
     }
 
-    public void updateProfilePicture(int userId, String pictureUrl) throws Exception {
-        try {
-            profileDAO.updateProfilePicture(userId, pictureUrl);
-        } catch (Exception e) {
-            throw new Exception("Error updating profile picture: " + e.getMessage());
-        }
-    }
+    // public void updateProfilePicture(int userId, String pictureUrl) throws Exception {
+    //     try {
+    //         profileDAO.updateProfilePicture(userId, pictureUrl);
+    //     } catch (Exception e) {
+    //         throw new Exception("Error updating profile picture: " + e.getMessage());
+    //     }
+    // }
 }
