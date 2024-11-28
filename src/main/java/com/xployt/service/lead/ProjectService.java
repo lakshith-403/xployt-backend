@@ -15,7 +15,7 @@ import com.xployt.util.ResponseUtil;
 import com.xployt.model.ProjectConfigInfo;
 import com.xployt.model.ProjectConfig;
 import com.xployt.dao.lead.ProjectConfigDAO;
-import com.xployt.dao.common.ProjectDAO;
+import com.xployt.dao.lead.ProjectDAO;
 
 public class ProjectService {
 
@@ -77,6 +77,32 @@ public class ProjectService {
       logger.severe("SQL Error in updateProjectConfigInfo: " + e.getMessage());
       ResponseUtil.writeResponse(response, JsonUtil.toJson(new GenericResponse(null, false, e.getMessage(), null)));
       return;
+    }
+  }
+
+  public void acceptProject(String projectId, HttpServletResponse response) throws IOException {
+    ProjectDAO projectDAO = new ProjectDAO();
+
+    logger.info("ProjectService acceptProject method called for projectId: " + projectId);
+    try {
+      projectDAO.updateProjectStatus(projectId, "Active");
+      response.getWriter().write(JsonUtil.toJson(new GenericResponse(null, true, "Project accepted", null)));
+    } catch (Exception e) {
+      logger.severe("Error accepting project: " + e.getMessage());
+      response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error accepting project");
+    }
+  }
+
+  public void rejectProject(String projectId, HttpServletResponse response) throws IOException {
+    ProjectDAO projectDAO = new ProjectDAO();
+
+    logger.info("ProjectService rejectProject method called for projectId: " + projectId);
+    try {
+      projectDAO.updateProjectStatus(projectId, "Rejected");
+      response.getWriter().write(JsonUtil.toJson(new GenericResponse(null, true, "Project rejected", null)));
+    } catch (Exception e) {
+      logger.severe("Error rejecting project: " + e.getMessage());
+      response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error rejecting project");
     }
   }
 }
