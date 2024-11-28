@@ -1,17 +1,19 @@
 package com.xployt.listener;
 
-import com.xployt.util.ContextManager;
-import com.xployt.util.CustomLogger;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
-import javax.servlet.annotation.WebListener;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+import javax.servlet.annotation.WebListener;
+
+import com.xployt.util.ContextManager;
+import com.xployt.util.CustomLogger;
 
 @WebListener
 public class DatabaseConnectionListener implements ServletContextListener {
