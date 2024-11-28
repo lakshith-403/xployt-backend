@@ -14,13 +14,15 @@ import javax.servlet.annotation.WebListener;
 
 import com.xployt.util.ContextManager;
 import com.xployt.util.CustomLogger;
+import io.github.cdimascio.dotenv.Dotenv;
 
 @WebListener
 public class DatabaseConnectionListener implements ServletContextListener {
   private static final Logger logger = CustomLogger.getLogger();
-  private static final String URL = "jdbc:mysql://xployt-xployt.b.aivencloud.com:17847/xployt?ssl-mode=REQUIRED";
-  private static final String USER = "avnadmin";
-  private static final String PASSWORD = "AVNS_5G4ol30FyzBOm-NNf6x";
+  private static final Dotenv dotenv = Dotenv.load();
+  private static final String URL = dotenv.get("DB_URL");
+  private static final String USER = dotenv.get("DB_USER");
+  private static final String PASSWORD = dotenv.get("DB_PASSWORD");
   private Connection connection;
 
   @Override
