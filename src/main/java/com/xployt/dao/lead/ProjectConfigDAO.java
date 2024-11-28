@@ -14,7 +14,7 @@ import com.xployt.model.ProjectConfig;
 public class ProjectConfigDAO {
     private Logger logger = CustomLogger.getLogger();
 
-    public void updateProjectConfig(ProjectConfig projectConfig) {
+    public void updateProjectConfig(ProjectConfig projectConfig) throws SQLException {
         logger.info("ProjectConfigDAO updateProjectConfig method called");
         String sql = "INSERT INTO ProjectConfigs (critical, high, medium, low, informative, visibility, initialFunding, attachments, testingScope, outOfScope, objectives, securityRequirements, projectId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -38,8 +38,6 @@ public class ProjectConfigDAO {
             stmt.setString(13, projectConfig.getProjectId());
             stmt.executeUpdate();
             logger.info("ProjectConfigDAO updateProjectConfig method completed");
-        } catch (SQLException e) {
-            logger.severe("SQL Error in getProjectInfo: " + e.getMessage());
         }
     }
 }
