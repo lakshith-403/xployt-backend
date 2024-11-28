@@ -9,7 +9,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.xployt.service.client.ProjectsService;
+import com.xployt.service.lead.ProjectsService;
 import com.xployt.util.CustomLogger;
 
 @WebServlet("/api/lead/projects/*")
