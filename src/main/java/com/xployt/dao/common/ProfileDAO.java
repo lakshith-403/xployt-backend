@@ -1,16 +1,18 @@
 package com.xployt.dao.common;
 
-import com.xployt.model.Profile;
-import com.xployt.util.ContextManager;
-import com.xployt.util.CustomLogger;
-import javax.servlet.ServletContext;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.logging.Logger;
-import java.text.SimpleDateFormat;  // Add this import
-import java.sql.Date;  // Add this import
+
+import javax.servlet.ServletContext;
+
+import com.xployt.model.Profile;
+import com.xployt.util.ContextManager;  // Add this import
+import com.xployt.util.CustomLogger;  // Add this import
 
 public class ProfileDAO {
     private static final Logger logger = CustomLogger.getLogger();
@@ -23,8 +25,8 @@ public class ProfileDAO {
                     "FROM Users u " +
                     "LEFT JOIN UserProfiles up ON u.userId = up.userId " +
                     "WHERE u.userId = ?";
-
-        try (Connection conn = (Connection) ContextManager.getContext("DBConnection").getAttribute("DBConnection");
+        Connection conn = (Connection) ContextManager.getContext("DBConnection").getAttribute("DBConnection");
+        try (
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setInt(1, userId);

@@ -1,17 +1,19 @@
 package com.xployt.controller;
-import com.xployt.model.Profile;
-import com.xployt.model.GenericResponse;
-import com.xployt.service.ProfileService;
-import com.xployt.util.JsonUtil;
-import com.xployt.util.CustomLogger;
+import java.io.IOException;
+import java.util.logging.Logger;
+
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.logging.Logger;
-@WebServlet("/api/user/profile/*")
+
+import com.xployt.model.GenericResponse;
+import com.xployt.model.Profile;
+import com.xployt.service.ProfileService;
+import com.xployt.util.CustomLogger;
+import com.xployt.util.JsonUtil;
+@WebServlet("/api/profile/*")
 public class ProfileServlet extends HttpServlet {
    private ProfileService profileService;
    private static final Logger logger = CustomLogger.getLogger();
