@@ -90,6 +90,27 @@ public class InvitationDAO {
             throw e;
         }
 
+        addProjectHacker(invitation);
+
         return invitation;
+    }
+
+    public void addProjectHacker(Invitation invitation) throws SQLException {
+        logger.info("Adding Hacker to project " + invitation.getProjectId());
+
+        String sql = "INSERT INTO ProjectHackers (projectId, hackerId) VALUES (?, ?)";
+
+        ServletContext servletContext = ContextManager.getContext("DBConnection");
+        Connection conn = (Connection) servletContext.getAttribute("DBConnection");
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+            stmt.setInt(2, invitation.getHackerId());
+            stmt.setInt(1, invitation.getProjectId());
+            stmt.executeUpdate();
+            logger.info("InvitationDAO: Hacker added successfully");
+        } catch (SQLException e) {
+            logger.severe("InvitationDAO: Error adding hacker" + e.getMessage());
+            throw e;
+        }
     }
 }

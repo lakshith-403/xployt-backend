@@ -104,16 +104,19 @@ public class HackerInvitationServlet extends HttpServlet {
         invitation.setHackerId(hackerId);
         invitation.setProjectId(projectId);
 
+        GenericResponse HackerInvitation;
+
         try {
-            invitationService.createInvitation(invitation);
+            HackerInvitation = invitationService.createInvitation(invitation);
             response.setStatus(HttpServletResponse.SC_CREATED);
         } catch (Exception e) {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error creating invitation");
+            return;
         }
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(JsonUtil.toJson(invitation));
+        response.getWriter().write(JsonUtil.toJson(HackerInvitation));
     }
 
     @Override
