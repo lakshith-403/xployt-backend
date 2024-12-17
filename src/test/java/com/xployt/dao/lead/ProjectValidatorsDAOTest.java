@@ -1,45 +1,59 @@
 package com.xployt.dao.lead;
 
-import org.junit.Before;
-import org.junit.After;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import java.sql.Connection;
-import java.sql.SQLException;
+// import java.sql.SQLException;
 import java.util.List;
 import com.xployt.util.DatabaseTestConfig;
+import com.xployt.testProps.SetupUsers;
+import com.xployt.testProps.SetupValidator;
+import com.xployt.testProps.SetupProject;
 // import java.util.logging.Logger;
 // import com.xployt.util.CustomLogger;
 
 public class ProjectValidatorsDAOTest {
 
   private ProjectValidatorsDAO projectValidatorsDAO;
+  // private ProjectDAO projectDAO;
   private Connection conn;
-  private static final String TEST_PROJECT_ID = "123";
+  private static int TEST_CLIENT_ID;
+  private static int TEST_PROJECT_LEAD_ID;
+  private static int TEST_PROJECT_ID;
+  private static int TEST_VALIDATOR_ID_1;
+  private static int TEST_VALIDATOR_ID_2;
   // private static final Logger logger = CustomLogger.getLogger();
 
-  @Before
-  public void setUp() throws SQLException {
-    conn = DatabaseTestConfig.getConnection();
-    projectValidatorsDAO = new ProjectValidatorsDAO();
-    System.out.println("Tests initialized successfully");
-
+  @BeforeEach
+  public void setUp() {
+    try {
+      conn = DatabaseTestConfig.getConnection();
+      projectValidatorsDAO = new ProjectValidatorsDAO();
+      // projectDAO = new ProjectDAO();
+      TEST_CLIENT_ID = SetupUsers.makeTestClient("Test Client", "test.client@test.com", conn);
+      TEST_PROJECT_ID = SetupProject.makeTestProject(TEST_CLIENT_ID, "Test Project", conn);
+      SetupProject.addProjectScopeRandom(TEST_PROJECT_ID, 7, conn);
+      TEST_PROJECT_LEAD_ID = SetupUsers.makeProjectLead("Test Project Lead", "test.projectlead@test.com", conn);
+      TEST_VALIDATOR_ID_1 = SetupUsers.makeTestValidators("Test Validator 1", "test.validator1@test.com", conn);
+      TEST_VALIDATOR_ID_2 = SetupUsers.makeTestValidators("Test Validator 2", "test.validator2@test.com", conn);
+      SetupValidator.addValidatorInfoWithSkills(TEST_VALIDATOR_ID_1, 6, conn);
+      SetupValidator.addValidatorInfoWithSkills(TEST_VALIDATOR_ID_2, 4, conn);
+      System.out.println("Tests initialized successfully");
+    } catch (Exception e) {
+      System.out.println("Error occurred: " + e.getMessage());
+      cleanUp();
+    }
   }
 
-  @After
-  public void tearDown() throws SQLException {
-    try (var stmt = conn.createStatement()) {
-      // Clean up in correct order due to foreign key constraints
-      stmt.execute("DELETE FROM Users WHERE email LIKE 'test.validator%'");
-      System.out.println("Deleted test users");
-      stmt.execute(
-          "DELETE FROM ProjectValidators WHERE projectId IN (SELECT projectId FROM Projects WHERE title = 'Test Project')");
-      stmt.execute(
-          "DELETE FROM ProjectScope WHERE projectId IN (SELECT projectId FROM Projects WHERE title = 'Test Project')");
-      stmt.execute(
-          "DELETE FROM ProjectConfigs WHERE projectId IN (SELECT projectId FROM Projects WHERE title = 'Test Project')");
-      stmt.execute("DELETE FROM Projects WHERE title = 'Test Project'");
-    }
+  @Test
+  public void placeHolderTest() {
+    System.out.println("TEST_CLIENT_ID: " + TEST_CLIENT_ID);
+    System.out.println("TEST_PROJECT_LEAD_ID: " + TEST_PROJECT_LEAD_ID);
+    System.out.println("TEST_PROJECT_ID: " + TEST_PROJECT_ID);
+    System.out.println("TEST_VALIDATOR_ID_1: " + TEST_VALIDATOR_ID_1);
+    System.out.println("TEST_VALIDATOR_ID_2: " + TEST_VALIDATOR_ID_2);
   }
 
   @Test
@@ -48,69 +62,57 @@ public class ProjectValidatorsDAOTest {
 
     try {
       List<String> assignedValidators = projectValidatorsDAO.assignValidatorsBasedOnSkills(TEST_PROJECT_ID,
-          validatorCount);
+          validatorCount, conn);
 
       // Basic validation
-      assertNotNull("Assigned validators list should not be null",
-          assignedValidators);
-      assertTrue("Should not assign more validators than requested",
-          assignedValidators.size() <= validatorCount);
+      if (assignedValidators == null) {
+        fail("Assigned validators list should not be null");
+      }
+      if (assignedValidators.size() > validatorCount) {
+        fail("Should not assign more validators than requested");
+      }
 
       // Validate each assigned validator
       for (String validatorId : assignedValidators) {
         assertNotNull("Validator ID should not be null", validatorId);
-        assertFalse("Validator ID should not be empty", validatorId.isEmpty());
+        assertFalse(validatorId.isEmpty(), "Validator ID should not be empty");
       }
 
-    } catch (SQLException e) {
+    } catch (Exception e) {
       fail("Error occurred: " + e.getMessage());
+      cleanUp();
     }
   }
 
-  // @Test(expected = SQLException.class)
-  // public void testAssignValidatorsBasedOnSkills_InvalidProjectId() throws
-  // SQLException {
-  // // Test with invalid project ID
-  // projectValidatorsDAO.assignValidatorsBasedOnSkills("invalid_project_id", 2);
-  // }
+  @AfterEach
+  public void tearDown() {
+    cleanUp();
+  }
 
-  // @Test
-  // public void testAssignValidatorsBasedOnSkills_ZeroValidators() {
-  // try {
-  // List<String> assignedValidators =
-  // projectValidatorsDAO.assignValidatorsBasedOnSkills(TEST_PROJECT_ID, 0);
-  // assertTrue("Should return empty list for zero validators",
-  // assignedValidators.isEmpty());
-  // } catch (SQLException e) {
-  // fail("Should not throw SQLException: " + e.getMessage());
-  // }
-  // }
-  @Test
-  public void InsertTestUsers() {
-    try {
-      // Insert users
-      try (var insertStmt = conn.createStatement()) {
-        System.out.println("Inserting test users...");
-        insertStmt.execute(
-            "INSERT INTO Users (email, passwordHash, name, role) VALUES " +
-                "('test.validator1@test.com', 'hash1', 'Test Validator 1', 'VALIDATOR')," +
-                "('test.validator2@test.com', 'hash2', 'Test Validator 2', 'VALIDATOR')");
-      }
-
-      // Verify insertion
-      try (var selectStmt = conn.createStatement();
-          var rs = selectStmt.executeQuery("SELECT * FROM Users WHERE email LIKE 'test.validator%'")) {
-        System.out.println("Inserted users:");
-        while (rs.next()) {
-          System.out.println(String.format("ID: %s, Email: %s, Name: %s, Role: %s",
-              rs.getString("userId"),
-              rs.getString("email"),
-              rs.getString("name"),
-              rs.getString("role")));
-        }
-      }
-    } catch (SQLException e) {
-      System.out.println("Error inserting test users: " + e.getMessage());
+  public void cleanUp() {
+    if (conn != null) {
+      conn = DatabaseTestConfig.getConnection();
+    }
+    try (var stmt = conn.createStatement()) {
+      conn.setAutoCommit(true);
+      // Clean up in correct order due to foreign key constraints
+      System.out.println("CLEANING UP TEST DATA");
+      stmt.execute("DELETE FROM ValidatorSkillSet WHERE validatorId IN (" + TEST_VALIDATOR_ID_1 + ", "
+          + TEST_VALIDATOR_ID_2 + ")");
+      stmt.execute("DELETE FROM ProjectValidators WHERE projectId IN (" + TEST_PROJECT_ID + ")");
+      stmt.execute(
+          "DELETE FROM ValidatorInfo WHERE validatorId IN (" + TEST_VALIDATOR_ID_1 + ", " + TEST_VALIDATOR_ID_2 + ")");
+      stmt.execute(
+          "DELETE FROM ValidatorInfo WHERE validatorId IN (" + TEST_VALIDATOR_ID_1 + ", " + TEST_VALIDATOR_ID_2 + ")");
+      stmt.execute("DELETE FROM ProjectScope WHERE projectId IN (" + TEST_PROJECT_ID + ")");
+      stmt.execute("DELETE FROM ProjectConfigs WHERE projectId IN (" + TEST_PROJECT_ID + ")");
+      stmt.execute("DELETE FROM Projects WHERE projectId IN (" + TEST_PROJECT_ID + ")");
+      stmt.execute("DELETE FROM Users WHERE userId IN (" + TEST_CLIENT_ID + ")");
+      stmt.execute("DELETE FROM Users WHERE userId IN (" + TEST_VALIDATOR_ID_1 + ", " + TEST_VALIDATOR_ID_2 + ")");
+      stmt.execute("DELETE FROM Users WHERE userId IN (" + TEST_PROJECT_LEAD_ID + ")");
+      System.out.println("Deleted test users");
+    } catch (Exception e) {
+      fail("Error occurred while cleaning up: " + e.getMessage());
     }
   }
 }
