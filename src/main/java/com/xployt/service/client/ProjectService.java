@@ -65,7 +65,8 @@ public class ProjectService {
     logger.info("ProjectService: Inside createProject");
 
     try {
-      projectDAO.createProject(clientId, title, description, startDate, endDate, url, technicalStack);
+      projectDAO.createProject(Integer.parseInt(clientId), title, description, startDate, endDate, url, technicalStack,
+          null);
       logger.info("Project created successfully.");
       response.getWriter().write(JsonUtil.toJson(new GenericResponse(null, true, null, null)));
     } catch (Exception e) {
