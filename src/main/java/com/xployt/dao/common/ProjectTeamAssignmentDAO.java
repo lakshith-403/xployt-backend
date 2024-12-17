@@ -17,32 +17,30 @@ public class ProjectTeamAssignmentDAO {
 
     public List<String> assignValidatorsToProject(String projectId, int validatorCount) throws SQLException {
         List<String> assignedValidators = new ArrayList<>();
-        
+
         ServletContext servletContext = ContextManager.getContext("DBConnection");
         Connection conn = (Connection) servletContext.getAttribute("DBConnection");
-        
+
         try {
             conn.setAutoCommit(false);
-            
+
             // Find validators with minimum project assignments
-            String findValidatorsSQL = 
-                "SELECT v.userId, COUNT(pv.validatorId) as project_count " +
-                "FROM Users v " +
-                "LEFT JOIN ProjectValidators pv ON v.userId = pv.validatorId " +
-                "WHERE v.role = 'VALIDATOR' " +
-                "GROUP BY v.userId " +
-                "ORDER BY project_count ASC " +
-                "LIMIT ?";
+            String findValidatorsSQL = "SELECT v.userId, COUNT(pv.validatorId) as project_count " +
+                    "FROM Users v " +
+                    "LEFT JOIN ProjectValidators pv ON v.userId = pv.validatorId " +
+                    "WHERE v.role = 'VALIDATOR' " +
+                    "GROUP BY v.userId " +
+                    "ORDER BY project_count ASC " +
+                    "LIMIT ?";
 
             try (PreparedStatement stmt = conn.prepareStatement(findValidatorsSQL)) {
                 stmt.setInt(1, validatorCount);
                 ResultSet rs = stmt.executeQuery();
 
-                String insertSQL = 
-                    "INSERT INTO ProjectValidators (projectId, validatorId) VALUES (?, ?)";
-                
+                String insertSQL = "INSERT INTO ProjectValidators (projectId, validatorId) VALUES (?, ?)";
+
                 PreparedStatement insertStmt = conn.prepareStatement(insertSQL);
-                
+
                 while (rs.next()) {
                     String validatorId = rs.getString("userId");
                     insertStmt.setString(1, projectId);
@@ -53,6 +51,7 @@ public class ProjectTeamAssignmentDAO {
             }
 
             conn.commit();
+            conn.close();
             return assignedValidators;
 
         } catch (SQLException e) {

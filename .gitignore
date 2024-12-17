@@ -6,3 +6,6 @@
 /node_modules
 .env
 /uploads
+/db-scripts
+/my-assets
+/xployt.session.sql
