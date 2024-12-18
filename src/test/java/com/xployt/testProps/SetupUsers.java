@@ -8,7 +8,7 @@ import java.sql.ResultSet;
 public class SetupUsers {
 
   public static int makeTestValidators(String name, String email, Connection conn) throws Exception {
-    String sql = "INSERT INTO Users (email, passwordHash, name, role) VALUES (?, ?, ?, 'VALIDATOR')";
+    String sql = "INSERT INTO Users (email, passwordHash, name, role) VALUES (?, ?, ?, 'Validator')";
     try (PreparedStatement stmt = conn.prepareStatement(sql)) {
       stmt.setString(3, name);
       stmt.setString(1, email);
@@ -29,7 +29,7 @@ public class SetupUsers {
   }
 
   public static int makeTestClient(String clientName, String email, Connection conn) throws Exception {
-    String sql = "INSERT INTO Users (email, passwordHash, name, role) VALUES (?, ?, ?, 'CLIENT')";
+    String sql = "INSERT INTO Users (email, passwordHash, name, role) VALUES (?, ?, ?, 'Client')";
     try (PreparedStatement stmt = conn.prepareStatement(sql)) {
       stmt.setString(1, email);
       stmt.setString(2, "hash1");
@@ -41,12 +41,18 @@ public class SetupUsers {
         stmt2.setString(1, email);
         ResultSet rs = stmt2.executeQuery();
         rs.next();
+        System.out.println("New test client id: " + rs.getInt("userId"));
         return rs.getInt("userId");
       }
     } catch (Exception e) {
       System.out.println("Error making test client: " + e.getMessage());
       throw e;
     }
+  }
+
+  public static int makeTestClientRandom(String clientName, String email, Connection conn) throws Exception {
+    email = email + System.currentTimeMillis() + "@test.com";
+    return makeTestClient(clientName, email, conn);
   }
 
   public static int makeProjectLead(String name, String email, Connection conn) throws Exception {

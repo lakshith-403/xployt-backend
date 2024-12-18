@@ -30,7 +30,12 @@
           <version>5.9.2</version>
           <scope>test</scope>
       </dependency>
-
+    <dependency>
+       <groupId>org.mockito</groupId>
+       <artifactId>mockito-inline</artifactId>
+       <version>4.0.0</version>
+       <scope>test</scope>
+   </dependency>
     <dependency>
         <groupId>javax.servlet</groupId>
         <artifactId>javax.servlet-api</artifactId>
@@ -54,6 +59,7 @@
         <groupId>com.mysql</groupId>
         <artifactId>mysql-connector-j</artifactId>
         <version>8.0.33</version>
+        <scope>compile</scope>
     </dependency>
 
     <!-- Jackson dependencies (no change needed) -->
