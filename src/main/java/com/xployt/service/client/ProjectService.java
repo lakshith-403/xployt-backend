@@ -21,11 +21,14 @@ public class ProjectService {
 
   private static final Logger logger = CustomLogger.getLogger();
 
-  // Method to create a project from JSON data
+  /**
+   * Method to create a project from JSON data
+   * Only initial project data from client request is entered into the database
+   * 
+   */
   public int createProject(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    // Log entry into the method
-    logger.info("Entering createProject method");
 
+    logger.info("Entering createProject method");
     // Read the JSON body from the request
     StringBuilder jsonBody = new StringBuilder();
     String line;

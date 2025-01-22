@@ -10,6 +10,10 @@ import com.xployt.service.client.ProjectService;
 import java.util.logging.Logger;
 import com.xployt.util.CustomLogger;
 
+/**
+ * Used to create a project request.
+ * Populates the project table with initial project data
+ */
 @WebServlet("/api/client/project/request")
 public class ProjectRequestServlet extends HttpServlet {
 
