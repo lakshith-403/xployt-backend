@@ -11,6 +11,20 @@ public class ProjectDAO {
 
   private static final Logger logger = CustomLogger.getLogger();
 
+  /**
+   * Method to create a project from JSON data
+   * Only initial project data from client request is entered into the database
+   * 
+   * @param clientId
+   * @param projectTitle
+   * @param projectDescription
+   * @param startDate
+   * @param endDate
+   * @param url
+   * @param technicalStack
+   * @param conn
+   * @return projectId
+   */
   public int createProject(int clientId, String projectTitle, String projectDescription, String startDate,
       String endDate, String url, String technicalStack, Connection conn) {
 
@@ -59,6 +73,12 @@ public class ProjectDAO {
     return -1;
   }
 
+  /**
+   * Method to assign a project lead to a project
+   * 
+   * @param projectId
+   * @param conn
+   */
   public void assignProjectLead(int projectId, Connection conn) {
 
     try {
@@ -79,6 +99,18 @@ public class ProjectDAO {
     }
   }
 
+  /**
+   * Method to get a suitable lead for a project using a scoring algorithm.
+   * The algorithm calculates a combined score based on:
+   * 1. Active project score (60% weight): Favors leads with fewer active projects
+   * 2. Total project score (40% weight): Favors leads with fewer total projects
+   * Both scores are normalized against the maximum count in their category.
+   * The lead with the highest combined score is selected.
+   * 
+   * @param projectId The ID of the project needing a lead
+   * @param conn      Database connection
+   * @return leadId ID of the most suitable project lead, or -1 if none found
+   */
   int getSuitedLead(int projectId, Connection conn) {
     String sql = "SELECT u.userId, " +
         "(1 - (active_projects / (SELECT MAX(active_count) + 1 FROM " +

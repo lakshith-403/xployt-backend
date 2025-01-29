@@ -13,6 +13,7 @@ import com.xployt.util.CustomLogger;
 /**
  * Used to create a project request.
  * Populates the project table with initial project data
+ * A project lead is assigned to the project
  */
 @WebServlet("/api/client/project/request")
 public class ProjectRequestServlet extends HttpServlet {

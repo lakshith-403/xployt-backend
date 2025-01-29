@@ -23,8 +23,11 @@ public class ProjectService {
 
   /**
    * Method to create a project from JSON data
-   * Only initial project data from client request is entered into the database
+   * Initial project data from client request is entered into the database
+   * A project lead is assigned to the project and added to the DB record
+   * Project Lead is selected using a scoring algorithm
    * 
+   * @return projectId
    */
   public int createProject(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
