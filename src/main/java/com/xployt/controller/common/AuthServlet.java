@@ -19,6 +19,7 @@ import com.xployt.model.User;
 import com.xployt.util.AuthUtil;
 import com.xployt.util.JsonUtil;
 import com.xployt.util.PasswordUtil;
+import com.xployt.util.ResponseProtocol;
 
 @WebServlet("/api/auth/*")
 public class AuthServlet extends HttpServlet {
@@ -52,12 +53,12 @@ public class AuthServlet extends HttpServlet {
             userDataMap.put("email", createdUser.getEmail());
             userDataMap.put("type", createdUser.getRole());
             userDataMap.put("avatar", "");
-            Map<String, Object> responseMap = new HashMap<>();
-            responseMap.put("data", userDataMap);
-            response.getWriter().write(gson.toJson(responseMap));
+            ResponseProtocol.sendSuccess(request, response, this, "User created successfully", userDataMap,
+                    HttpServletResponse.SC_OK);
 
         } catch (SQLException e) {
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error creating user");
+            ResponseProtocol.sendError(request, response, this, "Error creating user", e.getMessage(),
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 

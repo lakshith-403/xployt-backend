@@ -48,8 +48,7 @@ public class ProjectTeamDAO {
                 return new PublicUser(
                         rs.getString("userId"),
                         rs.getString("name"),
-                        rs.getString("email")
-                );
+                        rs.getString("email"));
             }
         } catch (SQLException e) {
             logger.severe("ProjectTeamDAO: Error retrieving user data: " + e.getMessage());
