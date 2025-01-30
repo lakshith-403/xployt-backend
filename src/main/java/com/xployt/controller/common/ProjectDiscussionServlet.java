@@ -37,7 +37,7 @@ public class ProjectDiscussionServlet extends HttpServlet {
 
         GenericResponse res;
         try {
-            res = discussionService.fetchDiscussions(projectId);
+            res = discussionService.fetchDiscussions(projectId); // todo just fetch ids
         } catch (Exception e) {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error fetching discussions");
             return;
