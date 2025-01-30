@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.sql.Connection;
 // import java.sql.SQLException;
 import java.util.List;
-import com.xployt.util.DatabaseTestConfig;
+import com.xployt.util.DatabaseConfig;
 import com.xployt.testProps.SetupUsers;
 import com.xployt.testProps.SetupValidator;
 import com.xployt.testProps.SetupProject;
@@ -29,7 +29,7 @@ public class ProjectValidatorsDAOTest {
   @BeforeEach
   public void setUp() {
     try {
-      conn = DatabaseTestConfig.getConnection();
+      conn = DatabaseConfig.getConnection();
       projectValidatorsDAO = new ProjectValidatorsDAO();
       // projectDAO = new ProjectDAO();
       TEST_CLIENT_ID = SetupUsers.makeTestClient("Test Client", "test.client@test.com", conn);
@@ -91,7 +91,7 @@ public class ProjectValidatorsDAOTest {
 
   public void cleanUp() {
     if (conn != null) {
-      conn = DatabaseTestConfig.getConnection();
+      conn = DatabaseConfig.getConnection();
     }
     try (var stmt = conn.createStatement()) {
       conn.setAutoCommit(true);

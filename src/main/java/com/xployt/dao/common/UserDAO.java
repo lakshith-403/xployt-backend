@@ -11,7 +11,7 @@ import javax.servlet.ServletContext;
 import com.xployt.model.User;
 import com.xployt.util.ContextManager;
 import com.xployt.util.CustomLogger;
-import com.xployt.util.DatabaseTestConfig;
+import com.xployt.util.DatabaseConfig;
 
 public class UserDAO {
     private static final Logger logger = CustomLogger.getLogger();
@@ -20,7 +20,7 @@ public class UserDAO {
 
         // ServletContext servletContext = ContextManager.getContext("DBConnection");
         // @SuppressWarnings("resource")
-        Connection conn = DatabaseTestConfig.getConnection();
+        Connection conn = DatabaseConfig.getConnection();
         conn.setAutoCommit(false);
         try {
             String sql = "INSERT INTO Users (email, passwordHash, name, role) VALUES (?, ?, ?, ?)";
@@ -37,7 +37,7 @@ public class UserDAO {
             ResultSet rs = stmt2.executeQuery();
             rs.next();
             String userId = rs.getString("userId");
-
+            logger.info("User created successfully. User ID: " + userId);
             if (user.getRole().equals("ProjectLead")) {
                 sql = "INSERT INTO ProjectLeadInfo (projectLeadId) VALUES (?)";
                 try (PreparedStatement stmt3 = conn.prepareStatement(sql)) {

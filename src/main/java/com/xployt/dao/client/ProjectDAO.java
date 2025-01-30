@@ -4,7 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.logging.Logger;
 import java.sql.ResultSet;
-
+// import com.xployt.util.SQLLoader;
 import com.xployt.util.CustomLogger;
 
 public class ProjectDAO {
@@ -26,7 +26,7 @@ public class ProjectDAO {
    * @return projectId
    */
   public int createProject(int clientId, String projectTitle, String projectDescription, String startDate,
-      String endDate, String url, String technicalStack, Connection conn) {
+      String endDate, String url, String technicalStack, Connection conn) throws Exception {
 
     String sql = "INSERT INTO Projects (clientId, title, description, startDate, endDate, url, technicalStack) VALUES (?, ?, ?, ?, ?, ?, ?)";
     System.out.println("clientId: " + clientId);
@@ -79,24 +79,33 @@ public class ProjectDAO {
    * @param projectId
    * @param conn
    */
-  public void assignProjectLead(int projectId, Connection conn) {
-
+  public int assignProjectLead(int projectId, Connection conn) throws Exception {
+    int leadId = -1;
     try {
-      String sql = "UPDATE Projects SET leadId = ? WHERE projectId = ?";
-      int leadId = getSuitedLead(projectId, conn);
+      leadId = getSuitedLead(projectId, conn);
       System.out.println("leadId: " + leadId);
       System.out.println("projectId: " + projectId);
       if (leadId == -1) {
         logger.severe("No suitable lead found for projectId: " + projectId);
-        return;
+        throw new Exception("No suitable lead found for projectId: " + projectId);
       }
+
+      String sql = "UPDATE Projects SET leadId = ? WHERE projectId = ?";
       PreparedStatement preparedStatement = conn.prepareStatement(sql);
       preparedStatement.setInt(1, leadId);
       preparedStatement.setInt(2, projectId);
       preparedStatement.executeUpdate();
+
+      String updateProjectLeadInfo = "UPDATE ProjectLeadInfo SET activeProjectCount = activeProjectCount + 1 WHERE projectLeadId = ?";
+      PreparedStatement preparedStatement3 = conn.prepareStatement(updateProjectLeadInfo);
+      preparedStatement3.setInt(1, leadId);
+      preparedStatement3.executeUpdate();
+
     } catch (Exception e) {
       logger.severe("Error assigning project lead: " + e.getMessage());
+      throw new Exception("Error assigning project lead: " + e.getMessage());
     }
+    return leadId;
   }
 
   /**
@@ -111,25 +120,33 @@ public class ProjectDAO {
    * @param conn      Database connection
    * @return leadId ID of the most suitable project lead, or -1 if none found
    */
+
   int getSuitedLead(int projectId, Connection conn) {
-    String sql = "SELECT u.userId, " +
-        "(1 - (active_projects / (SELECT MAX(active_count) + 1 FROM " +
-        "(SELECT COUNT(*) as active_count FROM Projects WHERE status = 'Active' GROUP BY leadId) counts))) * 0.6 AS active_project_score, "
-        +
-        "(1 - (total_projects / (SELECT MAX(total_count) + 1 FROM " +
-        "(SELECT COUNT(*) as total_count FROM Projects GROUP BY leadId) counts))) * 0.4 AS total_project_score, " +
-        "((1 - (active_projects / (SELECT MAX(active_count) + 1 FROM " +
-        "(SELECT COUNT(*) as active_count FROM Projects WHERE status = 'Active' GROUP BY leadId) counts))) * 0.6 + " +
-        "(1 - (total_projects / (SELECT MAX(total_count) + 1 FROM " +
-        "(SELECT COUNT(*) as total_count FROM Projects GROUP BY leadId) counts))) * 0.4) AS combined_score " +
-        "FROM Users u " +
-        "LEFT JOIN (SELECT leadId, COUNT(*) as active_projects FROM Projects WHERE status = 'Active' GROUP BY leadId) ap ON u.userId = ap.leadId "
-        +
-        "LEFT JOIN (SELECT leadId, COUNT(*) as total_projects FROM Projects GROUP BY leadId) tp ON u.userId = tp.leadId "
-        +
-        "WHERE u.role = 'ProjectLead' " +
-        "ORDER BY combined_score DESC " +
-        "LIMIT 1";
+    // String sql = "";
+    // try {
+    // // sql = SQLLoader.loadSQL("getSuitedLead.sql");
+    // } catch (Exception e) {
+    // logger.severe("Error reading SQL file: " + e.getMessage());
+    // }
+
+    String sql = "WITH MaxCounts AS ("
+        + " SELECT "
+        + " MAX(activeProjectCount) + 1 AS max_active_projects,"
+        + " MAX(completedProjectCount) + 1 AS max_completed_projects"
+        + " FROM ProjectLeadInfo"
+        + ")"
+        + ""
+        + "SELECT "
+        + " u.userId,"
+        + " "
+        + " ((1 - COALESCE(pli.activeProjectCount, 0) / mc.max_active_projects) * 0.6 + "
+        + " (1 - COALESCE(pli.completedProjectCount, 0) / mc.max_completed_projects) * 0.4) AS combined_score"
+        + " FROM Users u"
+        + " LEFT JOIN ProjectLeadInfo pli ON u.userId = pli.projectLeadId"
+        + " CROSS JOIN MaxCounts mc"
+        + " WHERE u.role = 'ProjectLead'"
+        + " ORDER BY combined_score DESC"
+        + " LIMIT 1";
     try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
       ResultSet rs = preparedStatement.executeQuery();
       if (rs.next()) {
