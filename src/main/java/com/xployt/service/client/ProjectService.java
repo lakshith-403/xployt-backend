@@ -1,21 +1,20 @@
 package com.xployt.service.client;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.sql.Connection;
 import java.util.logging.Logger;
 import java.sql.SQLException;
+import java.io.IOException;
 import java.io.BufferedReader;
+import java.util.Map;
 
 import com.xployt.dao.client.ProjectDAO;
-import com.xployt.util.ContextManager;
 import com.xployt.util.CustomLogger;
 import com.xployt.model.Project;
-import com.xployt.model.GenericResponse;
-import com.xployt.util.JsonUtil;
+import com.xployt.util.ResponseProtocol;
+import com.xployt.util.DatabaseConfig;
 
 public class ProjectService {
 
@@ -39,6 +38,12 @@ public class ProjectService {
       while ((line = reader.readLine()) != null) {
         jsonBody.append(line);
       }
+    } catch (IOException e) {
+      logger.severe("IOException in createProject: " + e.getMessage());
+      ResponseProtocol.sendError(request, response, "Error reading JSON",
+          Map.of("error", "Error reading JSON"),
+          HttpServletResponse.SC_BAD_REQUEST);
+      return -1;
     }
 
     // Log the raw JSON data
@@ -50,9 +55,10 @@ public class ProjectService {
     try {
       projectRequest = objectMapper.readValue(jsonBody.toString(), Project.class);
     } catch (IOException e) {
-      logger.severe("Error parsing JSON: " + e.getMessage());
-      response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid JSON format");
-      response.getWriter().write(JsonUtil.toJson(new GenericResponse(null, false, e.getMessage(), null)));
+      logger.severe("IOException in createProject: " + e.getMessage());
+      ResponseProtocol.sendError(request, response, "Error reading JSON",
+          Map.of("error", "Error reading JSON"),
+          HttpServletResponse.SC_BAD_REQUEST);
       return -1;
     }
 
@@ -75,8 +81,9 @@ public class ProjectService {
     if (clientId == null || title == null || description == null || startDate == null
         || endDate == null) {
       logger.severe("Missing required parameters in JSON payload.");
-      response.getWriter()
-          .write(JsonUtil.toJson(new GenericResponse(null, false, "Missing required parameters", null)));
+      ResponseProtocol.sendError(request, response, "Missing required parameters",
+          Map.of("error", "Missing required parameters"),
+          HttpServletResponse.SC_BAD_REQUEST);
       return -1;
     }
 
@@ -86,23 +93,18 @@ public class ProjectService {
     Connection conn = null;
     logger.info("ProjectService: Inside createProject");
 
+    conn = DatabaseConfig.getConnection();
     try {
-      ServletContext servletContext = ContextManager.getContext("DBConnection");
-      if (servletContext == null) {
-        throw new NullPointerException("ServletContext is null");
-      }
-      conn = (Connection) servletContext.getAttribute("DBConnection");
-      if (conn == null) {
-        throw new NullPointerException("DBConnection is null");
-      }
       conn.setAutoCommit(false);
       projectId = projectDAO.createProject(Integer.parseInt(clientId), title, description, startDate, endDate, url,
           technicalStack,
           conn);
-      projectDAO.assignProjectLead(projectId, conn);
+      int leadId = projectDAO.assignProjectLead(projectId, conn);
       conn.commit();
       logger.info("Project created successfully.");
-      response.getWriter().write(JsonUtil.toJson(new GenericResponse(null, true, null, null)));
+      ResponseProtocol.sendSuccess(request, response, "Project created successfully",
+          Map.of("projectId", projectId, "leadId", leadId),
+          HttpServletResponse.SC_OK);
     } catch (Exception e) {
       try {
         conn.rollback();
@@ -110,7 +112,9 @@ public class ProjectService {
         logger.severe("Error rolling back transaction: " + e1.getMessage());
       }
       logger.severe("Error creating project: " + e.getMessage());
-      response.getWriter().write(JsonUtil.toJson(new GenericResponse(null, false, e.getMessage(), null)));
+      ResponseProtocol.sendError(request, response, "Error creating project",
+          Map.of("error", e.getMessage()),
+          HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
       return -1;
     }
     return projectId;

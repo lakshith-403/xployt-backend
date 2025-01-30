@@ -19,7 +19,7 @@ import java.io.StringWriter;
 
 import com.xployt.util.ContextManager;
 import com.xployt.service.client.ProjectService;
-import com.xployt.util.DatabaseTestConfig;
+import com.xployt.util.DatabaseConfig;
 import com.xployt.testProps.SetupUsers;
 
 public class ProjectServiceTest {
@@ -38,7 +38,7 @@ public class ProjectServiceTest {
     servletContext = Mockito.mock(ServletContext.class);
     ContextManager.registerContext("DBConnection", servletContext);
 
-    conn = DatabaseTestConfig.getConnection();
+    conn = DatabaseConfig.getConnection();
     Mockito.when(servletContext.getAttribute("DBConnection")).thenReturn(conn);
 
     try {
@@ -83,7 +83,7 @@ public class ProjectServiceTest {
     System.out.println("Cleaning up test data");
     ContextManager.removeContext("DBConnection");
     if (conn != null) {
-      conn = DatabaseTestConfig.getConnection();
+      conn = DatabaseConfig.getConnection();
     }
     try (var stmt = conn.createStatement()) {
       conn.setAutoCommit(true);

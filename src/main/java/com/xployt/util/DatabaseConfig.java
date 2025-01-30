@@ -6,7 +6,7 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class DatabaseTestConfig {
+public class DatabaseConfig {
     private static final Logger logger = CustomLogger.getLogger();
     private static Connection connection;
     private static final String URL = "jdbc:mysql://xployt-xployt.b.aivencloud.com:17847/xployt?ssl-mode=REQUIRED";
