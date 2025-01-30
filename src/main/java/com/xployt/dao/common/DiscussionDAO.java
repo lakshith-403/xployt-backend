@@ -25,9 +25,7 @@ public class DiscussionDAO {
 
     public List<Discussion> getDiscussionsByProjectId(String projectId) throws SQLException {
         List<Discussion> discussions = new ArrayList<>();
-        String sql = "SELECT d.*, u.* FROM Discussion d " +
-                "LEFT JOIN DiscussionParticipants dp ON d.id = dp.discussion_id " +
-                "LEFT JOIN Users u ON dp.user_id = u.userId " +
+        String sql = "SELECT DISTINCT d.* FROM Discussion d " +
                 "WHERE d.project_id = ?";
 
         ServletContext servletContext = ContextManager.getContext("DBConnection");
@@ -212,8 +210,7 @@ public class DiscussionDAO {
     private List<PublicUser> getParticipantsForDiscussion(String discussionId, Connection conn) throws SQLException {
         List<PublicUser> participants = new ArrayList<>();
         String sql = "SELECT u.* FROM Users u " +
-                "JOIN DiscussionParticipants dp ON u.userId = dp.user_id " +
-                "WHERE dp.discussion_id = ?";
+                "WHERE u.userId IN (SELECT dp.user_id FROM DiscussionParticipants dp WHERE dp.discussion_id = ?)";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, discussionId);
