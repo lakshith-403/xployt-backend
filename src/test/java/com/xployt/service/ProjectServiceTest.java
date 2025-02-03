@@ -37,8 +37,12 @@ public class ProjectServiceTest {
     response = Mockito.mock(HttpServletResponse.class);
     servletContext = Mockito.mock(ServletContext.class);
     ContextManager.registerContext("DBConnection", servletContext);
-
-    conn = DatabaseConfig.getConnection();
+    try {
+      conn = DatabaseConfig.getConnection();
+    } catch (Exception e) {
+      e.printStackTrace();
+      fail("Error getting connection: " + e.getMessage());
+    }
     Mockito.when(servletContext.getAttribute("DBConnection")).thenReturn(conn);
 
     try {
@@ -82,8 +86,12 @@ public class ProjectServiceTest {
   public void tearDown() {
     System.out.println("Cleaning up test data");
     ContextManager.removeContext("DBConnection");
-    if (conn != null) {
-      conn = DatabaseConfig.getConnection();
+    try {
+      if (conn != null) {
+        conn = DatabaseConfig.getConnection();
+      }
+    } catch (Exception e) {
+      System.out.println("Error getting connection: " + e.getMessage());
     }
     try (var stmt = conn.createStatement()) {
       conn.setAutoCommit(true);

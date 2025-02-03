@@ -42,9 +42,14 @@ public class ResponseProtocol {
     responseMap.put("state", state);
     responseMap.put("message", message);
     responseMap.put("code", code);
-    responseMap.put("data", data);
-    responseMap.put("uri", request.getRequestURI());
+    if (data != null) {
+      responseMap.put("data", data);
+    } else {
+      responseMap.put("data", new HashMap<>());
+    }
+    responseMap.put("url", request.getRequestURI());
     // responseMap.put("servlet", request.getServletPath());
+
     if (servlet != null) {
       responseMap.put("servletClass", servlet.getClass().getName());
     }

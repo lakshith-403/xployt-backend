@@ -90,27 +90,33 @@ public class ProjectValidatorsDAOTest {
   }
 
   public void cleanUp() {
-    if (conn != null) {
-      conn = DatabaseConfig.getConnection();
-    }
-    try (var stmt = conn.createStatement()) {
-      conn.setAutoCommit(true);
-      // Clean up in correct order due to foreign key constraints
-      System.out.println("CLEANING UP TEST DATA");
-      stmt.execute("DELETE FROM ValidatorSkillSet WHERE validatorId IN (" + TEST_VALIDATOR_ID_1 + ", "
-          + TEST_VALIDATOR_ID_2 + ")");
-      stmt.execute("DELETE FROM ProjectValidators WHERE projectId IN (" + TEST_PROJECT_ID + ")");
-      stmt.execute(
-          "DELETE FROM ValidatorInfo WHERE validatorId IN (" + TEST_VALIDATOR_ID_1 + ", " + TEST_VALIDATOR_ID_2 + ")");
-      stmt.execute(
-          "DELETE FROM ValidatorInfo WHERE validatorId IN (" + TEST_VALIDATOR_ID_1 + ", " + TEST_VALIDATOR_ID_2 + ")");
-      stmt.execute("DELETE FROM ProjectScope WHERE projectId IN (" + TEST_PROJECT_ID + ")");
-      stmt.execute("DELETE FROM ProjectConfigs WHERE projectId IN (" + TEST_PROJECT_ID + ")");
-      stmt.execute("DELETE FROM Projects WHERE projectId IN (" + TEST_PROJECT_ID + ")");
-      stmt.execute("DELETE FROM Users WHERE userId IN (" + TEST_CLIENT_ID + ")");
-      stmt.execute("DELETE FROM Users WHERE userId IN (" + TEST_VALIDATOR_ID_1 + ", " + TEST_VALIDATOR_ID_2 + ")");
-      stmt.execute("DELETE FROM Users WHERE userId IN (" + TEST_PROJECT_LEAD_ID + ")");
-      System.out.println("Deleted test users");
+    try {
+      if (conn != null) {
+        conn = DatabaseConfig.getConnection();
+      }
+      try (var stmt = conn.createStatement()) {
+        conn.setAutoCommit(true);
+        // Clean up in correct order due to foreign key constraints
+        System.out.println("CLEANING UP TEST DATA");
+        stmt.execute("DELETE FROM ValidatorSkillSet WHERE validatorId IN (" + TEST_VALIDATOR_ID_1 + ", "
+            + TEST_VALIDATOR_ID_2 + ")");
+        stmt.execute("DELETE FROM ProjectValidators WHERE projectId IN (" + TEST_PROJECT_ID + ")");
+        stmt.execute(
+            "DELETE FROM ValidatorInfo WHERE validatorId IN (" + TEST_VALIDATOR_ID_1 + ", " + TEST_VALIDATOR_ID_2
+                + ")");
+        stmt.execute(
+            "DELETE FROM ValidatorInfo WHERE validatorId IN (" + TEST_VALIDATOR_ID_1 + ", " + TEST_VALIDATOR_ID_2
+                + ")");
+        stmt.execute("DELETE FROM ProjectScope WHERE projectId IN (" + TEST_PROJECT_ID + ")");
+        stmt.execute("DELETE FROM ProjectConfigs WHERE projectId IN (" + TEST_PROJECT_ID + ")");
+        stmt.execute("DELETE FROM Projects WHERE projectId IN (" + TEST_PROJECT_ID + ")");
+        stmt.execute("DELETE FROM Users WHERE userId IN (" + TEST_CLIENT_ID + ")");
+        stmt.execute("DELETE FROM Users WHERE userId IN (" + TEST_VALIDATOR_ID_1 + ", " + TEST_VALIDATOR_ID_2 + ")");
+        stmt.execute("DELETE FROM Users WHERE userId IN (" + TEST_PROJECT_LEAD_ID + ")");
+        System.out.println("Deleted test users");
+      } catch (Exception e) {
+        fail("Error occurred while cleaning up: " + e.getMessage());
+      }
     } catch (Exception e) {
       fail("Error occurred while cleaning up: " + e.getMessage());
     }

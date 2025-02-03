@@ -6,38 +6,49 @@ import java.sql.SQLException;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
-
 import com.xployt.dao.client.ProjectDAO;
 
 public class SetupProject {
 
   public static int makeTestProject(int clientId, String projectTitle, Connection conn) {
     ProjectDAO projectDAO = new ProjectDAO();
-    int projectId = projectDAO.createProject(
-        clientId,
-        projectTitle,
-        "This is a test project",
-        "2023-01-01",
-        "2023-12-31",
-        "http://example.com",
-        "Java, Spring",
-        conn);
-    return projectId;
+    try {
+      int projectId = projectDAO.createProject(
+          clientId,
+          projectTitle,
+          "This is a test project",
+          "2023-01-01",
+          "2023-12-31",
+          "http://example.com",
+          "Java, Spring",
+          conn);
+      return projectId;
+    } catch (Exception e) {
+      e.printStackTrace();
+      System.out.println("Error creating test project: " + e.getMessage());
+      return -1;
+    }
   }
 
   public static int makeTestProject(int clientId, String projectTitle, String projectDescription, String startDate,
       String endDate, String url, String technicalStack, Connection conn) {
     ProjectDAO projectDAO = new ProjectDAO();
-    int projectId = projectDAO.createProject(
-        clientId,
-        projectTitle,
-        projectDescription,
-        startDate,
-        endDate,
-        url,
-        technicalStack,
-        conn);
-    return projectId;
+    try {
+      int projectId = projectDAO.createProject(
+          clientId,
+          projectTitle,
+          projectDescription,
+          startDate,
+          endDate,
+          url,
+          technicalStack,
+          conn);
+      return projectId;
+    } catch (Exception e) {
+      e.printStackTrace();
+      System.out.println("Error creating test project: " + e.getMessage());
+      return -1;
+    }
   }
 
   public static void addProjectScope(int projectId, int scopeId, Connection conn) {

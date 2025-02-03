@@ -116,12 +116,21 @@ public class AuthServlet extends HttpServlet {
         response.getWriter().write(gson.toJson(responseMap));
     }
 
+    /*
+     * Get the signed in user
+     * Used by: All users at login
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
+        System.out.println("\n ------- AuthServlet | Get -------");
+
         User signedInUser = AuthUtil.getSignedInUser(request);
         if (signedInUser != null) {
             Gson gson = JsonUtil.useGson();
+
+            System.out.println("Signed in user: " + signedInUser.getUserId());
             Map<String, Object> userDataMap = new HashMap<>();
             userDataMap.put("id", signedInUser.getUserId());
             userDataMap.put("username", signedInUser.getEmail());
@@ -134,7 +143,11 @@ public class AuthServlet extends HttpServlet {
             responseMap.put("data", userDataMap);
             response.getWriter().write(gson.toJson(responseMap));
         } else {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "You must log in first");
+            System.out.println("Not signed in");
+            // response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "You must log in
+            // first");
+            ResponseProtocol.sendError(request, response, this, "You must log in first", null,
+                    HttpServletResponse.SC_UNAUTHORIZED);
         }
     }
 }
