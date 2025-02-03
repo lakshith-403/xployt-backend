@@ -93,7 +93,15 @@ public class ProjectService {
     Connection conn = null;
     logger.info("ProjectService: Inside createProject");
 
-    conn = DatabaseConfig.getConnection();
+    try {
+      conn = DatabaseConfig.getConnection();
+    } catch (Exception e) {
+      e.printStackTrace();
+      ResponseProtocol.sendError(request, response, "Error getting connection",
+          Map.of("error", e.getMessage()),
+          HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+      return -1;
+    }
     try {
       conn.setAutoCommit(false);
       projectId = projectDAO.createProject(Integer.parseInt(clientId), title, description, startDate, endDate, url,

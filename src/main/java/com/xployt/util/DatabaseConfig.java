@@ -13,32 +13,37 @@ public class DatabaseConfig {
     private static final String USER = "avnadmin";
     private static final String PASSWORD = "AVNS_5G4ol30FyzBOm-NNf6x";
 
-    public static Connection getConnection() {
-        if (connection == null) {
-            initializeConnection();
-        }
-        return connection;
-    }
-
-    private static void initializeConnection() {
+    // ✅ Always return a new connection
+    public static Connection getConnection() throws SQLException {
         try {
-            // Use H2 in-memory database for testing
             Class.forName("com.mysql.cj.jdbc.Driver");
-            connection = DriverManager.getConnection(
-                    URL,
-                    USER,
-                    PASSWORD);
-
-            logger.log(Level.INFO, "Test database connection initialized");
-
+            return DriverManager.getConnection(URL, USER, PASSWORD);
         } catch (ClassNotFoundException e) {
-            logger.log(Level.SEVERE, "H2 driver not found: " + e.getMessage());
-            throw new RuntimeException("Failed to initialize test database", e);
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Failed to initialize test database connection: " + e.getMessage());
-            throw new RuntimeException("Failed to initialize test database", e);
+            logger.log(Level.SEVERE, "MySQL driver not found: " + e.getMessage());
+            throw new SQLException("Database driver not found", e);
         }
     }
+
+    // private static void initializeConnection() {
+    // try {
+    // // Use H2 in-memory database for testing
+    // Class.forName("com.mysql.cj.jdbc.Driver");
+    // connection = DriverManager.getConnection(
+    // URL,
+    // USER,
+    // PASSWORD);
+
+    // logger.log(Level.INFO, "Test database connection initialized");
+
+    // } catch (ClassNotFoundException e) {
+    // logger.log(Level.SEVERE, "H2 driver not found: " + e.getMessage());
+    // throw new RuntimeException("Failed to initialize test database", e);
+    // } catch (SQLException e) {
+    // logger.log(Level.SEVERE, "Failed to initialize test database connection: " +
+    // e.getMessage());
+    // throw new RuntimeException("Failed to initialize test database", e);
+    // }
+    // }
 
     public static void closeConnection() {
         if (connection != null) {
