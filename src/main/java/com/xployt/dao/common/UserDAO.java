@@ -6,34 +6,57 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javax.servlet.ServletContext;
 
 import com.xployt.model.User;
 import com.xployt.util.ContextManager;
 import com.xployt.util.CustomLogger;
+import com.xployt.util.DatabaseConfig;
 
 public class UserDAO {
     private static final Logger logger = CustomLogger.getLogger();
 
     public User createUser(User user) throws SQLException {
-        String sql = "INSERT INTO Users (email, passwordHash, name, role) VALUES (?, ?, ?, ?)";
 
-        ServletContext servletContext = ContextManager.getContext("DBConnection");
-        @SuppressWarnings("resource")
-        Connection conn = (Connection) servletContext.getAttribute("DBConnection");
-
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+        // ServletContext servletContext = ContextManager.getContext("DBConnection");
+        // @SuppressWarnings("resource")
+        Connection conn = DatabaseConfig.getConnection();
+        conn.setAutoCommit(false);
+        try {
+            String sql = "INSERT INTO Users (email, passwordHash, name, role) VALUES (?, ?, ?, ?)";
+            PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, user.getEmail());
             stmt.setString(2, user.getPasswordHash());
             stmt.setString(3, user.getName());
             stmt.setString(4, user.getRole());
-
             stmt.executeUpdate();
-            return user; // Return the created user object
+
+            sql = "SELECT userId FROM Users WHERE email = ?";
+            PreparedStatement stmt2 = conn.prepareStatement(sql);
+            stmt2.setString(1, user.getEmail());
+            ResultSet rs = stmt2.executeQuery();
+            rs.next();
+            String userId = rs.getString("userId");
+            logger.info("User created successfully. User ID: " + userId);
+            if (user.getRole().equals("ProjectLead")) {
+                sql = "INSERT INTO ProjectLeadInfo (projectLeadId) VALUES (?)";
+                try (PreparedStatement stmt3 = conn.prepareStatement(sql)) {
+                    stmt3.setString(1, userId);
+                    stmt3.executeUpdate();
+                } catch (SQLException e) {
+                    logger.log(Level.SEVERE, "Error creating user: {0}", e.getMessage());
+                    throw e;
+                }
+            }
+            conn.commit();
+            return new User(userId, user.getEmail(), user.getPasswordHash(), user.getName(), user.getRole(), null,
+                    null);
         } catch (SQLException e) {
+            conn.rollback();
             logger.log(Level.SEVERE, "Error creating user: {0}", e.getMessage());
             throw e;
+        } finally {
+            conn.setAutoCommit(true);
         }
     }
 

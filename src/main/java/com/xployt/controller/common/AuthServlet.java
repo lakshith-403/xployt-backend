@@ -19,6 +19,7 @@ import com.xployt.model.User;
 import com.xployt.util.AuthUtil;
 import com.xployt.util.JsonUtil;
 import com.xployt.util.PasswordUtil;
+import com.xployt.util.ResponseProtocol;
 
 @WebServlet("/api/auth/*")
 public class AuthServlet extends HttpServlet {
@@ -52,12 +53,12 @@ public class AuthServlet extends HttpServlet {
             userDataMap.put("email", createdUser.getEmail());
             userDataMap.put("type", createdUser.getRole());
             userDataMap.put("avatar", "");
-            Map<String, Object> responseMap = new HashMap<>();
-            responseMap.put("data", userDataMap);
-            response.getWriter().write(gson.toJson(responseMap));
+            ResponseProtocol.sendSuccess(request, response, this, "User created successfully", userDataMap,
+                    HttpServletResponse.SC_OK);
 
         } catch (SQLException e) {
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error creating user");
+            ResponseProtocol.sendError(request, response, this, "Error creating user", e.getMessage(),
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -115,12 +116,21 @@ public class AuthServlet extends HttpServlet {
         response.getWriter().write(gson.toJson(responseMap));
     }
 
+    /*
+     * Get the signed in user
+     * Used by: All users at login
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
+        System.out.println("\n ------- AuthServlet | Get -------");
+
         User signedInUser = AuthUtil.getSignedInUser(request);
         if (signedInUser != null) {
             Gson gson = JsonUtil.useGson();
+
+            System.out.println("Signed in user: " + signedInUser.getUserId());
             Map<String, Object> userDataMap = new HashMap<>();
             userDataMap.put("id", signedInUser.getUserId());
             userDataMap.put("username", signedInUser.getEmail());
@@ -133,7 +143,11 @@ public class AuthServlet extends HttpServlet {
             responseMap.put("data", userDataMap);
             response.getWriter().write(gson.toJson(responseMap));
         } else {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "You must log in first");
+            System.out.println("Not signed in");
+            // response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "You must log in
+            // first");
+            ResponseProtocol.sendError(request, response, this, "You must log in first", null,
+                    HttpServletResponse.SC_UNAUTHORIZED);
         }
     }
 }

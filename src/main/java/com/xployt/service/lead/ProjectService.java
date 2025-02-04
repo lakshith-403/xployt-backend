@@ -1,21 +1,31 @@
 package com.xployt.service.lead;
 
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+import java.util.logging.Logger;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.logging.Logger;
-import com.xployt.util.CustomLogger;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.xployt.dao.lead.ProjectConfigInfoDAO;
-import com.xployt.util.JsonUtil;
-import com.xployt.model.GenericResponse;
-import com.xployt.util.ResponseUtil;
-import com.xployt.model.ProjectConfigInfo;
-import com.xployt.model.ProjectConfig;
+import com.xployt.dao.common.DiscussionDAO;
+import com.xployt.dao.common.ProjectTeamDAO;
 import com.xployt.dao.lead.ProjectConfigDAO;
-import com.xployt.dao.common.ProjectDAO;
+import com.xployt.dao.lead.ProjectConfigInfoDAO;
+import com.xployt.dao.lead.ProjectDAO;
+import com.xployt.model.Discussion;
+import com.xployt.model.GenericResponse;
+import com.xployt.model.ProjectConfig;
+import com.xployt.model.ProjectConfigInfo;
+import com.xployt.model.ProjectTeam;
+import com.xployt.model.PublicUser;
+import com.xployt.util.CustomLogger;
+import com.xployt.util.JsonUtil;
+import com.xployt.util.ResponseUtil;
 
 public class ProjectService {
 
@@ -77,6 +87,50 @@ public class ProjectService {
       logger.severe("SQL Error in updateProjectConfigInfo: " + e.getMessage());
       ResponseUtil.writeResponse(response, JsonUtil.toJson(new GenericResponse(null, false, e.getMessage(), null)));
       return;
+    }
+  }
+
+  public void acceptProject(String projectId, HttpServletResponse response) throws IOException {
+    ProjectDAO projectDAO = new ProjectDAO();
+    
+    // create a discussion and add to the project
+    try {
+        ProjectTeamDAO projectTeamDAO = new ProjectTeamDAO();
+        ProjectTeam projectTeam = projectTeamDAO.getProjectTeam(projectId);
+
+        List<PublicUser> participants = new ArrayList<>();
+        participants.add(new PublicUser(projectTeam.getClient().getUserId(), projectTeam.getClient().getName(), projectTeam.getClient().getEmail()));
+        participants.add(new PublicUser(projectTeam.getProjectLead().getUserId(), projectTeam.getProjectLead().getName(), projectTeam.getProjectLead().getEmail()));
+        
+        DiscussionDAO discussionDAO = new DiscussionDAO();
+        Discussion discussion = new Discussion(UUID.randomUUID().toString(), "Init Project", participants, new Date(), projectId, new ArrayList<>());
+        discussionDAO.createDiscussion(discussion);
+    } catch (Exception e) {
+      logger.severe("Error creating discussion with client and lead: " + e.getMessage());
+      response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error creating discussion with client and lead");
+      return;
+    }
+
+    logger.info("ProjectService acceptProject method called for projectId: " + projectId);
+    try {
+      projectDAO.updateProjectStatus(projectId, "Active");
+      response.getWriter().write(JsonUtil.toJson(new GenericResponse(null, true, "Project accepted", null)));
+    } catch (Exception e) {
+      logger.severe("Error accepting project: " + e.getMessage());
+      response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error accepting project");
+    }
+  }
+
+  public void rejectProject(String projectId, HttpServletResponse response) throws IOException {
+    ProjectDAO projectDAO = new ProjectDAO();
+
+    logger.info("ProjectService rejectProject method called for projectId: " + projectId);
+    try {
+      projectDAO.updateProjectStatus(projectId, "Rejected");
+      response.getWriter().write(JsonUtil.toJson(new GenericResponse(null, true, "Project rejected", null)));
+    } catch (Exception e) {
+      logger.severe("Error rejecting project: " + e.getMessage());
+      response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error rejecting project");
     }
   }
 }
