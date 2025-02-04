@@ -126,4 +126,20 @@ public class UserDAO {
         }
         return null;
     }
+
+    public boolean updateUserRole(String userId, String newRole) throws SQLException {
+        String sql = "UPDATE Users SET role = ? WHERE userId = ?";
+        ServletContext servletContext = ContextManager.getContext("DBConnection");
+        Connection conn = (Connection) servletContext.getAttribute("DBConnection");
+
+        try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setString(1, newRole);
+            preparedStatement.setString(2, userId);
+            int rowsAffected = preparedStatement.executeUpdate();
+            return rowsAffected > 0; // Return true if the update was successful
+        } catch (SQLException e) {
+            logger.severe("Error updating user role: " + e.getMessage());
+            throw e;
+        }
+    }
 }
