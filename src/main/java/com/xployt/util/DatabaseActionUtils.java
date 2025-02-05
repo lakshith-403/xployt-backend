@@ -11,7 +11,6 @@ import java.sql.ResultSetMetaData;
 import java.util.HashMap;
 
 public class DatabaseActionUtils {
-  private static Connection conn = null;
 
   public static List<Map<String, Object>> executeSQL(String[] sqlStatements, List<Object[]> sqlParams)
       throws SQLException {
@@ -19,32 +18,45 @@ public class DatabaseActionUtils {
     ResultSet rs = null;
     List<Map<String, Object>> resultList = new ArrayList<>(); // ✅ Stores query results
 
+    System.out.println("------ Executing SQL statements --------");
+    System.out.println("Number of statements: " + sqlStatements.length);
+
+    Connection conn = null;
+
     try {
       conn = DatabaseConfig.getConnection();
       conn.setAutoCommit(false);
 
-      // Execute all statements except the last one if it's a SELECT
-      for (int i = 0; i < sqlStatements.length - 1; i++) {
+      int lastIndex = sqlStatements.length - 1;
 
-        try (PreparedStatement tempStmt = conn.prepareStatement(sqlStatements[i])) {
-          tempStmt.setQueryTimeout(10); // Prevents long waits
-          setParameters(tempStmt, sqlParams.get(i));
-
-          if (!sqlStatements[i].trim().toLowerCase().startsWith("select")) {
-            System.out.println("Executing INSERT/UPDATE/DELETE statement: " + sqlStatements[i]);
-            tempStmt.executeUpdate();
-          }
-        } // ✅ `tempStmt` is automatically closed here
+      // ✅ Check if there's a `SELECT` before the last statement
+      for (int i = 0; i < lastIndex; i++) {
+        if (sqlStatements[i].trim().toLowerCase().startsWith("select")) {
+          System.out.println("ERROR: SELECT statement found in the middle or start. Aborting.");
+          throw new SQLException("SELECT statements must be at the end of the execution batch.");
+        }
       }
 
-      // Handle last statement (if it's a SELECT, store results)
-      String lastSQL = sqlStatements[sqlStatements.length - 1];
-      stmt = conn.prepareStatement(lastSQL);
-      stmt.setQueryTimeout(10);
-      setParameters(stmt, sqlParams.get(sqlStatements.length - 1));
+      // ✅ Execute all non-SELECT statements (INSERT, UPDATE, DELETE)
+      for (int i = 0; i < lastIndex; i++) {
+        try (PreparedStatement tempStmt = conn.prepareStatement(sqlStatements[i])) {
+          System.out.println("Executing non-SELECT statement: " + sqlStatements[i]);
+          tempStmt.setQueryTimeout(10); // Prevents long waits
+          setParameters(tempStmt, sqlParams.get(i));
+          tempStmt.executeUpdate(); // No need to store the result
+        }
+      }
 
-      if (lastSQL.trim().toLowerCase().startsWith("select")) {
-        System.out.println("Executing SELECT statement: " + lastSQL);
+      // ✅ Handle last statement
+      String lastSQL = sqlStatements[lastIndex].trim().toLowerCase();
+
+      if (lastSQL.startsWith("select")) {
+        // ✅ If last statement is a SELECT, execute and return results
+        stmt = conn.prepareStatement(sqlStatements[lastIndex]);
+        stmt.setQueryTimeout(10);
+        setParameters(stmt, sqlParams.get(lastIndex));
+
+        System.out.println("Executing SELECT statement: " + sqlStatements[lastIndex]);
         rs = stmt.executeQuery();
 
         // ✅ Store all rows in resultList
@@ -58,11 +70,18 @@ public class DatabaseActionUtils {
           }
           resultList.add(row);
         }
+      } else {
+        PreparedStatement tempStmt = conn.prepareStatement(sqlStatements[lastIndex]);
+        tempStmt.setQueryTimeout(10);
+        setParameters(tempStmt, sqlParams.get(lastIndex));
+        System.out.println("Executing non-SELECT statement: " + sqlStatements[lastIndex]);
+        tempStmt.executeUpdate();
       }
 
-      stmt.close(); // ✅ Now it's safe to close the statement
       conn.commit();
-      return resultList; // ✅ Return stored result
+      System.out.println("SQL executed successfully");
+
+      return resultList.isEmpty() ? null : resultList; // ✅ Return result only if SELECT was executed
 
     } catch (SQLException e) {
       System.out.println("SQL Error: " + e.getMessage());
@@ -81,6 +100,8 @@ public class DatabaseActionUtils {
       try {
         if (rs != null)
           rs.close(); // ✅ Ensure ResultSet is closed
+        if (stmt != null)
+          stmt.close(); // ✅ Ensure statement is closed
         if (conn != null)
           conn.close(); // ✅ Close connection after all operations
       } catch (SQLException ex) {
@@ -88,6 +109,15 @@ public class DatabaseActionUtils {
       }
     }
   }
+
+  // private static void setParameters(PreparedStatement stmt, Object[] params)
+  // throws SQLException {
+  // if (params != null) {
+  // for (int i = 0; i < params.length; i++) {
+  // stmt.setObject(i + 1, params[i]);
+  // }
+  // }
+  // }
 
   private static void setParameters(PreparedStatement stmt, Object[] params) throws SQLException {
     try {
