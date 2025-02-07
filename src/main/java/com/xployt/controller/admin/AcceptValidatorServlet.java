@@ -42,7 +42,7 @@ public class AcceptValidatorServlet extends HttpServlet {
         return;
       }
       System.out.println("Validators found");
-      ResponseProtocol.sendSuccess(request, response, this, "Validator accepted successfully",
+      ResponseProtocol.sendSuccess(request, response, this, "Validators fetched successfully",
           Map.of("validators", results),
           HttpServletResponse.SC_OK);
 
