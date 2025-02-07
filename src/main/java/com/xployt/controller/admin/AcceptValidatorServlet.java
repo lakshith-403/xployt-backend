@@ -33,13 +33,15 @@ public class AcceptValidatorServlet extends HttpServlet {
       sqlParams = new ArrayList<>();
 
       results = DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
+      System.out.println("Results: " + results);
       if (results == null || results.isEmpty()) {
+        System.out.println("No validators found");
         ResponseProtocol.sendSuccess(request, response, this, "No validators found",
             Map.of("validators", results),
             HttpServletResponse.SC_OK);
         return;
       }
-
+      System.out.println("Validators found");
       ResponseProtocol.sendSuccess(request, response, this, "Validator accepted successfully",
           Map.of("validators", results),
           HttpServletResponse.SC_OK);

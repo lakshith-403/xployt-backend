@@ -83,7 +83,7 @@ public class DatabaseActionUtils {
       conn.commit();
       System.out.println("SQL executed successfully");
 
-      return resultList.isEmpty() ? null : resultList; // ✅ Return result only if SELECT was executed
+      return resultList.isEmpty() ? new ArrayList<>() : resultList; // ✅ Return result only if SELECT was executed
 
     } catch (
 
