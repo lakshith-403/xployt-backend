@@ -19,8 +19,8 @@ public class DatabaseActionUtils {
     ResultSet rs = null;
     List<Map<String, Object>> resultList = new ArrayList<>(); // ✅ Stores query results
 
-    System.out.println("------ Executing SQL statements --------");
-    System.out.println("Number of statements: " + sqlStatements.length);
+    // System.out.println("------ Executing SQL statements --------");
+    // System.out.println("Number of statements: " + sqlStatements.length);
 
     Connection conn = null;
 
@@ -33,7 +33,8 @@ public class DatabaseActionUtils {
       // ✅ Check if there's a `SELECT` before the last statement
       for (int i = 0; i < lastIndex; i++) {
         if (sqlStatements[i].trim().toLowerCase().startsWith("select")) {
-          System.out.println("ERROR: SELECT statement found in the middle or start. Aborting.");
+          // System.out.println("ERROR: SELECT statement found in the middle or start.
+          // Aborting.");
           throw new SQLException("SELECT statements must be at the end of the execution batch.");
         }
       }
@@ -42,13 +43,13 @@ public class DatabaseActionUtils {
       for (int i = 0; i < lastIndex; i++) {
         try {
           stmt = conn.prepareStatement(sqlStatements[i]);
-          System.out.println("Executing non-SELECT statement: " + sqlStatements[i]);
-          stmt.setQueryTimeout(10); // Prevents long waits
+          // System.out.println("Executing non-SELECT statement: " + sqlStatements[i]);
+          // stmt.setQueryTimeout(10); // Prevents long waits
           setParameters(stmt, sqlParams.get(i));
           stmt.executeUpdate(); // No need to store the result
 
         } catch (SQLException e) {
-          System.out.println("SQL Error: " + e.getMessage());
+          // System.out.println("SQL Error: " + e.getMessage());
           throw new SQLException("Database action failed at statement: " + sqlStatements[i] + ": "
               + e.getMessage());
         }
@@ -58,42 +59,44 @@ public class DatabaseActionUtils {
       String lastSQL = sqlStatements[lastIndex].trim().toLowerCase();
 
       if (lastSQL.startsWith("select")) {
-        System.out.println("Executing SELECT statement: " + sqlStatements[lastIndex]);
+        // System.out.println("Executing SELECT statement: " +
+        // sqlStatements[lastIndex]);
         // ✅ If last statement is a SELECT, execute and return results
         stmt = conn.prepareStatement(sqlStatements[lastIndex]);
-        stmt.setQueryTimeout(10);
+        // stmt.setQueryTimeout(10);
         // System.out.println("SQL Params size: " + sqlParams.size());
         if (sqlParams.size() > 0 && sqlParams.get(lastIndex) != null) {
           setParameters(stmt, sqlParams.get(lastIndex));
         }
 
-        System.out.println("Executing SELECT statement parameters injected");
+        // System.out.println("Executing SELECT statement parameters injected");
         rs = stmt.executeQuery();
         resultList = getResults(rs);
 
       } else {
         stmt = conn.prepareStatement(sqlStatements[lastIndex]);
-        stmt.setQueryTimeout(10);
+        // stmt.setQueryTimeout(10);
         setParameters(stmt, sqlParams.get(lastIndex));
-        System.out.println("Executing non-SELECT statement: " + sqlStatements[lastIndex]);
+        // System.out.println("Executing non-SELECT statement: " +
+        // sqlStatements[lastIndex]);
         stmt.executeUpdate();
 
       }
 
       conn.commit();
-      System.out.println("SQL executed successfully");
+      // System.out.println("SQL executed successfully");
 
       return resultList.isEmpty() ? new ArrayList<>() : resultList; // ✅ Return result only if SELECT was executed
 
     } catch (
 
     SQLException e) {
-      System.out.println("SQL Error: " + e.getMessage());
+      // System.out.println("SQL Error: " + e.getMessage());
 
       if (conn != null) {
         try {
           conn.rollback();
-          System.out.println("Transaction rolled back due to an error.");
+          // System.out.println("Transaction rolled back due to an error.");
         } catch (SQLException ex) {
           throw new SQLException("Rollback failed: " + ex.getMessage());
         }
@@ -147,7 +150,7 @@ public class DatabaseActionUtils {
   private static void setParameters(PreparedStatement stmt, Object[] params) throws SQLException {
     try {
       if (params == null) {
-        System.out.println("Warning: No parameters provided for statement.");
+        // System.out.println("Warning: No parameters provided for statement.");
         return;
       }
 

@@ -35,7 +35,7 @@ public class ApplicationDataServlet extends HttpServlet {
       String[] sqlStatements = {
           "SELECT * FROM UserProfiles WHERE userId = ? "
       };
-      sqlParams = new ArrayList<>();
+      sqlParams.clear();
       sqlParams.add(new Object[] { pathParams.get(0) });
 
       results = DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);

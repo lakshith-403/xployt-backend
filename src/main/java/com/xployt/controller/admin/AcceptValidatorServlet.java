@@ -28,7 +28,7 @@ public class AcceptValidatorServlet extends HttpServlet {
           "SELECT * FROM Users WHERE status = 'inactive' AND role = 'Validator'"
       };
 
-      sqlParams = new ArrayList<>();
+      sqlParams.clear();
 
       results = DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
       // System.out.println("Results: " + results);
