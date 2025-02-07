@@ -15,6 +15,7 @@ public class DatabaseActionUtils {
   public static List<Map<String, Object>> executeSQL(String[] sqlStatements, List<Object[]> sqlParams)
       throws SQLException {
     PreparedStatement stmt = null;
+    // PreparedStatement tempStmt = null;
     ResultSet rs = null;
     List<Map<String, Object>> resultList = new ArrayList<>(); // ✅ Stores query results
 
@@ -39,11 +40,17 @@ public class DatabaseActionUtils {
 
       // ✅ Execute all non-SELECT statements (INSERT, UPDATE, DELETE)
       for (int i = 0; i < lastIndex; i++) {
-        try (PreparedStatement tempStmt = conn.prepareStatement(sqlStatements[i])) {
+        try {
+          stmt = conn.prepareStatement(sqlStatements[i]);
           System.out.println("Executing non-SELECT statement: " + sqlStatements[i]);
-          tempStmt.setQueryTimeout(10); // Prevents long waits
-          setParameters(tempStmt, sqlParams.get(i));
-          tempStmt.executeUpdate(); // No need to store the result
+          stmt.setQueryTimeout(10); // Prevents long waits
+          setParameters(stmt, sqlParams.get(i));
+          stmt.executeUpdate(); // No need to store the result
+
+        } catch (SQLException e) {
+          System.out.println("SQL Error: " + e.getMessage());
+          throw new SQLException("Database action failed at statement: " + sqlStatements[i] + ": "
+              + e.getMessage());
         }
       }
 
@@ -51,31 +58,26 @@ public class DatabaseActionUtils {
       String lastSQL = sqlStatements[lastIndex].trim().toLowerCase();
 
       if (lastSQL.startsWith("select")) {
+        System.out.println("Executing SELECT statement: " + sqlStatements[lastIndex]);
         // ✅ If last statement is a SELECT, execute and return results
         stmt = conn.prepareStatement(sqlStatements[lastIndex]);
         stmt.setQueryTimeout(10);
-        setParameters(stmt, sqlParams.get(lastIndex));
-
-        System.out.println("Executing SELECT statement: " + sqlStatements[lastIndex]);
-        rs = stmt.executeQuery();
-
-        // ✅ Store all rows in resultList
-        ResultSetMetaData metaData = rs.getMetaData();
-        int columnCount = metaData.getColumnCount();
-
-        while (rs.next()) {
-          Map<String, Object> row = new HashMap<>();
-          for (int i = 1; i <= columnCount; i++) {
-            row.put(metaData.getColumnName(i), rs.getObject(i));
-          }
-          resultList.add(row);
+        System.out.println("SQL Params size: " + sqlParams.size());
+        if (sqlParams.size() > 0 && sqlParams.get(lastIndex) != null) {
+          setParameters(stmt, sqlParams.get(lastIndex));
         }
+
+        System.out.println("Executing SELECT statement parameters injected");
+        rs = stmt.executeQuery();
+        resultList = getResults(rs);
+
       } else {
-        PreparedStatement tempStmt = conn.prepareStatement(sqlStatements[lastIndex]);
-        tempStmt.setQueryTimeout(10);
-        setParameters(tempStmt, sqlParams.get(lastIndex));
+        stmt = conn.prepareStatement(sqlStatements[lastIndex]);
+        stmt.setQueryTimeout(10);
+        setParameters(stmt, sqlParams.get(lastIndex));
         System.out.println("Executing non-SELECT statement: " + sqlStatements[lastIndex]);
-        tempStmt.executeUpdate();
+        stmt.executeUpdate();
+
       }
 
       conn.commit();
@@ -83,7 +85,9 @@ public class DatabaseActionUtils {
 
       return resultList.isEmpty() ? null : resultList; // ✅ Return result only if SELECT was executed
 
-    } catch (SQLException e) {
+    } catch (
+
+    SQLException e) {
       System.out.println("SQL Error: " + e.getMessage());
 
       if (conn != null) {
@@ -98,16 +102,37 @@ public class DatabaseActionUtils {
       throw new SQLException("Database action failed: " + e.getMessage());
     } finally {
       try {
+        System.out.println("Closing resources");
         if (rs != null)
           rs.close(); // ✅ Ensure ResultSet is closed
         if (stmt != null)
           stmt.close(); // ✅ Ensure statement is closed
+        // if (tempStmt != null)
+        // tempStmt.close(); // ✅ Ensure statement is closed
         if (conn != null)
           conn.close(); // ✅ Close connection after all operations
+
       } catch (SQLException ex) {
         System.out.println("Error closing resources: " + ex.getMessage());
       }
     }
+  }
+
+  public static List<Map<String, Object>> getResults(ResultSet rs) throws SQLException {
+    List<Map<String, Object>> resultList = new ArrayList<>();
+    // ✅ Store all rows in resultList
+    ResultSetMetaData metaData = rs.getMetaData();
+    int columnCount = metaData.getColumnCount();
+
+    while (rs.next()) {
+      Map<String, Object> row = new HashMap<>();
+      for (int i = 1; i <= columnCount; i++) {
+        row.put(metaData.getColumnName(i), rs.getObject(i));
+      }
+      resultList.add(row);
+    }
+
+    return resultList;
   }
 
   // private static void setParameters(PreparedStatement stmt, Object[] params)
