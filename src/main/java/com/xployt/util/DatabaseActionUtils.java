@@ -62,7 +62,7 @@ public class DatabaseActionUtils {
         // ✅ If last statement is a SELECT, execute and return results
         stmt = conn.prepareStatement(sqlStatements[lastIndex]);
         stmt.setQueryTimeout(10);
-        System.out.println("SQL Params size: " + sqlParams.size());
+        // System.out.println("SQL Params size: " + sqlParams.size());
         if (sqlParams.size() > 0 && sqlParams.get(lastIndex) != null) {
           setParameters(stmt, sqlParams.get(lastIndex));
         }
@@ -102,7 +102,7 @@ public class DatabaseActionUtils {
       throw new SQLException("Database action failed: " + e.getMessage());
     } finally {
       try {
-        System.out.println("Closing resources");
+        // System.out.println("Closing resources");
         if (rs != null)
           rs.close(); // ✅ Ensure ResultSet is closed
         if (stmt != null)
@@ -113,7 +113,7 @@ public class DatabaseActionUtils {
           conn.close(); // ✅ Close connection after all operations
 
       } catch (SQLException ex) {
-        System.out.println("Error closing resources: " + ex.getMessage());
+        // System.out.println("Error closing resources: " + ex.getMessage());
       }
     }
   }
