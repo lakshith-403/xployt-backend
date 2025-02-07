@@ -23,8 +23,6 @@ public class AcceptValidatorServlet extends HttpServlet {
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     System.out.println("\n------------ AcceptValidatorServlet | doGet ------------");
     try {
-      Map<String, Object> requestBody = RequestProtocol.parseRequest(request);
-      System.out.println("Request body: " + requestBody);
 
       sqlStatements = new String[] {
           "SELECT * FROM Users WHERE status = 'inactive' AND role = 'Validator'"
@@ -33,7 +31,7 @@ public class AcceptValidatorServlet extends HttpServlet {
       sqlParams = new ArrayList<>();
 
       results = DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
-      System.out.println("Results: " + results);
+      // System.out.println("Results: " + results);
       if (results == null || results.isEmpty()) {
         System.out.println("No validators found");
         ResponseProtocol.sendSuccess(request, response, this, "No validators found",
