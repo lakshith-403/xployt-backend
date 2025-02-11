@@ -24,7 +24,14 @@ public class ApplicationDataServlet extends HttpServlet {
   // private static Map<String, Object> requestBody = new HashMap<>();
   // private static Map<String, Object> queryParams = new HashMap<>();
 
+  /*
+   * ApplicationDataServlet : doGet
+   * Fetches the application data for a given user id
+   * Used when a validator applications are fetched in order to accept reject by
+   * Admin
+   */
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
+
       throws IOException {
     System.out.println("\n------------ ApplicationDataServlet | doGet ------------");
 
