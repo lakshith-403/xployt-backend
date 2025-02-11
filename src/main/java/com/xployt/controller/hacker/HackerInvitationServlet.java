@@ -125,8 +125,11 @@ public class HackerInvitationServlet extends HttpServlet {
         logger.info("Accepting Invitation");
 
         Map<String, Object> jsonObject;
+        logger.info("Parsing request body");
         try {
+            logger.info("Parsing request body");
             jsonObject = parseRequestBody(request);
+            logger.info("jsonObject: " + jsonObject);
         } catch (Exception e) {
             logger.severe("Error parsing JSON: " + e.getMessage());
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid JSON format");
@@ -134,30 +137,49 @@ public class HackerInvitationServlet extends HttpServlet {
         }
 
         String hackerId = jsonObject.get("hackerId") != null
-                ? String.valueOf(jsonObject.get("hackerId")).replace(".0", "")
+                ? new Gson().toJson(jsonObject.get("hackerId")).replace(".0", "").replace("\"", "")
                 : null;
+        logger.info("hackerId: " + hackerId);
         String projectId = jsonObject.get("projectId") != null
-                ? String.valueOf(jsonObject.get("projectId")).replace(".0", "")
+                ? new Gson().toJson(jsonObject.get("projectId")).replace(".0", "").replace("\"", "")
                 : null;
+        logger.info("projectId: " + projectId);
+        Boolean accepted = jsonObject.get("accept") != null
+                ? new Gson().fromJson(jsonObject.get("accept").toString(), Boolean.class)
+                : null;
+        logger.info("accepted: " + accepted);
 
-        if (hackerId == null || projectId == null) {
+        if (hackerId == null || projectId == null || accepted == null) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing parameters");
             return;
         }
+
+        logger.info("Accepting invitation for projectId: " + projectId + ", hackerId: " + hackerId + ", accepted: " + accepted);
 
         Invitation invitation = new Invitation();
         invitation.setHackerId(hackerId);
         invitation.setProjectId(projectId);
 
+
+        GenericResponse updatedInvitation;
+
         try {
-            invitationService.acceptInvitation(invitation);
+            if (Boolean.TRUE.equals(accepted)) {
+                invitation.setStatus("Accepted");
+                updatedInvitation = invitationService.acceptInvitation(invitation);
+            } else {
+                invitation.setStatus("Declined");
+                updatedInvitation = invitationService.rejectInvitation(invitation);
+            }
+
             response.setStatus(HttpServletResponse.SC_OK);
         } catch (Exception e) {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error accepting invitation");
+            return;
         }
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(JsonUtil.toJson(invitation));
+        response.getWriter().write(JsonUtil.toJson(updatedInvitation));
     }
 }

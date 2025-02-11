@@ -30,15 +30,15 @@ public class InvitationDAO {
             ResultSet rs = stmt.executeQuery();
             logger.info("InvitationDAO: Fetching hacker's invitations");
             while (rs.next()) {
-                if(rs.getString("status").equals("Pending")) {
+//                if(rs.getString("status").equals("Pending")) {
                     Invitation invitation = new Invitation(
-                            rs.getInt("projectId"),
-                            rs.getInt("hackerId"),
-                            rs.getString("status"),
+                            rs.getInt("HackerID"),
+                            rs.getInt("ProjectID"),
+                            rs.getString("Status"),
                             rs.getString("InvitedAt")
                     );
                     invitations.add(invitation);
-                }
+//                }
             }
             logger.info("InvitationDAO: Hackers of a project fetched Successfully");
             logger.info("InvitationDAO: Number of invitations fetched " + invitations.size());
@@ -53,7 +53,7 @@ public class InvitationDAO {
     public Invitation createInvitation(Invitation invitation) throws SQLException{
         logger.info("InvitationDAO: creating invitation");
 
-        String sql = "INSERT INTO Invitations (hackerId, projectId) VALUES (?, ?)";
+        String sql = "INSERT INTO Invitations (HackerID, ProjectID) VALUES (?, ?)";
 
         ServletContext servletContext = ContextManager.getContext("DBConnection");
         Connection conn = (Connection) servletContext.getAttribute("DBConnection");
@@ -75,7 +75,7 @@ public class InvitationDAO {
     public Invitation acceptInvitation(Invitation invitation) throws SQLException{
         logger.info("InvitationDAO: accepting invitation");
 
-        String sql = "UPDATE Invitations SET status = 'Accepted' WHERE hackerId = ? AND projectId = ?";
+        String sql = "UPDATE Invitations SET Status = 'Accepted' WHERE HackerID = ? AND ProjectID = ?";
 
         ServletContext servletContext = ContextManager.getContext("DBConnection");
         Connection conn = (Connection) servletContext.getAttribute("DBConnection");
@@ -91,6 +91,27 @@ public class InvitationDAO {
         }
 
         addProjectHacker(invitation);
+
+        return invitation;
+    }
+
+    public Invitation rejectInvitation(Invitation invitation) throws SQLException{
+        logger.info("InvitationDAO: rejecting invitation");
+
+        String sql = "UPDATE Invitations SET Status = 'Declined' WHERE HackerID = ? AND ProjectID = ?";
+
+        ServletContext servletContext = ContextManager.getContext("DBConnection");
+        Connection conn = (Connection) servletContext.getAttribute("DBConnection");
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+            stmt.setInt(1, invitation.getHackerId());
+            stmt.setInt(2, invitation.getProjectId());
+            stmt.executeUpdate();
+            logger.info("InvitationDAO: Invitation rejected successfully");
+        } catch (SQLException e) {
+            logger.severe("InvitationDAO: Error rejecting invitation" + e.getMessage());
+            throw e;
+        }
 
         return invitation;
     }

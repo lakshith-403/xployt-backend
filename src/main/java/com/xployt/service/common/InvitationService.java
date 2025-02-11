@@ -1,5 +1,6 @@
 package com.xployt.service.common;
 
+import com.xployt.dao.common.BlastPointsDAO;
 import com.xployt.dao.common.InvitationDAO;
 import com.xployt.model.GenericResponse;
 import com.xployt.model.Invitation;
@@ -16,6 +17,7 @@ public class InvitationService {
     private static final Logger logger = CustomLogger.getLogger();
 
     public InvitationService() {this.invitationDAO = new InvitationDAO();}
+
 
     public GenericResponse fetchHackerInvitations(String userId) throws SQLException {
         logger.info("InvitationService: Fetching invitations of user " + userId);
@@ -38,9 +40,22 @@ public class InvitationService {
     public GenericResponse acceptInvitation(Invitation invitation) throws SQLException {
         logger.info("InvitationService: Accepting invitation for user " + invitation.getHackerId());
         Invitation acceptedInvitation = invitationDAO.acceptInvitation(invitation);
+        BlastPointsDAO blastPointsDAO = new BlastPointsDAO();
+        blastPointsDAO.addUserBlastPoints(invitation.getHackerId(), "participation", "project_participation");
         if(acceptedInvitation != null) {
+            logger.info("InvitationService: Success");
             return new GenericResponse(invitation, true, null, null);
         }
+        logger.info("InvitationService: Failed");
         return new GenericResponse(null, false, "Failed to accept invitation", null);
+    }
+
+    public GenericResponse rejectInvitation(Invitation invitation) throws SQLException {
+        logger.info("InvitationService: Rejecting invitation for user " + invitation.getHackerId());
+        Invitation rejectedInvitation = invitationDAO.rejectInvitation(invitation);
+        if(rejectedInvitation != null) {
+            return new GenericResponse(invitation, true, null, null);
+        }
+        return new GenericResponse(null, false, "Failed to reject invitation", null);
     }
 }
