@@ -20,7 +20,7 @@ public class CORSFilter implements Filter {
       throws IOException, ServletException {
 
     logger.info("\n-----------------------------------");
-    logger.info("Adding CORS headers");
+    // logger.info("Adding CORS headers");
     HttpServletRequest httpRequest = (HttpServletRequest) request;
     HttpServletResponse httpResponse = (HttpServletResponse) response;
 
@@ -35,7 +35,7 @@ public class CORSFilter implements Filter {
     if ("OPTIONS".equalsIgnoreCase(((HttpServletRequest) request).getMethod())) {
       // If it's a preflight request, just return without processing the request
       // further.
-      logger.info("Preflight request detected. Sending 200 OK response.");
+      // logger.info("Preflight request detected. Sending 200 OK response.");
       httpResponse.setStatus(HttpServletResponse.SC_OK);
       return;
     }

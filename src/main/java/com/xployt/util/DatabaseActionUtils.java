@@ -12,12 +12,14 @@ import java.util.HashMap;
 
 public class DatabaseActionUtils {
 
+  private static List<Map<String, Object>> resultList = new ArrayList<>(); // ✅ Stores query results
+
   public static List<Map<String, Object>> executeSQL(String[] sqlStatements, List<Object[]> sqlParams)
       throws SQLException {
     PreparedStatement stmt = null;
     // PreparedStatement tempStmt = null;
+    resultList.clear();
     ResultSet rs = null;
-    List<Map<String, Object>> resultList = new ArrayList<>(); // ✅ Stores query results
 
     // System.out.println("------ Executing SQL statements --------");
     // System.out.println("Number of statements: " + sqlStatements.length);
@@ -86,7 +88,7 @@ public class DatabaseActionUtils {
       conn.commit();
       // System.out.println("SQL executed successfully");
 
-      return resultList.isEmpty() ? new ArrayList<>() : resultList; // ✅ Return result only if SELECT was executed
+      return resultList; // ✅ Return result only if SELECT was executed
 
     } catch (
 
@@ -122,7 +124,6 @@ public class DatabaseActionUtils {
   }
 
   public static List<Map<String, Object>> getResults(ResultSet rs) throws SQLException {
-    List<Map<String, Object>> resultList = new ArrayList<>();
     // ✅ Store all rows in resultList
     ResultSetMetaData metaData = rs.getMetaData();
     int columnCount = metaData.getColumnCount();
@@ -137,15 +138,6 @@ public class DatabaseActionUtils {
 
     return resultList;
   }
-
-  // private static void setParameters(PreparedStatement stmt, Object[] params)
-  // throws SQLException {
-  // if (params != null) {
-  // for (int i = 0; i < params.length; i++) {
-  // stmt.setObject(i + 1, params[i]);
-  // }
-  // }
-  // }
 
   private static void setParameters(PreparedStatement stmt, Object[] params) throws SQLException {
     try {
