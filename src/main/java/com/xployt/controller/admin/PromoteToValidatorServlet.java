@@ -15,7 +15,7 @@ import com.xployt.util.ResponseProtocol;
 import com.xployt.util.RequestProtocol;
 import com.xployt.util.DatabaseActionUtils;
 
-@WebServlet("/api/admin/promoteToLead/*")
+@WebServlet("/api/admin/promoteToLead/")
 public class PromoteToValidatorServlet extends HttpServlet {
 
   private static List<Object[]> sqlParams = new ArrayList<>();
@@ -48,7 +48,7 @@ public class PromoteToValidatorServlet extends HttpServlet {
       results = DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
 
       if (results.size() > 0) {
-        // System.out.println("Application Data: " + results);
+        System.out.println("Validator Data fetched successfully");
         ResponseProtocol.sendSuccess(request, response, this, "Validator Data fetched successfully",
             Map.of("validatorData", results),
             HttpServletResponse.SC_OK);
@@ -77,6 +77,7 @@ public class PromoteToValidatorServlet extends HttpServlet {
       sqlParams.add(new Object[] { userId });
 
       results = DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
+      System.out.println("promoted to lead successfully");
 
     } catch (Exception e) {
       System.out.println("Error parsing request: " + e.getMessage());
