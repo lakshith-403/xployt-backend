@@ -16,7 +16,7 @@ import com.xployt.util.RequestProtocol;
 import com.xployt.util.DatabaseActionUtils;
 
 @WebServlet("/api/admin/promoteToLead/")
-public class PromoteToValidatorServlet extends HttpServlet {
+public class PromoteToLeadServlet extends HttpServlet {
 
   private static List<Object[]> sqlParams = new ArrayList<>();
   private static List<Map<String, Object>> results = new ArrayList<>();
@@ -33,7 +33,7 @@ public class PromoteToValidatorServlet extends HttpServlet {
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
 
       throws IOException {
-    System.out.println("\n------------ PromoteToValidatorServlet | doGet ------------");
+    System.out.println("\n------------ PromoteToLeadServlet | doGet ------------");
 
     try {
       // pathParams = RequestProtocol.parsePathParams(request);
@@ -67,9 +67,14 @@ public class PromoteToValidatorServlet extends HttpServlet {
     }
   }
 
+  /*
+   * PromoteToValidatorServlet : doPost
+   * Promotes a validator to a projectLead
+   * Used by: Admin
+   */
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    System.out.println("\n\n------------ PromoteToValidatorServlet | doPost ------------");
+    System.out.println("\n\n------------ PromoteToLeadServlet | doPost ------------");
 
     try {
       requestBody = RequestProtocol.parseRequest(request);
@@ -93,12 +98,12 @@ public class PromoteToValidatorServlet extends HttpServlet {
 
   @Override
   protected void doPut(HttpServletRequest request, HttpServletResponse response) {
-    System.out.println("\n------------ PromoteToValidatorServlet | doPut ------------");
+    System.out.println("\n------------ PromoteToLeadServlet | doPut ------------");
   }
 
   @Override
   protected void doDelete(HttpServletRequest request, HttpServletResponse response)
       throws IOException {
-    System.out.println("\n------------ PromoteToValidatorServlet | doDelete ------------");
+    System.out.println("\n------------ PromoteToLeadServlet | doDelete ------------");
   }
 }
