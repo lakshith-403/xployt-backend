@@ -1,4 +1,4 @@
-package com.xployt.controller;
+package com.xployt.controller.admin;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -16,8 +16,8 @@ import com.xployt.util.ResponseProtocol;
 import com.xployt.util.DatabaseActionUtils;
 // import com.xployt.model.User;
 
-@WebServlet("/api/test/*")
-public class TemplateServlet extends HttpServlet {
+@WebServlet("/api/admin/userManagement/*")
+public class UserManagementServlet extends HttpServlet {
 
   private static String[] sqlStatements = {};
   private static List<Object[]> sqlParams = new ArrayList<>();
@@ -26,32 +26,84 @@ public class TemplateServlet extends HttpServlet {
   private static ArrayList<String> pathParams = new ArrayList<>();
   private static Map<String, Object> queryParams = new HashMap<>();
 
+  /*
+   * Get all users
+   * Used to view user info
+   * Depending on user type the fetched info can vary
+   * Used in route: /admin/list/users
+   * The reponse varies on whether a pathParam is set or not
+   */
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
       throws IOException {
 
-    System.out.println("\n------------ TemplateServlet | doGet ------------");
-    pathParams = RequestProtocol.parsePathParams(request);
-    System.out.println("Path params: " + pathParams);
+    System.out.println("\n------------ UserManagementServlet | doGet ------------");
+    try {
 
-    if (pathParams.size() > 0) {
-      System.out.println("Path params: " + pathParams.get(0));
-      ResponseProtocol.sendSuccess(request, response, this, "Path params is not empty",
-          Map.of("pathParams", pathParams),
-          HttpServletResponse.SC_OK);
-      return;
+      pathParams = RequestProtocol.parsePathParams(request);
+      System.out.println("Path params: " + pathParams);
+
+      // Handle /api/admin/userManagement/{userId}
+      if (pathParams.size() > 0) {
+        System.out.println("Path params: " + pathParams.get(0));
+        String userType = pathParams.get(0);
+        String userId = pathParams.get(1);
+
+        switch (userType) {
+          case "Validator":
+            sqlStatements = new String[] {
+                "SELECT * FROM Users INNER JOIN UserProfiles ON Users.userId = UserProfiles.userId WHERE Users.userId = ?"
+            };
+            break;
+          case "Admin":
+          case "Hacker":
+          case "ProjectLead":
+          case "Client":
+            sqlStatements = new String[] {
+                "SELECT * FROM Users INNER JOIN UserProfiles ON Users.userId = UserProfiles.userId WHERE Users.userId = ?"
+            };
+            break;
+        }
+        sqlParams = new ArrayList<>();
+        sqlParams.add(new Object[] { userId });
+        results = DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
+
+        ResponseProtocol.sendSuccess(request, response, this, "User fetched successfully",
+            Map.of("user", results),
+            HttpServletResponse.SC_OK);
+
+      } else {
+        // Handle /api/admin/userManagement
+        sqlStatements = new String[] {
+            "SELECT userId, name, role, email, status FROM Users"
+        };
+
+        sqlParams = new ArrayList<>();
+        results = DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
+
+        if (results.size() > 0) {
+          System.out.println("Users fetched successfully");
+          ResponseProtocol.sendSuccess(request, response, this, "Users fetched successfully",
+              Map.of("users", results),
+              HttpServletResponse.SC_OK);
+        } else {
+          System.out.println("No users found");
+          ResponseProtocol.sendSuccess(request, response, this, "No users found",
+              Map.of("users", results),
+              HttpServletResponse.SC_OK);
+        }
+      }
+    } catch (Exception e) {
+      System.out.println("Error fetching users: " + e.getMessage());
+      ResponseProtocol.sendError(request, response, this, "Error fetching users", e.getMessage(),
+          HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
-
-    ResponseProtocol.sendError(request, response, this, "Path params is empty",
-        Map.of("pathParams", new ArrayList<>()),
-        HttpServletResponse.SC_BAD_REQUEST);
 
   }
 
   @Override
-
   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    System.out.println("\n\n------------ TemplateServlet | doPost ------------");
+    System.out.println("\n\n------------ UserManagementServlet | doPost ------------");
 
     int userId = 0;
     try {
@@ -67,7 +119,7 @@ public class TemplateServlet extends HttpServlet {
 
       };
 
-      sqlParams.clear();
+      sqlParams = new ArrayList<>();
 
       sqlParams.add(new Object[] { "Test@test.com",
           "testPassword",
@@ -111,7 +163,7 @@ public class TemplateServlet extends HttpServlet {
   @Override
   protected void doPut(HttpServletRequest request, HttpServletResponse response)
       throws IOException {
-    System.out.println("\n------------ TemplateServlet | doPut ------------");
+    System.out.println("\n------------ UserManagementServlet | doPut ------------");
     queryParams = RequestProtocol.parseQueryParams(request);
     System.out.println("Query params: " + queryParams);
 
@@ -130,7 +182,7 @@ public class TemplateServlet extends HttpServlet {
   @Override
   protected void doDelete(HttpServletRequest request, HttpServletResponse response)
       throws IOException {
-    System.out.println("\n------------ TemplateServlet | doDelete ------------");
+    System.out.println("\n------------ UserManagementServlet | doDelete ------------");
     pathParams = RequestProtocol.parsePathParams(request);
     System.out.println("Path params: " + pathParams);
   }
