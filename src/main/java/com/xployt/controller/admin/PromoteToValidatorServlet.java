@@ -52,6 +52,11 @@ public class PromoteToValidatorServlet extends HttpServlet {
         ResponseProtocol.sendSuccess(request, response, this, "Validator Data fetched successfully",
             Map.of("validatorData", results),
             HttpServletResponse.SC_OK);
+      } else {
+        System.out.println("Validator Data not found");
+        ResponseProtocol.sendSuccess(request, response, this, "Validator Data not found",
+            Map.of("validatorData", new ArrayList<>()),
+            HttpServletResponse.SC_OK);
       }
 
     } catch (Exception e) {

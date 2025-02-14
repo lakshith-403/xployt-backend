@@ -52,6 +52,10 @@ public class ApplicationDataServlet extends HttpServlet {
         ResponseProtocol.sendSuccess(request, response, this, "Application Data fetched successfully",
             Map.of("applicationData", results),
             HttpServletResponse.SC_OK);
+      } else {
+        ResponseProtocol.sendError(request, response, this, "Application Data not found",
+            Map.of("applicationData", new ArrayList<>()),
+            HttpServletResponse.SC_NOT_FOUND);
       }
 
     } catch (Exception e) {
