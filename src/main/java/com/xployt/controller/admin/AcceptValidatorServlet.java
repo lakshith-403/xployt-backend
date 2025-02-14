@@ -19,6 +19,12 @@ public class AcceptValidatorServlet extends HttpServlet {
   private static List<Object[]> sqlParams = new ArrayList<>();
   private static List<Map<String, Object>> results = new ArrayList<>();
 
+  /*
+   * AcceptValidatorServlet : doGet
+   * Fetches all validators who have fetches applications but have not been
+   * processed (Accepted or rejected)
+   * 
+   */
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     System.out.println("\n------------ AcceptValidatorServlet | doGet ------------");
@@ -53,6 +59,10 @@ public class AcceptValidatorServlet extends HttpServlet {
     }
   }
 
+  /*
+   * AcceptValidatorServlet : doPost
+   * Accepts or rejects a validator application
+   */
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
     System.out.println("\n\n------------ AcceptValidatorServlet | doPost ------------");
