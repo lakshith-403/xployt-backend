@@ -1,6 +1,4 @@
-package com.xployt.controller.common;
-
-import com.xployt.service.common.ProjectService;
+package com.xployt.controller.validator;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -9,7 +7,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.logging.Logger;
+
 import com.xployt.util.CustomLogger;
+import com.xployt.service.common.ProjectService;
 
 @WebServlet("/api/validator/projects/*") // Matches /api/validator/projects/{userId}
 public class ProjectServlet extends HttpServlet {
