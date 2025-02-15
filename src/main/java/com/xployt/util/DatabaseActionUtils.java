@@ -12,13 +12,15 @@ import java.util.HashMap;
 
 public class DatabaseActionUtils {
 
-  private static List<Map<String, Object>> resultList = new ArrayList<>(); // ✅ Stores query results
+  // private static List<Map<String, Object>> resultList = new ArrayList<>(); // ✅
+  // Stores query results
 
   public static List<Map<String, Object>> executeSQL(String[] sqlStatements, List<Object[]> sqlParams)
       throws SQLException {
     PreparedStatement stmt = null;
     // PreparedStatement tempStmt = null;
-    resultList.clear();
+    // resultList.clear();
+    List<Map<String, Object>> resultList = new ArrayList<>();
     ResultSet rs = null;
 
     // System.out.println("------ Executing SQL statements --------");
@@ -73,7 +75,7 @@ public class DatabaseActionUtils {
 
         // System.out.println("Executing SELECT statement parameters injected");
         rs = stmt.executeQuery();
-        resultList = getResults(rs);
+        resultList = getResults(rs, resultList);
 
       } else {
         stmt = conn.prepareStatement(sqlStatements[lastIndex]);
@@ -123,7 +125,8 @@ public class DatabaseActionUtils {
     }
   }
 
-  public static List<Map<String, Object>> getResults(ResultSet rs) throws SQLException {
+  public static List<Map<String, Object>> getResults(ResultSet rs, List<Map<String, Object>> resultList)
+      throws SQLException {
     // ✅ Store all rows in resultList
     ResultSetMetaData metaData = rs.getMetaData();
     int columnCount = metaData.getColumnCount();
