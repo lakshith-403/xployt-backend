@@ -47,25 +47,27 @@ public class UserManagementServlet extends HttpServlet {
       if (pathParams.size() > 0) {
         System.out.println("Path params: " + pathParams.get(0));
         String userType = pathParams.get(0);
-        String userId = pathParams.get(1);
 
         switch (userType) {
           case "Validator":
             sqlStatements = new String[] {
-                "SELECT * FROM Users INNER JOIN UserProfiles ON Users.userId = UserProfiles.userId WHERE Users.userId = ?"
+                "SELECT * FROM Users WHERE role = 'Validator'"
             };
             break;
           case "Admin":
           case "Hacker":
           case "ProjectLead":
+            sqlStatements = new String[] {
+                "SELECT * FROM Users WHERE role = 'Admin' OR role = 'Hacker' OR role = 'ProjectLead'"
+            };
           case "Client":
             sqlStatements = new String[] {
-                "SELECT * FROM Users INNER JOIN UserProfiles ON Users.userId = UserProfiles.userId WHERE Users.userId = ?"
+                "SELECT * FROM Users WHERE role = 'Client'"
             };
             break;
         }
         sqlParams = new ArrayList<>();
-        sqlParams.add(new Object[] { userId });
+        sqlParams.add(new Object[] { userType });
         results = DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
 
         ResponseProtocol.sendSuccess(request, response, this, "User fetched successfully",
@@ -75,7 +77,7 @@ public class UserManagementServlet extends HttpServlet {
       } else {
         // Handle /api/admin/userManagement
         sqlStatements = new String[] {
-            "SELECT userId, name, role, email, status FROM Users"
+            "SELECT userId, name, email, status FROM Users"
         };
 
         sqlParams = new ArrayList<>();
