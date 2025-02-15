@@ -37,7 +37,7 @@ public class ProjectsService {
     List<ProjectBriefLead> remainingProjects = new ArrayList<>();
 
     for (ProjectBriefLead project : allProjects) {
-      if (!STATUS_FILTER.contains(project.getStatus())) {
+      if (!STATUS_FILTER.contains(project.getState())) {
         filteredProjects.add(project);
       } else {
         remainingProjects.add(project);
