@@ -139,23 +139,4 @@ public class TemplateServlet extends HttpServlet {
     pathParams = RequestProtocol.parsePathParams(request);
     System.out.println("Path params: " + pathParams);
   }
-
-  // @Override
-  // protected void doPut(HttpServletRequest request, HttpServletResponse
-  // response)
-  // throws IOException {
-  // System.out.println("\n------------ TemplateServlet | doPut 2 ------------");
-
-  // User user = RequestProtocol.parseRequest(request, User.class);
-  // System.out.println("User: " + user);
-
-  // requestBody = RequestProtocol.parseRequest(request);
-  // System.out.println("Request body: " + requestBody);
-
-  // ResponseProtocol.sendSuccess(request, response, this, "User updated
-  // successfully",
-  // Map.of("user", user),
-  // HttpServletResponse.SC_OK);
-  // }
-
 }

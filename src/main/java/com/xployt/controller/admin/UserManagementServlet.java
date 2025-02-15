@@ -22,9 +22,9 @@ public class UserManagementServlet extends HttpServlet {
   private static String[] sqlStatements = {};
   private static List<Object[]> sqlParams = new ArrayList<>();
   private static List<Map<String, Object>> results = new ArrayList<>();
-  private static Map<String, Object> requestBody = new HashMap<>();
   private static ArrayList<String> pathParams = new ArrayList<>();
-  private static Map<String, Object> queryParams = new HashMap<>();
+  // private static Map<String, Object> requestBody = new HashMap<>();
+  // private static Map<String, Object> queryParams = new HashMap<>();
 
   /*
    * Get all users
@@ -82,6 +82,7 @@ public class UserManagementServlet extends HttpServlet {
             return;
         }
         sqlParams = new ArrayList<>();
+        sqlParams.add(new Object[] { userId });
         results = DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
 
         ResponseProtocol.sendSuccess(request, response, this, "User info fetched successfully",
@@ -122,105 +123,49 @@ public class UserManagementServlet extends HttpServlet {
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
     System.out.println("\n\n------------ UserManagementServlet | doPost ------------");
-
-    int userId = 0;
-    try {
-      requestBody = RequestProtocol.parseRequest(request);
-      System.out.println("Request body: " + requestBody);
-      // Simulate requestBody
-
-      sqlStatements = new String[] {
-          "INSERT INTO Users (email, passwordHash, name, role, status) VALUES (?, ?, ?, 'Validator', 'inactive')",
-          "UPDATE Users SET role = ? WHERE email = ?",
-          "UPDATE Users SET name = ? WHERE email = ?",
-          "SELECT userId FROM Users WHERE email = ?"
-
-      };
-
-      sqlParams = new ArrayList<>();
-
-      sqlParams.add(new Object[] { "Test@test.com",
-          "testPassword",
-          "Test User" });
-
-      sqlParams.add(new Object[] { "Admin", "Test@test.com" });
-
-      sqlParams.add(new Object[] { "Edited Test User", "Test@test.com" });
-
-      sqlParams.add(new Object[] { "Test@test.com" });
-
-      results = DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
-      if (results.size() > 0) {
-        System.out.println("After rs.next()");
-        userId = (int) results.get(0).get("userId");
-        System.out.println("User ID: " + userId);
-      }
-
-      sqlStatements = new String[] {
-          "DELETE FROM Users WHERE userId = ?"
-      };
-      sqlParams = new ArrayList<>();
-      sqlParams.add(new Object[] { userId });
-      DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
-
-      System.out.println("Test case done successfully");
-
-      ResponseProtocol.sendSuccess(request, response, this, "Test case excuted successfully",
-          Map.of("userId", userId),
-          HttpServletResponse.SC_CREATED);
-
-    } catch (Exception e) {
-      System.out.println("Error creating validator: " + e.getMessage());
-
-      ResponseProtocol.sendError(request, response, this, "Error creating validator", e.getMessage(),
-          HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-
-    }
   }
 
   @Override
   protected void doPut(HttpServletRequest request, HttpServletResponse response)
       throws IOException {
     System.out.println("\n------------ UserManagementServlet | doPut ------------");
-    queryParams = RequestProtocol.parseQueryParams(request);
-    System.out.println("Query params: " + queryParams);
-
-    if (queryParams.size() > 0) {
-      ResponseProtocol.sendSuccess(request, response, this, "Query params is not empty",
-          Map.of("queryParams", queryParams),
-          HttpServletResponse.SC_OK);
-      return;
-    }
-
-    ResponseProtocol.sendError(request, response, this, "Query params is empty",
-        Map.of("queryParams", new HashMap<>()),
-        HttpServletResponse.SC_BAD_REQUEST);
   }
 
+  /*
+   * Delete a user
+   * Used to delete a user
+   * Used in route: /admin/list-users
+   * The reponse varies on whether a pathParam is set or not
+   */
   @Override
   protected void doDelete(HttpServletRequest request, HttpServletResponse response)
       throws IOException {
     System.out.println("\n------------ UserManagementServlet | doDelete ------------");
-    pathParams = RequestProtocol.parsePathParams(request);
-    System.out.println("Path params: " + pathParams);
+
+    try {
+      pathParams = RequestProtocol.parsePathParams(request);
+      System.out.println("Path params: " + pathParams);
+
+      if (pathParams.size() == 1) {
+        String userId = pathParams.get(0);
+        sqlStatements = new String[] {
+            "DELETE FROM UserProfiles WHERE userId = ?",
+            "DELETE FROM Users WHERE userId = ?"
+        };
+        sqlParams = new ArrayList<>();
+        sqlParams.add(new Object[] { userId });
+        sqlParams.add(new Object[] { userId });
+        DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
+
+        System.out.println("User deleted successfully");
+        ResponseProtocol.sendSuccess(request, response, this, "User deleted successfully",
+            Map.of("userId", userId),
+            HttpServletResponse.SC_OK);
+      }
+    } catch (Exception e) {
+      System.out.println("Error deleting user: " + e.getMessage());
+      ResponseProtocol.sendError(request, response, this, "Error deleting user", e.getMessage(),
+          HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+    }
   }
-
-  // @Override
-  // protected void doPut(HttpServletRequest request, HttpServletResponse
-  // response)
-  // throws IOException {
-  // System.out.println("\n------------ TemplateServlet | doPut 2 ------------");
-
-  // User user = RequestProtocol.parseRequest(request, User.class);
-  // System.out.println("User: " + user);
-
-  // requestBody = RequestProtocol.parseRequest(request);
-  // System.out.println("Request body: " + requestBody);
-
-  // ResponseProtocol.sendSuccess(request, response, this, "User updated
-  // successfully",
-  // Map.of("user", user),
-  // HttpServletResponse.SC_OK);
-  // }
-
 }
