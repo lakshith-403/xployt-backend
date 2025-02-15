@@ -7,7 +7,7 @@ public class ProjectConfigInfo {
   private String endDate;
   private String url;
   private String technicalStack;
-  private String status;
+  private String state;
 
   private String clientId;
   private String clientName;
@@ -94,11 +94,11 @@ public class ProjectConfigInfo {
     this.clientUsername = clientUsername;
   }
 
-  public String getStatus() {
-    return status;
+  public String getState() {
+    return state;
   }
 
-  public void setStatus(String status) {
-    this.status = status;
+  public void setState(String state) {
+    this.state = state;
   }
 }

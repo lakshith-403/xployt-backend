@@ -126,10 +126,10 @@ public class ProjectValidatorsDAO {
 
   private Map<String, Double> getWorkloadScores(Connection conn) throws Exception {
     String sql = "SELECT v.userId, " +
-        "(1 - (COUNT(DISTINCT CASE WHEN p.status = 'Active' THEN pv.projectId END) / " +
+        "(1 - (COUNT(DISTINCT CASE WHEN p.state = 'Active' THEN pv.projectId END) / " +
         "(SELECT MAX(active_count) + 1 FROM (SELECT COUNT(*) as active_count FROM ProjectValidators " +
         "JOIN Projects ON ProjectValidators.projectId = Projects.projectId " +
-        "WHERE Projects.status = 'Active' GROUP BY validatorId) counts))) * ? AS workload_score " +
+        "WHERE Projects.state = 'Active' GROUP BY validatorId) counts))) * ? AS workload_score " +
         "FROM Users v " +
         "LEFT JOIN ProjectValidators pv ON v.userId = pv.validatorId " +
         "LEFT JOIN Projects p ON pv.projectId = p.projectId " +

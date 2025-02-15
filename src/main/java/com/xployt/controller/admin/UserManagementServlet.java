@@ -1,4 +1,4 @@
-package com.xployt.controller.lead;
+package com.xployt.controller.admin;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -14,30 +14,10 @@ import java.util.HashMap;
 import com.xployt.util.RequestProtocol;
 import com.xployt.util.ResponseProtocol;
 import com.xployt.util.DatabaseActionUtils;
+// import com.xployt.model.User;
 
-// import com.xployt.service.lead.ProjectService;
-
-@WebServlet("/api/lead/project/*")
-public class ProjectConfigServlet extends HttpServlet {
-
-  // private final ProjectService projectService = new ProjectService();
-  // @Override
-  // protected void doGet(HttpServletRequest request, HttpServletResponse
-  // response) {
-  // System.out.println("ProjectConfigServlet doGet method called");
-  // // projectService.getProjectConfigInfo(request, response);
-  // // response.setContentType("application/json");
-  // // response.setCharacterEncoding("UTF-8");
-  // }
-  // @Override
-  // protected void doPost(HttpServletRequest request, HttpServletResponse
-  // response) {
-  // System.out.println("ProjectConfigServlet doPost method called");
-  // // projectService.updateProjectConfigInfo(request, response);
-  // // response.setContentType("application/json");
-  // // response.setCharacterEncoding("UTF-8");
-  // }
-  // }
+@WebServlet("/api/admin/userManagement/*")
+public class UserManagementServlet extends HttpServlet {
 
   private static String[] sqlStatements = {};
   private static List<Object[]> sqlParams = new ArrayList<>();
@@ -46,65 +26,84 @@ public class ProjectConfigServlet extends HttpServlet {
   private static ArrayList<String> pathParams = new ArrayList<>();
   private static Map<String, Object> queryParams = new HashMap<>();
 
+  /*
+   * Get all users
+   * Used to view user info
+   * Depending on user type the fetched info can vary
+   * Used in route: /admin/list/users
+   * The reponse varies on whether a pathParam is set or not
+   */
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
       throws IOException {
 
-    System.out.println("\n------------ ProjectConfigServlet | doGet ------------");
-
+    System.out.println("\n------------ UserManagementServlet | doGet ------------");
     try {
+
       pathParams = RequestProtocol.parsePathParams(request);
       System.out.println("Path params: " + pathParams);
 
+      // Handle /api/admin/userManagement/{userId}
       if (pathParams.size() > 0) {
         System.out.println("Path params: " + pathParams.get(0));
+        String userType = pathParams.get(0);
+        String userId = pathParams.get(1);
 
-        // Combined SQL Statement
-        String sqlCombined = "SELECT p.*, u.* FROM Projects p JOIN Users u ON p.clientId = u.userId WHERE p.projectId = ?;";
-
-        // Execute Combined Query
-        sqlParams.clear();
-        sqlParams.add(new Object[] { pathParams.get(0) });
-        List<Map<String, Object>> combinedResults = DatabaseActionUtils.executeSQL(new String[] { sqlCombined },
-            sqlParams);
-
-        System.out.println("Combined results: " + combinedResults);
-
-        // Check Results
-        if (!combinedResults.isEmpty()) {
-          // Map<String, Object> mergedResults = new HashMap<>();
-          // mergedResults.put("project", combinedResults.get(0)); // Project details
-          // mergedResults.put("user", combinedResults.get(0)); // User details (same row
-          // due to JOIN)
-          // System.out.println("Merged results: " + mergedResults);
-          ResponseProtocol.sendSuccess(request, response, this, "Project and User found",
-              combinedResults.get(0),
-              HttpServletResponse.SC_OK);
-          return;
-        } else {
-          ResponseProtocol.sendError(request, response, this, "Project or User not found",
-              "Project or User not found",
-              HttpServletResponse.SC_NOT_FOUND);
-          return;
+        switch (userType) {
+          case "Validator":
+            sqlStatements = new String[] {
+                "SELECT * FROM Users INNER JOIN UserProfiles ON Users.userId = UserProfiles.userId WHERE Users.userId = ?"
+            };
+            break;
+          case "Admin":
+          case "Hacker":
+          case "ProjectLead":
+          case "Client":
+            sqlStatements = new String[] {
+                "SELECT * FROM Users INNER JOIN UserProfiles ON Users.userId = UserProfiles.userId WHERE Users.userId = ?"
+            };
+            break;
         }
+        sqlParams = new ArrayList<>();
+        sqlParams.add(new Object[] { userId });
+        results = DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
 
+        ResponseProtocol.sendSuccess(request, response, this, "User fetched successfully",
+            Map.of("user", results),
+            HttpServletResponse.SC_OK);
+
+      } else {
+        // Handle /api/admin/userManagement
+        sqlStatements = new String[] {
+            "SELECT userId, name, role, email, status FROM Users"
+        };
+
+        sqlParams = new ArrayList<>();
+        results = DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
+
+        if (results.size() > 0) {
+          System.out.println("Users fetched successfully");
+          ResponseProtocol.sendSuccess(request, response, this, "Users fetched successfully",
+              Map.of("users", results),
+              HttpServletResponse.SC_OK);
+        } else {
+          System.out.println("No users found");
+          ResponseProtocol.sendSuccess(request, response, this, "No users found",
+              Map.of("users", results),
+              HttpServletResponse.SC_OK);
+        }
       }
-
-      ResponseProtocol.sendError(request, response, this, "Path params is empty",
-          Map.of("pathParams", new ArrayList<>()),
-          HttpServletResponse.SC_BAD_REQUEST);
-
     } catch (Exception e) {
-      System.out.println("Error getting project config info: " + e.getMessage());
-      ResponseProtocol.sendError(request, response, this, "Error getting project config info", e.getMessage(),
+      System.out.println("Error fetching users: " + e.getMessage());
+      ResponseProtocol.sendError(request, response, this, "Error fetching users", e.getMessage(),
           HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
+
   }
 
   @Override
-
   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    System.out.println("\n\n------------ ProjectConfigServlet | doPost ------------");
+    System.out.println("\n\n------------ UserManagementServlet | doPost ------------");
 
     int userId = 0;
     try {
@@ -120,7 +119,7 @@ public class ProjectConfigServlet extends HttpServlet {
 
       };
 
-      sqlParams.clear();
+      sqlParams = new ArrayList<>();
 
       sqlParams.add(new Object[] { "Test@test.com",
           "testPassword",
@@ -164,7 +163,7 @@ public class ProjectConfigServlet extends HttpServlet {
   @Override
   protected void doPut(HttpServletRequest request, HttpServletResponse response)
       throws IOException {
-    System.out.println("\n------------ ProjectConfigServlet | doPut ------------");
+    System.out.println("\n------------ UserManagementServlet | doPut ------------");
     queryParams = RequestProtocol.parseQueryParams(request);
     System.out.println("Query params: " + queryParams);
 
@@ -183,8 +182,27 @@ public class ProjectConfigServlet extends HttpServlet {
   @Override
   protected void doDelete(HttpServletRequest request, HttpServletResponse response)
       throws IOException {
-    System.out.println("\n------------ ProjectConfigServlet | doDelete ------------");
+    System.out.println("\n------------ UserManagementServlet | doDelete ------------");
     pathParams = RequestProtocol.parsePathParams(request);
     System.out.println("Path params: " + pathParams);
   }
+
+  // @Override
+  // protected void doPut(HttpServletRequest request, HttpServletResponse
+  // response)
+  // throws IOException {
+  // System.out.println("\n------------ TemplateServlet | doPut 2 ------------");
+
+  // User user = RequestProtocol.parseRequest(request, User.class);
+  // System.out.println("User: " + user);
+
+  // requestBody = RequestProtocol.parseRequest(request);
+  // System.out.println("Request body: " + requestBody);
+
+  // ResponseProtocol.sendSuccess(request, response, this, "User updated
+  // successfully",
+  // Map.of("user", user),
+  // HttpServletResponse.SC_OK);
+  // }
+
 }

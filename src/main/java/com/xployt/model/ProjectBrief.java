@@ -2,14 +2,14 @@ package com.xployt.model;
 
 public class ProjectBrief {
     private int id;
-    private String status;
+    private String state;
     private String title;
     private String leadId;
     private int pendingReports;
 
-    public ProjectBrief(int id, String status, String title, String leadId, int pendingReports) {
+    public ProjectBrief(int id, String state, String title, String leadId, int pendingReports) {
         this.id = id;
-        this.status = status;
+        this.state = state;
         this.title = title;
         this.leadId = leadId;
         this.pendingReports = pendingReports;
@@ -20,8 +20,8 @@ public class ProjectBrief {
         return id;
     }
 
-    public String getStatus() {
-        return status;
+    public String getState() {
+        return state;
     }
 
     public String getTitle() {

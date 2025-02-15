@@ -16,6 +16,11 @@ import com.xployt.util.ResponseProtocol;
 import com.xployt.util.DatabaseActionUtils;
 // import com.xployt.model.User;
 
+/*
+ * This is a template servlet for creating new servlets
+ * It is used to be used to setup a new Controller
+ * Try out theese ednpoints to se how it works
+ */
 @WebServlet("/api/test/*")
 public class TemplateServlet extends HttpServlet {
 
@@ -67,7 +72,7 @@ public class TemplateServlet extends HttpServlet {
 
       };
 
-      sqlParams = new ArrayList<>();
+      sqlParams.clear();
 
       sqlParams.add(new Object[] { "Test@test.com",
           "testPassword",

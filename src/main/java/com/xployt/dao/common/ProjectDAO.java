@@ -40,7 +40,7 @@ public class ProjectDAO {
             while (rs.next()) {
                 ProjectBrief project = new ProjectBrief(
                         rs.getInt("projectId"),
-                        rs.getString("status"),
+                        rs.getString("state"),
                         rs.getString("title"),
                         rs.getString("clientId"),
                         rs.getInt("pendingReports"));
@@ -69,7 +69,7 @@ public class ProjectDAO {
                     while (rs.next()) {
                         ProjectBrief project = new ProjectBrief(
                                 rs.getInt("projectId"),
-                                rs.getString("status"),
+                                rs.getString("state"),
                                 rs.getString("title"),
                                 rs.getString("clientId"),
                                 rs.getInt("pendingReports"));
@@ -117,14 +117,14 @@ public class ProjectDAO {
         return project;
     }
 
-    public void updateProjectStatus(String projectId, String status) throws SQLException {
-        String sql = "UPDATE Projects SET status = ? WHERE projectId = ?";
+    public void updateProjectState(String projectId, String state) throws SQLException {
+        String sql = "UPDATE Projects SET state = ? WHERE projectId = ?";
         ServletContext servletContext = ContextManager.getContext("DBConnection");
         Connection conn = (Connection) servletContext.getAttribute("DBConnection");
         logger.info("ProjectDAO: Connection established");
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, status);
+            stmt.setString(1, state);
             stmt.setString(2, projectId);
             stmt.executeUpdate();
         }

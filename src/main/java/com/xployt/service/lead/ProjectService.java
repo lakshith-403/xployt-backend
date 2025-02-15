@@ -82,7 +82,7 @@ public class ProjectService {
     ProjectConfigDAO projectConfigDAO = new ProjectConfigDAO();
     try {
       projectConfigDAO.updateProjectConfig(projectConfig);
-      projectDAO.updateProjectStatus(projectConfig.getProjectId(), "Active");
+      projectDAO.updateProjectState(projectConfig.getProjectId(), "Active");
     } catch (SQLException e) {
       logger.severe("SQL Error in updateProjectConfigInfo: " + e.getMessage());
       ResponseUtil.writeResponse(response, JsonUtil.toJson(new GenericResponse(null, false, e.getMessage(), null)));
@@ -92,28 +92,32 @@ public class ProjectService {
 
   public void acceptProject(String projectId, HttpServletResponse response) throws IOException {
     ProjectDAO projectDAO = new ProjectDAO();
-    
+
     // create a discussion and add to the project
     try {
-        ProjectTeamDAO projectTeamDAO = new ProjectTeamDAO();
-        ProjectTeam projectTeam = projectTeamDAO.getProjectTeam(projectId);
+      ProjectTeamDAO projectTeamDAO = new ProjectTeamDAO();
+      ProjectTeam projectTeam = projectTeamDAO.getProjectTeam(projectId);
 
-        List<PublicUser> participants = new ArrayList<>();
-        participants.add(new PublicUser(projectTeam.getClient().getUserId(), projectTeam.getClient().getName(), projectTeam.getClient().getEmail()));
-        participants.add(new PublicUser(projectTeam.getProjectLead().getUserId(), projectTeam.getProjectLead().getName(), projectTeam.getProjectLead().getEmail()));
-        
-        DiscussionDAO discussionDAO = new DiscussionDAO();
-        Discussion discussion = new Discussion(UUID.randomUUID().toString(), "Init Project", participants, new Date(), projectId, new ArrayList<>());
-        discussionDAO.createDiscussion(discussion);
+      List<PublicUser> participants = new ArrayList<>();
+      participants.add(new PublicUser(projectTeam.getClient().getUserId(), projectTeam.getClient().getName(),
+          projectTeam.getClient().getEmail()));
+      participants.add(new PublicUser(projectTeam.getProjectLead().getUserId(), projectTeam.getProjectLead().getName(),
+          projectTeam.getProjectLead().getEmail()));
+
+      DiscussionDAO discussionDAO = new DiscussionDAO();
+      Discussion discussion = new Discussion(UUID.randomUUID().toString(), "Init Project", participants, new Date(),
+          projectId, new ArrayList<>());
+      discussionDAO.createDiscussion(discussion);
     } catch (Exception e) {
       logger.severe("Error creating discussion with client and lead: " + e.getMessage());
-      response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error creating discussion with client and lead");
+      response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+          "Error creating discussion with client and lead");
       return;
     }
 
     logger.info("ProjectService acceptProject method called for projectId: " + projectId);
     try {
-      projectDAO.updateProjectStatus(projectId, "Active");
+      projectDAO.updateProjectState(projectId, "Active");
       response.getWriter().write(JsonUtil.toJson(new GenericResponse(null, true, "Project accepted", null)));
     } catch (Exception e) {
       logger.severe("Error accepting project: " + e.getMessage());
@@ -126,7 +130,7 @@ public class ProjectService {
 
     logger.info("ProjectService rejectProject method called for projectId: " + projectId);
     try {
-      projectDAO.updateProjectStatus(projectId, "Rejected");
+      projectDAO.updateProjectState(projectId, "Rejected");
       response.getWriter().write(JsonUtil.toJson(new GenericResponse(null, true, "Project rejected", null)));
     } catch (Exception e) {
       logger.severe("Error rejecting project: " + e.getMessage());
