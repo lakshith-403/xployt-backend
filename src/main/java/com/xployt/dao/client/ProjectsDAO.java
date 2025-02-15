@@ -33,7 +33,7 @@ public class ProjectsDAO {
       while (rs.next()) {
         ProjectBrief project = new ProjectBrief(
             rs.getInt("projectId"),
-            rs.getString("status"),
+            rs.getString("state"),
             rs.getString("title"),
             rs.getString("leadId"),
             rs.getInt("pendingReports"));
