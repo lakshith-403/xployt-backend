@@ -43,42 +43,60 @@ public class UserManagementServlet extends HttpServlet {
       pathParams = RequestProtocol.parsePathParams(request);
       System.out.println("Path params: " + pathParams);
 
-      // Handle /api/admin/userManagement/{userId}
-      if (pathParams.size() > 0) {
-        System.out.println("Path params: " + pathParams.get(0));
+      // Handle /api/admin/userManagement/{userType}
+      if (pathParams.size() == 2) {
         String userType = pathParams.get(0);
         String userId = pathParams.get(1);
 
         switch (userType) {
           case "Validator":
             sqlStatements = new String[] {
-                "SELECT * FROM Users INNER JOIN UserProfiles ON Users.userId = UserProfiles.userId WHERE Users.userId = ?"
+                "SELECT * FROM Users WHERE role = 'Validator' AND userId = ?"
             };
             break;
           case "Admin":
-          case "Hacker":
-          case "ProjectLead":
-          case "Client":
             sqlStatements = new String[] {
-                "SELECT * FROM Users INNER JOIN UserProfiles ON Users.userId = UserProfiles.userId WHERE Users.userId = ?"
+                "SELECT * FROM Users WHERE role = 'Admin' AND userId = ?"
             };
             break;
+          case "Hacker":
+            sqlStatements = new String[] {
+                "SELECT * FROM Users WHERE role = 'Hacker' AND userId = ?"
+            };
+            break;
+          case "ProjectLead":
+            sqlStatements = new String[] {
+                "SELECT * FROM Users WHERE role = 'ProjectLead' AND userId = ?"
+            };
+            break;
+          case "Client":
+            sqlStatements = new String[] {
+                "SELECT * FROM Users WHERE role = 'Client' AND userId = ?"
+            };
+            break;
+          default:
+            System.out.println("Invalid user type: " + userType);
+            ResponseProtocol.sendError(request, response, this, "Invalid user type",
+                "Invalid user type: " + userType,
+                HttpServletResponse.SC_BAD_REQUEST);
+            return;
         }
         sqlParams = new ArrayList<>();
-        sqlParams.add(new Object[] { userId });
         results = DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
 
-        ResponseProtocol.sendSuccess(request, response, this, "User fetched successfully",
-            Map.of("user", results),
+        ResponseProtocol.sendSuccess(request, response, this, "User info fetched successfully",
+            Map.of("users", results),
             HttpServletResponse.SC_OK);
 
-      } else {
-        // Handle /api/admin/userManagement
+        // Handle /api/admin/userManagement/{userType}/{userId}
+      } else if (pathParams.size() == 1) {
+        String userType = pathParams.get(0);
         sqlStatements = new String[] {
-            "SELECT userId, name, role, email, status FROM Users"
+            "SELECT userId, name, email, status FROM Users WHERE role = ?"
         };
 
         sqlParams = new ArrayList<>();
+        sqlParams.add(new Object[] { userType });
         results = DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
 
         if (results.size() > 0) {
