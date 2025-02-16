@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 
 public class ProjectDAO {
     // private static ServletContext servletContext;
-    private Logger logger = CustomLogger.getLogger();
+    private final Logger logger = CustomLogger.getLogger();
 
     // public static void setServletContext(ServletContext context) {
     // servletContext = context;
@@ -42,7 +42,10 @@ public class ProjectDAO {
                         rs.getInt("projectId"),
                         rs.getString("status"),
                         rs.getString("title"),
+                        rs.getString("leadId"),
                         rs.getString("clientId"),
+                        rs.getString("startDate"),
+                        rs.getString("endDate"),
                         rs.getInt("pendingReports"));
                 projects.add(project);
             }
@@ -71,7 +74,10 @@ public class ProjectDAO {
                                 rs.getInt("projectId"),
                                 rs.getString("status"),
                                 rs.getString("title"),
+                                rs.getString("leadId"),
                                 rs.getString("clientId"),
+                                rs.getString("startDate"),
+                                rs.getString("endDate"),
                                 rs.getInt("pendingReports"));
                         projects.add(project);
                     }
