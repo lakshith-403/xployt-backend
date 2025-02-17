@@ -2,9 +2,11 @@ package com.xployt.service.common;
 
 import com.xployt.dao.common.ProjectDAO;
 import com.xployt.model.GenericResponse;
+import com.xployt.model.Project;
 import com.xployt.model.ProjectBrief;
 import com.xployt.util.CustomLogger;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -14,7 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public class ProjectService {
-    private ProjectDAO projectDAO;
+    private final ProjectDAO projectDAO;
     private static final List<String> STATUS_FILTER = Arrays.asList("closed");
     private static final Logger logger = CustomLogger.getLogger();
 
@@ -48,5 +50,14 @@ public class ProjectService {
             logger.severe("Error writing response: " + e.getMessage());
             response.getWriter().write(JsonUtil.toJson(new GenericResponse(result, false, null, null)));
         }
+    }
+
+    public GenericResponse getProjectById(String projectId) throws SQLException {
+        logger.info("Fetching project of projectId: " + projectId);
+        Project project = projectDAO.getProject(projectId);
+        if(project != null) {
+            return new GenericResponse(project, true, null, null);
+        }
+        return new GenericResponse(null, false, "Failed to fetch project", null);
     }
 }
