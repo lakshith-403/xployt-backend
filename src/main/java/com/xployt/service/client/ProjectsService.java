@@ -39,9 +39,9 @@ public class ProjectsService {
     List<ProjectBrief> activeProjects = new ArrayList<>();
 
     for (ProjectBrief project : allProjects) {
-      if (INACTIVE_FILTER.contains(project.getStatus())) {
+      if (INACTIVE_FILTER.contains(project.getState())) {
         inactiveProjects.add(project);
-      } else if (REQUESTS_FILTER.contains(project.getStatus())) {
+      } else if (REQUESTS_FILTER.contains(project.getState())) {
         requestedProjects.add(project);
       } else {
         activeProjects.add(project);

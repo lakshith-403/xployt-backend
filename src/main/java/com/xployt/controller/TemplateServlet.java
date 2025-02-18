@@ -16,6 +16,11 @@ import com.xployt.util.ResponseProtocol;
 import com.xployt.util.DatabaseActionUtils;
 // import com.xployt.model.User;
 
+/*
+ * This is a template servlet for creating new servlets
+ * It is used to be used to setup a new Controller
+ * Try out theese ednpoints to se how it works
+ */
 @WebServlet("/api/test/*")
 public class TemplateServlet extends HttpServlet {
 
@@ -67,7 +72,7 @@ public class TemplateServlet extends HttpServlet {
 
       };
 
-      sqlParams = new ArrayList<>();
+      sqlParams.clear();
 
       sqlParams.add(new Object[] { "Test@test.com",
           "testPassword",
@@ -134,23 +139,4 @@ public class TemplateServlet extends HttpServlet {
     pathParams = RequestProtocol.parsePathParams(request);
     System.out.println("Path params: " + pathParams);
   }
-
-  // @Override
-  // protected void doPut(HttpServletRequest request, HttpServletResponse
-  // response)
-  // throws IOException {
-  // System.out.println("\n------------ TemplateServlet | doPut 2 ------------");
-
-  // User user = RequestProtocol.parseRequest(request, User.class);
-  // System.out.println("User: " + user);
-
-  // requestBody = RequestProtocol.parseRequest(request);
-  // System.out.println("Request body: " + requestBody);
-
-  // ResponseProtocol.sendSuccess(request, response, this, "User updated
-  // successfully",
-  // Map.of("user", user),
-  // HttpServletResponse.SC_OK);
-  // }
-
 }

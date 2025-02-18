@@ -26,7 +26,7 @@ public class ProjectBrief {
         return id;
     }
 
-    public String getStatus() {
+    public String getState() {
         return state;
     }
 
@@ -51,4 +51,5 @@ public class ProjectBrief {
     public int getPendingReports() {
         return pendingReports;
     }
+
 }

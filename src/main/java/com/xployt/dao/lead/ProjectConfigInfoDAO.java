@@ -40,7 +40,7 @@ public class ProjectConfigInfoDAO {
                     project.setTechnicalStack(rs.getString("technicalStack"));
                     project.setDescription(rs.getString("description"));
                     project.setUrl(rs.getString("url"));
-                    project.setStatus(rs.getString("status"));
+                    project.setState(rs.getString("state"));
 
                     project.setClientId(rs.getString("clientId"));
                     project.setClientName(rs.getString("name"));

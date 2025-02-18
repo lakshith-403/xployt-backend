@@ -32,7 +32,7 @@ public class ProjectService {
         List<ProjectBrief> remainingProjects = new ArrayList<>();
 
         for (ProjectBrief project : allProjects) {
-            if (!STATUS_FILTER.contains(project.getStatus())) {
+            if (!STATUS_FILTER.contains(project.getState())) {
                 filteredProjects.add(project);
             } else {
                 remainingProjects.add(project);
