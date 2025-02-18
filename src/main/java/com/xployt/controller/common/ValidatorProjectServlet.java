@@ -1,42 +1,41 @@
 package com.xployt.controller.common;
 
-import java.io.IOException;
-import java.util.logging.Logger;
+import com.xployt.service.common.ProjectService;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import com.xployt.model.GenericResponse;
-import com.xployt.service.common.ProjectService;
+import java.io.IOException;
+import java.util.logging.Logger;
 import com.xployt.util.CustomLogger;
-import com.xployt.util.JsonUtil;
 
-@WebServlet("/api/project/*")
-public class ProjectServlet extends HttpServlet {
+@WebServlet("/api/validator/projects/*") // Matches /api/validator/projects/{userId}
+public class ValidatorProjectServlet extends HttpServlet {
     private ProjectService projectService;
     private static final Logger logger = CustomLogger.getLogger();
 
     @Override
-    public  void init() throws ServletException {
+    public void init() throws ServletException {
         projectService = new ProjectService();
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        logger.info("Fetching project");
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        logger.info("Fetching projects for user");
         String pathInfo = request.getPathInfo();
         if (pathInfo == null || pathInfo.isEmpty()) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "User ID not provided");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "User ID not provided hehe hoo");
             return;
         }
+        logger.info("pathInfo: " + pathInfo);
+        logger.info("pathInfo substring: " + pathInfo.substring(1));
 
-        String projectId = pathInfo.substring(1);
-        GenericResponse project;
+        String userId = pathInfo.substring(1); // Get userId from URL
         try {
-            project = projectService.getProjectById(projectId);
+            projectService.fetchProjects(userId, response);
         } catch (Exception e) {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error fetching projects");
             return;
@@ -44,6 +43,6 @@ public class ProjectServlet extends HttpServlet {
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(JsonUtil.useGson().toJson(project));
+
     }
 }

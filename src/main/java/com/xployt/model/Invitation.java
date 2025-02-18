@@ -9,6 +9,7 @@ public class Invitation {
     public Invitation(int hackerId, int projectId, String status, String timestamp) {
         this.projectId = projectId;
         this.hackerId = hackerId;
+        this.status = status;
         this.timestamp = timestamp;
     }
 

@@ -18,7 +18,8 @@ import java.util.logging.Logger;
 public class ProjectsService {
 
   public void fetchProjects(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    final List<String> STATUS_FILTER = Arrays.asList("Completed", "Rejected");
+    final List<String> INACTIVE_FILTER = Arrays.asList("Completed", "Rejected");
+    final List<String> REQUESTS_FILTER = Arrays.asList("Pending", "Unconfigured");
     final Logger logger = CustomLogger.getLogger();
 
     logger.info("Client ProjectsService: Inside fetchProjects");
@@ -33,21 +34,25 @@ public class ProjectsService {
     ProjectsDAO projectsDAO = new ProjectsDAO();
     List<ProjectBrief> allProjects = projectsDAO.getAllProjects(userId);
 
-    List<ProjectBrief> filteredProjects = new ArrayList<>();
-    List<ProjectBrief> remainingProjects = new ArrayList<>();
+    List<ProjectBrief> requestedProjects = new ArrayList<>();
+    List<ProjectBrief> inactiveProjects = new ArrayList<>();
+    List<ProjectBrief> activeProjects = new ArrayList<>();
 
     for (ProjectBrief project : allProjects) {
-      if (!STATUS_FILTER.contains(project.getState())) {
-        filteredProjects.add(project);
+      if (INACTIVE_FILTER.contains(project.getState())) {
+        inactiveProjects.add(project);
+      } else if (REQUESTS_FILTER.contains(project.getState())) {
+        requestedProjects.add(project);
       } else {
-        remainingProjects.add(project);
+        activeProjects.add(project);
       }
     }
 
-    logger.info("Client ProjectsService: Filtered projects: " + filteredProjects.size());
+    logger.info("Client ProjectsService: Filtered projects: " + requestedProjects.size());
     List<List<ProjectBrief>> result = new ArrayList<>();
-    result.add(filteredProjects);
-    result.add(remainingProjects);
+    result.add(activeProjects);
+    result.add(requestedProjects);
+    result.add(inactiveProjects);
 
     try {
       response.getWriter().write(JsonUtil.toJson(new GenericResponse(result, true, null, null)));
