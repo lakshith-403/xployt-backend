@@ -27,12 +27,12 @@ public class UserProjectsDAO {
         } else if (Objects.equals(userStatus, "lead")) {
             sql = "SELECT * FROM Projects WHERE leadId = ?";
         } else if (Objects.equals(userStatus, "validator")) {
-            sql = "SELECT ProjectValidators.projectId FROM ProjectValidators " +
+            sql = "SELECT * FROM ProjectValidators " +
                     "INNER JOIN Projects " +
                     "ON ProjectValidators.projectId = Projects.projectId " +
                     "WHERE ProjectValidators.validatorId = ?";
         } else {
-            sql = "SELECT ProjectHackers.projectId FROM ProjectHackers " +
+            sql = "SELECT * FROM ProjectHackers " +
                     "INNER JOIN Projects " +
                     "ON ProjectHackers.projectId = Projects.projectId " +
                     "WHERE ProjectHackers.hackerId = ?";
