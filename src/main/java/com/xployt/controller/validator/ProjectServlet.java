@@ -1,4 +1,4 @@
-package com.xployt.controller.common;
+package com.xployt.controller.validator;
 
 import java.io.IOException;
 import java.util.logging.Logger;
@@ -20,7 +20,7 @@ public class ProjectServlet extends HttpServlet {
     private static final Logger logger = CustomLogger.getLogger();
 
     @Override
-    public  void init() throws ServletException {
+    public void init() throws ServletException {
         projectService = new ProjectService();
     }
 
