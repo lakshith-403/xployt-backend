@@ -10,7 +10,7 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.HashMap;
+// import java.util.HashMap;
 
 import com.xployt.util.RequestProtocol;
 import com.xployt.util.ResponseProtocol;
@@ -22,12 +22,12 @@ import com.xployt.util.DatabaseActionUtils;
 @WebServlet("/api/dashboard/*")
 public class DashboardStatsServlet extends HttpServlet {
 
-  private static String[] SQL_STATEMENTS = {};
+  // private static String[] SQL_STATEMENTS = {};
   private static List<Object[]> SQL_PARAMS = new ArrayList<>();
-  private static final List<Map<String, Object>> RESULTS = new ArrayList<>();
-  private static Map<String, Object> REQUEST_BODY = new HashMap<>();
+  private static List<Map<String, Object>> RESULTS = new ArrayList<>();
+  // private static Map<String, Object> REQUEST_BODY = new HashMap<>();
   private static ArrayList<String> PATH_PARAMS = new ArrayList<>();
-  private static Map<String, Object> QUERY_PARAMS = new HashMap<>();
+  // private static Map<String, Object> QUERY_PARAMS = new HashMap<>();
 
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -39,7 +39,7 @@ public class DashboardStatsServlet extends HttpServlet {
       System.out.println("Path params: " + PATH_PARAMS);
 
       if (!PATH_PARAMS.isEmpty()) {
-        System.out.println("Path params: " + PATH_PARAMS.get(0));
+        System.out.println("Path selected: " + PATH_PARAMS.get(0));
         handlePathParams(request, response);
         return;
       }
@@ -59,14 +59,14 @@ public class DashboardStatsServlet extends HttpServlet {
       throws SQLException, IOException {
     if ("project-stats".equals(PATH_PARAMS.get(0)) && PATH_PARAMS.size() == 3) {
       RESULTS.clear();
-      RESULTS.addAll(getProjectStats(PATH_PARAMS.get(1), PATH_PARAMS.get(2)));
+      RESULTS = getProjectStats(PATH_PARAMS.get(1), PATH_PARAMS.get(2));
     } else if ("recent-projects".equals(PATH_PARAMS.get(0)) && PATH_PARAMS.size() == 3) {
       RESULTS.clear();
-      RESULTS.addAll(getRecentProjects(PATH_PARAMS.get(1), PATH_PARAMS.get(2)));
+      RESULTS = getRecentProjects(PATH_PARAMS.get(1), PATH_PARAMS.get(2));
     }
 
     ResponseProtocol.sendSuccess(request, response, this, "Project stats fetched successfully",
-        Map.of("projectStats", RESULTS),
+        Map.of("stats", RESULTS),
         HttpServletResponse.SC_OK);
   }
 
@@ -126,95 +126,5 @@ public class DashboardStatsServlet extends HttpServlet {
       default:
         throw new SQLException("Invalid user type");
     }
-  }
-
-  @Override
-  protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    System.out.println("\n\n------------ DashboardStatsServlet | doPost ------------");
-
-    // int userId = 0;
-    // try {
-    // requestBody = RequestProtocol.parseRequest(request);
-    // System.out.println("Request body: " + requestBody);
-    // // Simulate requestBody
-
-    // sqlStatements = new String[] {
-    // "INSERT INTO Users (email, passwordHash, name, role, status) VALUES (?, ?, ?,
-    // 'Validator', 'inactive')",
-    // "UPDATE Users SET role = ? WHERE email = ?",
-    // "UPDATE Users SET name = ? WHERE email = ?",
-    // "SELECT userId FROM Users WHERE email = ?"
-
-    // };
-
-    // sqlParams.clear();
-
-    // sqlParams.add(new Object[] { "Test@test.com",
-    // "testPassword",
-    // "Test User" });
-
-    // sqlParams.add(new Object[] { "Admin", "Test@test.com" });
-
-    // sqlParams.add(new Object[] { "Edited Test User", "Test@test.com" });
-
-    // sqlParams.add(new Object[] { "Test@test.com" });
-
-    // results = DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
-    // if (results.size() > 0) {
-    // System.out.println("After rs.next()");
-    // userId = (int) results.get(0).get("userId");
-    // System.out.println("User ID: " + userId);
-    // }
-
-    // sqlStatements = new String[] {
-    // "DELETE FROM Users WHERE userId = ?"
-    // };
-    // sqlParams = new ArrayList<>();
-    // sqlParams.add(new Object[] { userId });
-    // DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
-
-    // System.out.println("Test case done successfully");
-
-    // ResponseProtocol.sendSuccess(request, response, this, "Test case excuted
-    // successfully",
-    // Map.of("userId", userId),
-    // HttpServletResponse.SC_CREATED);
-
-    // } catch (Exception e) {
-    // System.out.println("Error creating validator: " + e.getMessage());
-
-    // ResponseProtocol.sendError(request, response, this, "Error creating
-    // validator", e.getMessage(),
-    // HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-
-    // }
-  }
-
-  @Override
-  protected void doPut(HttpServletRequest request, HttpServletResponse response)
-      throws IOException {
-    System.out.println("\n------------ DashboardStatsServlet | doPut ------------");
-    // queryParams = RequestProtocol.parseQueryParams(request);
-    // System.out.println("Query params: " + queryParams);
-
-    // if (queryParams.size() > 0) {
-    // ResponseProtocol.sendSuccess(request, response, this, "Query params is not
-    // empty",
-    // Map.of("queryParams", queryParams),
-    // HttpServletResponse.SC_OK);
-    // return;
-    // }
-
-    // ResponseProtocol.sendError(request, response, this, "Query params is empty",
-    // Map.of("queryParams", new HashMap<>()),
-    // HttpServletResponse.SC_BAD_REQUEST);
-  }
-
-  @Override
-  protected void doDelete(HttpServletRequest request, HttpServletResponse response)
-      throws IOException {
-    System.out.println("\n------------ DashboardStatsServlet | doDelete ------------");
-    // pathParams = RequestProtocol.parsePathParams(request);
-    // System.out.println("Path params: " + pathParams);
   }
 }
