@@ -1,4 +1,4 @@
-package com.xployt.controller.lead;
+package com.xployt.controller;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -14,30 +14,15 @@ import java.util.HashMap;
 import com.xployt.util.RequestProtocol;
 import com.xployt.util.ResponseProtocol;
 import com.xployt.util.DatabaseActionUtils;
+// import com.xployt.model.User;
 
-// import com.xployt.service.lead.ProjectService;
-
-@WebServlet("/api/lead/project/*")
-public class ProjectConfigServlet extends HttpServlet {
-
-  // private final ProjectService projectService = new ProjectService();
-  // @Override
-  // protected void doGet(HttpServletRequest request, HttpServletResponse
-  // response) {
-  // System.out.println("ProjectConfigServlet doGet method called");
-  // // projectService.getProjectConfigInfo(request, response);
-  // // response.setContentType("application/json");
-  // // response.setCharacterEncoding("UTF-8");
-  // }
-  // @Override
-  // protected void doPost(HttpServletRequest request, HttpServletResponse
-  // response) {
-  // System.out.println("ProjectConfigServlet doPost method called");
-  // // projectService.updateProjectConfigInfo(request, response);
-  // // response.setContentType("application/json");
-  // // response.setCharacterEncoding("UTF-8");
-  // }
-  // }
+/*
+ * This is a template servlet for creating new servlets
+ * It is used to be used to setup a new Controller
+ * Try out theese ednpoints to se how it works
+ */
+@WebServlet("/api/test/*")
+public class TemplateServlet extends HttpServlet {
 
   private static String[] sqlStatements = {};
   private static List<Object[]> sqlParams = new ArrayList<>();
@@ -50,61 +35,28 @@ public class ProjectConfigServlet extends HttpServlet {
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
       throws IOException {
 
-    System.out.println("\n------------ ProjectConfigServlet | doGet ------------");
+    System.out.println("\n------------ TemplateServlet | doGet ------------");
+    pathParams = RequestProtocol.parsePathParams(request);
+    System.out.println("Path params: " + pathParams);
 
-    try {
-      pathParams = RequestProtocol.parsePathParams(request);
-      System.out.println("Path params: " + pathParams);
-
-      if (pathParams.size() > 0) {
-        System.out.println("Path params: " + pathParams.get(0));
-
-        // Combined SQL Statement
-        String sqlCombined = "SELECT p.*, u.* FROM Projects p JOIN Users u ON p.clientId = u.userId WHERE p.projectId = ?;";
-
-        // Execute Combined Query
-        sqlParams.clear();
-        sqlParams.add(new Object[] { pathParams.get(0) });
-        List<Map<String, Object>> combinedResults = DatabaseActionUtils.executeSQL(new String[] { sqlCombined },
-            sqlParams);
-
-        System.out.println("Combined results: " + combinedResults);
-
-        // Check Results
-        if (!combinedResults.isEmpty()) {
-          // Map<String, Object> mergedResults = new HashMap<>();
-          // mergedResults.put("project", combinedResults.get(0)); // Project details
-          // mergedResults.put("user", combinedResults.get(0)); // User details (same row
-          // due to JOIN)
-          // System.out.println("Merged results: " + mergedResults);
-          ResponseProtocol.sendSuccess(request, response, this, "Project and User found",
-              combinedResults.get(0),
-              HttpServletResponse.SC_OK);
-          return;
-        } else {
-          ResponseProtocol.sendError(request, response, this, "Project or User not found",
-              "Project or User not found",
-              HttpServletResponse.SC_NOT_FOUND);
-          return;
-        }
-
-      }
-
-      ResponseProtocol.sendError(request, response, this, "Path params is empty",
-          Map.of("pathParams", new ArrayList<>()),
-          HttpServletResponse.SC_BAD_REQUEST);
-
-    } catch (Exception e) {
-      System.out.println("Error getting project config info: " + e.getMessage());
-      ResponseProtocol.sendError(request, response, this, "Error getting project config info", e.getMessage(),
-          HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+    if (pathParams.size() > 0) {
+      System.out.println("Path params: " + pathParams.get(0));
+      ResponseProtocol.sendSuccess(request, response, this, "Path params is not empty",
+          Map.of("pathParams", pathParams),
+          HttpServletResponse.SC_OK);
+      return;
     }
+
+    ResponseProtocol.sendError(request, response, this, "Path params is empty",
+        Map.of("pathParams", new ArrayList<>()),
+        HttpServletResponse.SC_BAD_REQUEST);
+
   }
 
   @Override
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    System.out.println("\n\n------------ ProjectConfigServlet | doPost ------------");
+    System.out.println("\n\n------------ TemplateServlet | doPost ------------");
 
     int userId = 0;
     try {
@@ -164,7 +116,7 @@ public class ProjectConfigServlet extends HttpServlet {
   @Override
   protected void doPut(HttpServletRequest request, HttpServletResponse response)
       throws IOException {
-    System.out.println("\n------------ ProjectConfigServlet | doPut ------------");
+    System.out.println("\n------------ TemplateServlet | doPut ------------");
     queryParams = RequestProtocol.parseQueryParams(request);
     System.out.println("Query params: " + queryParams);
 
@@ -183,7 +135,7 @@ public class ProjectConfigServlet extends HttpServlet {
   @Override
   protected void doDelete(HttpServletRequest request, HttpServletResponse response)
       throws IOException {
-    System.out.println("\n------------ ProjectConfigServlet | doDelete ------------");
+    System.out.println("\n------------ TemplateServlet | doDelete ------------");
     pathParams = RequestProtocol.parsePathParams(request);
     System.out.println("Path params: " + pathParams);
   }

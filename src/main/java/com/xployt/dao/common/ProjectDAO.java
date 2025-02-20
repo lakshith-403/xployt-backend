@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 
 public class ProjectDAO {
     // private static ServletContext servletContext;
-    private Logger logger = CustomLogger.getLogger();
+    private final Logger logger = CustomLogger.getLogger();
 
     // public static void setServletContext(ServletContext context) {
     // servletContext = context;
@@ -40,9 +40,12 @@ public class ProjectDAO {
             while (rs.next()) {
                 ProjectBrief project = new ProjectBrief(
                         rs.getInt("projectId"),
-                        rs.getString("status"),
+                        rs.getString("state"),
                         rs.getString("title"),
+                        rs.getString("leadId"),
                         rs.getString("clientId"),
+                        rs.getString("startDate"),
+                        rs.getString("endDate"),
                         rs.getInt("pendingReports"));
                 projects.add(project);
             }
@@ -69,9 +72,12 @@ public class ProjectDAO {
                     while (rs.next()) {
                         ProjectBrief project = new ProjectBrief(
                                 rs.getInt("projectId"),
-                                rs.getString("status"),
+                                rs.getString("state"),
                                 rs.getString("title"),
+                                rs.getString("leadId"),
                                 rs.getString("clientId"),
+                                rs.getString("startDate"),
+                                rs.getString("endDate"),
                                 rs.getInt("pendingReports"));
                         projects.add(project);
                     }
@@ -117,14 +123,14 @@ public class ProjectDAO {
         return project;
     }
 
-    public void updateProjectStatus(String projectId, String status) throws SQLException {
-        String sql = "UPDATE Projects SET status = ? WHERE projectId = ?";
+    public void updateProjectState(String projectId, String state) throws SQLException {
+        String sql = "UPDATE Projects SET state = ? WHERE projectId = ?";
         ServletContext servletContext = ContextManager.getContext("DBConnection");
         Connection conn = (Connection) servletContext.getAttribute("DBConnection");
         logger.info("ProjectDAO: Connection established");
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, status);
+            stmt.setString(1, state);
             stmt.setString(2, projectId);
             stmt.executeUpdate();
         }
