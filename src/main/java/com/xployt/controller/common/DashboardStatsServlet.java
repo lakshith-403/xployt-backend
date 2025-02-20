@@ -123,6 +123,8 @@ public class DashboardStatsServlet extends HttpServlet {
         return "SELECT * FROM Projects WHERE leadId = ? ORDER BY projectId DESC LIMIT 5";
       case "admin":
         return "SELECT * FROM Projects ORDER BY projectId DESC LIMIT 5";
+      case "validator":
+        return "SELECT p.* FROM Projects p JOIN ProjectValidators pv ON p.projectId = pv.projectId WHERE pv.validatorId = ? ORDER BY p.projectId DESC LIMIT 5";
       default:
         throw new SQLException("Invalid user type");
     }
