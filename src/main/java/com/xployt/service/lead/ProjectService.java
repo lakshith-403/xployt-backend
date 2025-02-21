@@ -26,6 +26,7 @@ import com.xployt.model.PublicUser;
 import com.xployt.util.CustomLogger;
 import com.xployt.util.JsonUtil;
 import com.xployt.util.ResponseUtil;
+import com.xployt.util.ResponseProtocol;
 
 public class ProjectService {
 
@@ -90,7 +91,8 @@ public class ProjectService {
     }
   }
 
-  public void acceptProject(String projectId, HttpServletResponse response) throws IOException {
+  public void acceptProject(String projectId, HttpServletResponse response, HttpServletRequest request)
+      throws IOException {
     ProjectDAO projectDAO = new ProjectDAO();
 
     // create a discussion and add to the project
@@ -117,24 +119,31 @@ public class ProjectService {
 
     logger.info("ProjectService acceptProject method called for projectId: " + projectId);
     try {
-      projectDAO.updateProjectState(projectId, "Active");
-      response.getWriter().write(JsonUtil.toJson(new GenericResponse(null, true, "Project accepted", null)));
+      projectDAO.updateProjectState(projectId, "Unconfigured");
+
+      ResponseProtocol.sendSuccess(request, response, "Project accepted", null,
+          HttpServletResponse.SC_OK);
     } catch (Exception e) {
       logger.severe("Error accepting project: " + e.getMessage());
-      response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error accepting project");
+      ResponseProtocol.sendError(request, response, "Error accepting project", e.getMessage(),
+          HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
   }
 
-  public void rejectProject(String projectId, HttpServletResponse response) throws IOException {
+  public void rejectProject(String projectId, HttpServletResponse response, HttpServletRequest request)
+      throws IOException {
     ProjectDAO projectDAO = new ProjectDAO();
 
     logger.info("ProjectService rejectProject method called for projectId: " + projectId);
     try {
       projectDAO.updateProjectState(projectId, "Rejected");
-      response.getWriter().write(JsonUtil.toJson(new GenericResponse(null, true, "Project rejected", null)));
+
+      ResponseProtocol.sendSuccess(request, response, "Project rejected", null,
+          HttpServletResponse.SC_OK);
     } catch (Exception e) {
       logger.severe("Error rejecting project: " + e.getMessage());
-      response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error rejecting project");
+      ResponseProtocol.sendError(request, response, "Error rejecting project", e.getMessage(),
+          HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
   }
 }
