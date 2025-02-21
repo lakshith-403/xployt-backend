@@ -54,10 +54,8 @@ public class ProjectConfigServlet extends HttpServlet {
 
     try {
       pathParams = RequestProtocol.parsePathParams(request);
-      System.out.println("Path params: " + pathParams);
 
       if (pathParams.size() > 0) {
-        System.out.println("Path params: " + pathParams.get(0));
 
         // Combined SQL Statement
         String sqlCombined = "SELECT p.*, u.* FROM Projects p JOIN Users u ON p.clientId = u.userId WHERE p.projectId = ?;";
