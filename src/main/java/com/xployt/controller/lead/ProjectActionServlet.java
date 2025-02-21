@@ -40,10 +40,10 @@ public class ProjectActionServlet extends HttpServlet {
 
     switch (action) {
       case "accept":
-        projectService.acceptProject(projectId, response);
+        projectService.acceptProject(projectId, response, request);
         break;
       case "reject":
-        projectService.rejectProject(projectId, response);
+        projectService.rejectProject(projectId, response, request);
         break;
       default:
         logger.warning("Lead ProjectActionServlet: Unknown action");

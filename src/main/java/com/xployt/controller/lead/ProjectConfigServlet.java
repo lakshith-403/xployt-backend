@@ -68,7 +68,7 @@ public class ProjectConfigServlet extends HttpServlet {
         List<Map<String, Object>> combinedResults = DatabaseActionUtils.executeSQL(new String[] { sqlCombined },
             sqlParams);
 
-        System.out.println("Combined results: " + combinedResults);
+        // System.out.println("Combined results: " + combinedResults);
 
         // Check Results
         if (!combinedResults.isEmpty()) {

@@ -4,8 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.logging.Logger;
-import javax.servlet.ServletContext;
-import com.xployt.util.ContextManager;
+import com.xployt.util.DatabaseConfig;
 import com.xployt.util.CustomLogger;
 
 public class ProjectDAO {
@@ -14,9 +13,8 @@ public class ProjectDAO {
 
   public void updateProjectState(String projectId, String state) throws SQLException {
     String sql = "UPDATE Projects SET state = ? WHERE projectId = ?";
-    ServletContext servletContext = ContextManager.getContext("DBConnection");
-    Connection conn = (Connection) servletContext.getAttribute("DBConnection");
-    logger.info("ProjectDAO: Connection established");
+
+    Connection conn = DatabaseConfig.getConnection();
 
     try (PreparedStatement stmt = conn.prepareStatement(sql)) {
       stmt.setString(1, state);
