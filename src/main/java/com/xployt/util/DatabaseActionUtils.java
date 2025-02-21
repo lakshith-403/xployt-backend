@@ -63,18 +63,19 @@ public class DatabaseActionUtils {
       String lastSQL = sqlStatements[lastIndex].trim().toLowerCase();
 
       if (lastSQL.startsWith("select")) {
-        // System.out.println("Executing SELECT statement: " +
-        // sqlStatements[lastIndex]);
+        System.out.println("Executing SELECT statement: " +
+            sqlStatements[lastIndex]);
         // ✅ If last statement is a SELECT, execute and return results
         stmt = conn.prepareStatement(sqlStatements[lastIndex]);
         // stmt.setQueryTimeout(10);
-        // System.out.println("SQL Params size: " + sqlParams.size());
+        System.out.println("SQL Params size: " + sqlParams.size());
         if (sqlParams.size() > 0 && sqlParams.get(lastIndex) != null) {
           setParameters(stmt, sqlParams.get(lastIndex));
         }
 
-        // System.out.println("Executing SELECT statement parameters injected");
+        System.out.println("Executing SELECT statement parameters injected");
         rs = stmt.executeQuery();
+        System.out.println("Results: " + rs);
         resultList = getResults(rs, resultList);
 
       } else {
@@ -134,7 +135,11 @@ public class DatabaseActionUtils {
     while (rs.next()) {
       Map<String, Object> row = new HashMap<>();
       for (int i = 1; i <= columnCount; i++) {
-        row.put(metaData.getColumnName(i), rs.getObject(i));
+        Object value = rs.getObject(i);
+        if (value == null) {
+          value = "null";
+        }
+        row.put(metaData.getColumnName(i), value);
       }
       resultList.add(row);
     }

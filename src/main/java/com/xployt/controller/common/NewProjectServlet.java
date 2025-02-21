@@ -81,13 +81,20 @@ public class NewProjectServlet extends HttpServlet {
 
   private String getSQLForUserType(String userType) throws SQLException {
     switch (userType) {
+      case "Hacker":
+      case "hacker":
+        return "SELECT * FROM Projects";
       case "client":
+      case "Client":
         return "SELECT * FROM Projects WHERE clientId = ?";
       case "lead":
+      case "ProjectLead":
         return "SELECT * FROM Projects WHERE leadId = ?";
       case "admin":
+      case "Admin":
         return "SELECT * FROM Projects";
       case "validator":
+      case "Validator":
         return "SELECT p.* FROM Projects p JOIN ProjectValidators pv ON p.projectId = pv.projectId WHERE pv.validatorId = ?";
       default:
         throw new SQLException("Invalid user type");
