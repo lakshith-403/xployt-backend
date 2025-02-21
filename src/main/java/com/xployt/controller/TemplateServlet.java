@@ -31,6 +31,13 @@ public class TemplateServlet extends HttpServlet {
   private static ArrayList<String> pathParams = new ArrayList<>();
   private static Map<String, Object> queryParams = new HashMap<>();
 
+  /**
+   * Get a resource - Add a detailed entry
+   * 
+   * @param request
+   * @param response
+   * @throws IOException
+   */
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
       throws IOException {
@@ -53,8 +60,14 @@ public class TemplateServlet extends HttpServlet {
 
   }
 
+  /**
+   * Create a resource - Add a detailed entry
+   * 
+   * @param request
+   * @param response
+   * @throws IOException
+   */
   @Override
-
   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
     System.out.println("\n\n------------ TemplateServlet | doPost ------------");
 
@@ -113,6 +126,13 @@ public class TemplateServlet extends HttpServlet {
     }
   }
 
+  /**
+   * Update a resource - Add a detailed entry
+   * 
+   * @param request
+   * @param response
+   * @throws IOException
+   */
   @Override
   protected void doPut(HttpServletRequest request, HttpServletResponse response)
       throws IOException {
@@ -132,6 +152,13 @@ public class TemplateServlet extends HttpServlet {
         HttpServletResponse.SC_BAD_REQUEST);
   }
 
+  /**
+   * Delete a resource - Add a detailed entry
+   * 
+   * @param request
+   * @param response
+   * @throws IOException
+   */
   @Override
   protected void doDelete(HttpServletRequest request, HttpServletResponse response)
       throws IOException {
