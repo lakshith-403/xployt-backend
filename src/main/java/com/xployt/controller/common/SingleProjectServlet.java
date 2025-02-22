@@ -62,13 +62,21 @@ public class SingleProjectServlet extends HttpServlet {
 
   private String getSQLForRole(String role) throws SQLException {
     switch (role) {
+      case "Client":
       case "client":
         return "SELECT * FROM Projects WHERE projectId = ?";
+      case "ProjectLead":
+      case "Lead":
       case "lead":
         return "SELECT * FROM Projects WHERE projectId = ?";
+      case "Admin":
       case "admin":
         return "SELECT * FROM Projects WHERE projectId = ?";
+      case "Validator":
       case "validator":
+        return "SELECT * FROM Projects WHERE projectId = ?";
+      case "Hacker":
+      case "hacker":
         return "SELECT * FROM Projects WHERE projectId = ?";
       default:
         throw new SQLException("Invalid role");

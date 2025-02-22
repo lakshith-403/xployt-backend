@@ -43,7 +43,7 @@ public class ResponseProtocol {
     responseMap.put("message", message);
     responseMap.put("code", code);
     if (data != null) {
-      System.out.println("Data: " + data);
+      System.out.println("Data sent via response: " + data);
       responseMap.put("data", data);
     } else {
       responseMap.put("data", new HashMap<>());
