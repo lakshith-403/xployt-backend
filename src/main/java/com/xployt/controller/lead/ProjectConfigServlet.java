@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
+import java.sql.SQLException;
 
 import com.xployt.util.RequestProtocol;
 import com.xployt.util.ResponseProtocol;
@@ -100,89 +101,66 @@ public class ProjectConfigServlet extends HttpServlet {
   }
 
   @Override
-
   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    System.out.println("\n\n------------ ProjectConfigServlet | doPost ------------");
+    System.out.println("\n------------ ProjectConfigServlet | doPost ------------");
 
-    int userId = 0;
     try {
-      requestBody = RequestProtocol.parseRequest(request);
+      Map<String, Object> requestBody = RequestProtocol.parseRequest(request);
       System.out.println("Request body: " + requestBody);
-      // Simulate requestBody
 
-      sqlStatements = new String[] {
-          "INSERT INTO Users (email, passwordHash, name, role, status) VALUES (?, ?, ?, 'Validator', 'inactive')",
-          "UPDATE Users SET role = ? WHERE email = ?",
-          "UPDATE Users SET name = ? WHERE email = ?",
-          "SELECT userId FROM Users WHERE email = ?"
+      String projectId = (String) requestBody.get("projectId");
 
-      };
+      // Define the fields to process for PaymentLevels
+      String[] levels = { "critical", "high", "medium", "low", "informative" };
 
-      sqlParams.clear();
+      for (String field : levels) {
+        String value = (String) requestBody.get(field);
+        if (value != null && !value.isEmpty()) {
+          String[] items = value.split(",");
+          for (String item : items) {
+            item = item.trim();
+            if (!item.isEmpty()) {
+              insertIntoPaymentLevels(projectId, field, item);
+            }
+          }
+        }
+      }
+      System.out.println("Payment levels inserted successfully");
+      // Define the levels to process for PaymentLevelAmounts
+      String[] fundingFields = { "criticalFunding", "highFunding", "mediumFunding", "lowFunding",
+          "informativeFunding" };
 
-      sqlParams.add(new Object[] { "Test@test.com",
-          "testPassword",
-          "Test User" });
-
-      sqlParams.add(new Object[] { "Admin", "Test@test.com" });
-
-      sqlParams.add(new Object[] { "Edited Test User", "Test@test.com" });
-
-      sqlParams.add(new Object[] { "Test@test.com" });
-
-      results = DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
-      if (results.size() > 0) {
-        System.out.println("After rs.next()");
-        userId = (int) results.get(0).get("userId");
-        System.out.println("User ID: " + userId);
+      for (int i = 0; i < fundingFields.length; i++) {
+        Double fundingValue = (Double) requestBody.get(fundingFields[i]);
+        if (fundingValue != null) {
+          insertIntoPaymentLevelAmounts(projectId, levels[i], fundingValue);
+        }
       }
 
-      sqlStatements = new String[] {
-          "DELETE FROM Users WHERE userId = ?"
-      };
-      sqlParams = new ArrayList<>();
-      sqlParams.add(new Object[] { userId });
-      DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
-
-      System.out.println("Test case done successfully");
-
-      ResponseProtocol.sendSuccess(request, response, this, "Test case excuted successfully",
-          Map.of("userId", userId),
-          HttpServletResponse.SC_CREATED);
+      ResponseProtocol.sendSuccess(request, response, this, "Data inserted successfully",
+          Map.of("projectId", projectId), HttpServletResponse.SC_CREATED);
 
     } catch (Exception e) {
-      System.out.println("Error creating validator: " + e.getMessage());
-
-      ResponseProtocol.sendError(request, response, this, "Error creating validator", e.getMessage(),
+      System.out.println("Error processing request: " + e.getMessage());
+      ResponseProtocol.sendError(request, response, this, "Error processing request", e.getMessage(),
           HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-
     }
   }
 
-  @Override
-  protected void doPut(HttpServletRequest request, HttpServletResponse response)
-      throws IOException {
-    System.out.println("\n------------ ProjectConfigServlet | doPut ------------");
-    queryParams = RequestProtocol.parseQueryParams(request);
-    System.out.println("Query params: " + queryParams);
+  private void insertIntoPaymentLevels(String projectId, String level, String item) throws SQLException {
+    String sql = "INSERT INTO PaymentLevels (projectId, level, area) VALUES (?, ?, ?)";
+    List<Object[]> sqlParams = new ArrayList<>();
+    sqlParams.add(new Object[] { Integer.parseInt(projectId), level, item });
 
-    if (queryParams.size() > 0) {
-      ResponseProtocol.sendSuccess(request, response, this, "Query params is not empty",
-          Map.of("queryParams", queryParams),
-          HttpServletResponse.SC_OK);
-      return;
-    }
-
-    ResponseProtocol.sendError(request, response, this, "Query params is empty",
-        Map.of("queryParams", new HashMap<>()),
-        HttpServletResponse.SC_BAD_REQUEST);
+    DatabaseActionUtils.executeSQL(new String[] { sql }, sqlParams);
   }
 
-  @Override
-  protected void doDelete(HttpServletRequest request, HttpServletResponse response)
-      throws IOException {
-    System.out.println("\n------------ ProjectConfigServlet | doDelete ------------");
-    pathParams = RequestProtocol.parsePathParams(request);
-    System.out.println("Path params: " + pathParams);
+  private void insertIntoPaymentLevelAmounts(String projectId, String level, double amount) throws SQLException {
+    String sql = "INSERT INTO PaymentLevelAmounts (projectId, level, amount) VALUES (?, ?, ?)";
+    List<Object[]> sqlParams = new ArrayList<>();
+    sqlParams.add(new Object[] { Integer.parseInt(projectId), level, amount });
+
+    DatabaseActionUtils.executeSQL(new String[] { sql }, sqlParams);
   }
+
 }
