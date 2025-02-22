@@ -178,8 +178,10 @@ public class DatabaseActionUtils {
       try {
         if (stmt != null)
           stmt.close();
-        if (conn != null)
-          conn.close();
+        if (conn != null) {
+          // System.out.println("Closing connection");
+          // conn.close();
+        }
       } catch (SQLException ex) {
         // Log error closing resources
       }
