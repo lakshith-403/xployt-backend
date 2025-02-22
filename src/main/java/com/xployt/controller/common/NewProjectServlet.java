@@ -66,7 +66,7 @@ public class NewProjectServlet extends HttpServlet {
               Map.of("projects", filteredResults), HttpServletResponse.SC_OK);
         } else {
           ResponseProtocol.sendSuccess(request, response, this, "No projects found",
-              Map.of("projects", new ArrayList<>()), HttpServletResponse.SC_NOT_FOUND);
+              Map.of("projects", new ArrayList<>()), HttpServletResponse.SC_OK);
         }
       } else {
         ResponseProtocol.sendError(request, response, this, "Path params are empty",
@@ -83,7 +83,7 @@ public class NewProjectServlet extends HttpServlet {
     switch (userType) {
       case "Hacker":
       case "hacker":
-        return "SELECT * FROM Projects";
+        return "SELECT p.* FROM Projects p JOIN ProjectHackers ph ON p.projectId = ph.projectId WHERE ph.hackerId = ? AND ph.status = 'Accepted'";
       case "client":
       case "Client":
         return "SELECT * FROM Projects WHERE clientId = ?";
