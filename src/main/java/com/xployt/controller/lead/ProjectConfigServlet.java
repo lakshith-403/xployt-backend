@@ -69,6 +69,14 @@ public class ProjectConfigServlet extends HttpServlet {
 
       String projectId = (String) requestBody.get("projectId");
 
+      String update = (String) RequestProtocol.parseQueryParams(request).get("update");
+
+      if (update != null && !update.isEmpty()) {
+        if (update.equals("true")) {
+          cleanupProjectData(Integer.parseInt(projectId));
+        }
+      }
+
       // Process testingScope with batch processing
       String testingScope = (String) requestBody.get("testingScope");
       if (testingScope != null && !testingScope.isEmpty()) {
@@ -122,9 +130,15 @@ public class ProjectConfigServlet extends HttpServlet {
       for (int i = 0; i < fundingFields.length; i++) {
         String fundingField = fundingFields[i];
         if (requestBody.get(fundingField) != null) {
-          String fundingValue = (String) requestBody.get(fundingField);
+          Object fundingValueObj = requestBody.get(fundingField);
+          String fundingValue;
+          if (fundingValueObj instanceof Double) {
+            fundingValue = Double.toString((Double) fundingValueObj);
+          } else {
+            fundingValue = (String) fundingValueObj;
+          }
           if (fundingValue != null && !fundingValue.isEmpty()) {
-            System.out.println("Funding value: " + fundingValue);
+            // System.out.println("Funding value: " + fundingValue);
             paymentLevelAmountParams.add(new Object[] { Integer.parseInt(projectId), levels[i],
                 fundingValue });
           }
