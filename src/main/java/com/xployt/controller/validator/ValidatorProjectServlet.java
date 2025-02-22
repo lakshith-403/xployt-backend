@@ -1,4 +1,4 @@
-package com.xployt.controller.common;
+package com.xployt.controller.validator;
 
 import com.xployt.service.common.ProjectService;
 
