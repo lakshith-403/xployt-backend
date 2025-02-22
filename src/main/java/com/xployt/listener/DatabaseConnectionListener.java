@@ -49,36 +49,35 @@ public class DatabaseConnectionListener implements ServletContextListener {
   public void contextDestroyed(ServletContextEvent sce) {
     System.out.println("DatabaseConnectionListener: contextDestroyed");
     System.out.println("Did some chnages here - Savith");
-    // if (connection != null) {
-    // try {
-    // connection.close();
-    // logger.log(Level.INFO, "Database connection closed.");
-    // ContextManager.removeContext("DBConnection");
-    // } catch (Exception e) {
-    // logger.log(Level.SEVERE, "Failed to close database connection: " +
-    // e.getMessage(), e);
-    // }
-    // }
+    if (connection != null) {
+      try {
+        connection.close();
+        logger.log(Level.INFO, "Database connection closed.");
+        ContextManager.removeContext("DBConnection");
+      } catch (Exception e) {
+        logger.log(Level.SEVERE, "Failed to close database connection: " +
+            e.getMessage(), e);
+      }
+    }
 
-    // // Unregister JDBC driver
-    // try {
-    // Enumeration<java.sql.Driver> drivers = DriverManager.getDrivers();
-    // while (drivers.hasMoreElements()) {
-    // java.sql.Driver driver = drivers.nextElement();
-    // DriverManager.deregisterDriver(driver);
-    // logger.log(Level.INFO, "Deregistering JDBC driver: " + driver);
-    // }
-    // } catch (SQLException e) {
-    // logger.log(Level.SEVERE, "Error deregistering driver: " + e.getMessage(), e);
-    // }
+    // Unregister JDBC driver
+    try {
+      Enumeration<java.sql.Driver> drivers = DriverManager.getDrivers();
+      while (drivers.hasMoreElements()) {
+        java.sql.Driver driver = drivers.nextElement();
+        DriverManager.deregisterDriver(driver);
+        logger.log(Level.INFO, "Deregistering JDBC driver: " + driver);
+      }
+    } catch (SQLException e) {
+      logger.log(Level.SEVERE, "Error deregistering driver: " + e.getMessage(), e);
+    }
 
-    // // Stop the abandoned connection cleanup thread
-    // try {
-    // com.mysql.cj.jdbc.AbandonedConnectionCleanupThread.checkedShutdown();
-    // logger.log(Level.INFO, "Abandoned connection cleanup thread stopped.");
-    // } catch (Exception e) {
-    // logger.log(Level.SEVERE, "Error stopping abandoned connection cleanup thread:
-    // ");
-    // }
+    // Stop the abandoned connection cleanup thread
+    try {
+      com.mysql.cj.jdbc.AbandonedConnectionCleanupThread.checkedShutdown();
+      logger.log(Level.INFO, "Abandoned connection cleanup thread stopped.");
+    } catch (Exception e) {
+      logger.log(Level.SEVERE, "Error stopping abandoned connection cleanup thread: " + e.getMessage(), e);
+    }
   }
 }

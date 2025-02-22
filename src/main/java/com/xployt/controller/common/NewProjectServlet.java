@@ -18,9 +18,7 @@ import com.xployt.util.DatabaseActionUtils;
 import com.xployt.util.RequestManager;
 
 /*
- * This is a template servlet for creating new servlets.
- * It is used to set up a new Controller.
- * Try out these endpoints to see how it works.
+ * Fetch all the projects relevent to each user
  */
 @WebServlet("/api/new-project/*")
 public class NewProjectServlet extends HttpServlet {
