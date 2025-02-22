@@ -1,4 +1,4 @@
-package com.xployt.controller.validator;
+package com.xployt.controller.common;
 
 import java.io.IOException;
 import java.util.logging.Logger;
