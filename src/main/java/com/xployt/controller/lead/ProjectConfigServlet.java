@@ -121,9 +121,13 @@ public class ProjectConfigServlet extends HttpServlet {
 
       for (int i = 0; i < fundingFields.length; i++) {
         String fundingField = fundingFields[i];
-        Double fundingValue = (Double) requestBody.get(fundingField);
-        if (fundingValue != null && fundingValue != 0) {
-          paymentLevelAmountParams.add(new Object[] { Integer.parseInt(projectId), levels[i], fundingValue });
+        if (requestBody.get(fundingField) != null) {
+          String fundingValue = (String) requestBody.get(fundingField);
+          if (fundingValue != null && !fundingValue.isEmpty()) {
+            System.out.println("Funding value: " + fundingValue);
+            paymentLevelAmountParams.add(new Object[] { Integer.parseInt(projectId), levels[i],
+                fundingValue });
+          }
         }
       }
       paymentLevelAmountParams = new ArrayList<>(new HashSet<>(paymentLevelAmountParams));
@@ -131,6 +135,11 @@ public class ProjectConfigServlet extends HttpServlet {
 
       ResponseProtocol.sendSuccess(request, response, this, "Data inserted successfully",
           Map.of("projectId", projectId), HttpServletResponse.SC_CREATED);
+
+      String sqlStatement = "UPDATE Projects SET state = 'Configured' WHERE projectId = ?";
+      List<Object[]> sqlParams = new ArrayList<>();
+      sqlParams.add(new Object[] { Integer.parseInt(projectId) });
+      DatabaseActionUtils.executeSQL(new String[] { sqlStatement }, sqlParams);
 
     } catch (Exception e) {
       System.out.println("Error processing request: " + e.getMessage());
@@ -194,10 +203,12 @@ public class ProjectConfigServlet extends HttpServlet {
           new String[] { deletePaymentLevelsSql },
           Collections.singletonList(new Object[] { projectId }));
 
-      String deleteProjectScopeSql = "DELETE FROM ProjectScope WHERE projectId = ?";
-      DatabaseActionUtils.executeSQL(
-          new String[] { deleteProjectScopeSql },
-          Collections.singletonList(new Object[] { projectId }));
+      String[] deleteProjectScopeSql = { "DELETE FROM ProjectScope WHERE projectId = ?",
+          "UPDATE Projects SET state = 'Unconfigured' WHERE projectId = ?" };
+      List<Object[]> sqlParams = new ArrayList<>();
+      sqlParams.add(new Object[] { projectId });
+      sqlParams.add(new Object[] { projectId });
+      DatabaseActionUtils.executeSQL(deleteProjectScopeSql, sqlParams);
     } catch (SQLException ex) {
       System.err.println("Cleanup failed for projectId " + projectId + ": " + ex.getMessage());
     }
