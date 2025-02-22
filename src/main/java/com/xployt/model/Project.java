@@ -10,6 +10,7 @@ public class Project {
   private String endDate;
   private String url;
   private String technicalStack;
+  private String[] scope;
 
   // Getters and setters
   public String getClientId() {
@@ -71,4 +72,8 @@ public class Project {
   public void setTechnicalStack(String technicalStack) {
     this.technicalStack = technicalStack;
   }
+
+  public String[] getScope() { return scope; }
+
+  public void setScope(String[] scope) { this.scope = scope; }
 }
