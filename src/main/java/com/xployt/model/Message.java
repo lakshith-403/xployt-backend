@@ -49,4 +49,10 @@ public class Message {
     public String getDiscussionId() {
         return discussionId;
     }
+
+    public void setAttachments(List<String> filePaths) {
+        for (int i = 0; i < filePaths.size(); i++) {
+            this.attachments.get(i).setUrl(filePaths.get(i));
+        }
+    }
 } 
