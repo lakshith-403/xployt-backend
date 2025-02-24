@@ -25,6 +25,7 @@ import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 import com.google.gson.Gson;
+import com.xployt.model.Attachment;
 import com.xployt.model.GenericResponse;
 import com.xployt.model.Message;
 import com.xployt.service.common.DiscussionService;
@@ -62,6 +63,8 @@ public class MessageServlet extends HttpServlet {
             List<FileItem> items = upload.parseRequest(request);
             String messageJson = null;
             List<File> uploadedFiles = new ArrayList<>();
+            
+            List<FileItem> files = new ArrayList<>();
 
             for (FileItem item : items) {
                 if (item.isFormField()) {
@@ -69,20 +72,7 @@ public class MessageServlet extends HttpServlet {
                         messageJson = item.getString();
                     }
                 } else {
-                    File file = File.createTempFile(item.getName().split("\\.")[0], "." + item.getName().split("\\.")[1], new File("uploads"));
-                    
-                    file.getParentFile().mkdirs();
-
-                    try (InputStream inputStream = item.getInputStream()) {
-                        Path outputPath = file.toPath();
-                        Files.copy(inputStream, outputPath, StandardCopyOption.REPLACE_EXISTING);
-                    } catch (IOException e) {
-                        logger.log(Level.SEVERE, "Error writing file: {0}", e.getMessage());
-                        response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error processing file upload");
-                        return;
-                    }
-                    
-                    uploadedFiles.add(file);
+                    files.add(item);
                 }
             }
 
@@ -94,6 +84,46 @@ public class MessageServlet extends HttpServlet {
             Gson gson = JsonUtil.useGson();
             Message message = gson.fromJson(messageJson, Message.class);
             logger.log(Level.INFO, "Message: {0}", message);
+
+            for (FileItem item : files) {
+                // get relevant attachment from message
+                Attachment attachment = message.getAttachments().stream()
+                    .filter(a -> a.getName().equals(item.getName()))
+                    .findFirst()
+                    .orElse(null);
+
+                if (attachment == null) {
+                    logger.log(Level.SEVERE, "Attachment not found: {0}", item.getName());
+                    response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Attachment not found");
+                    return;
+                }
+
+                String fileExtension = "";
+                String originalFileName = item.getName();
+                int lastDot = originalFileName.lastIndexOf('.');
+                if (lastDot > 0) {
+                    fileExtension = originalFileName.substring(lastDot);
+                }
+                
+                String uploadPath = getServletContext().getRealPath("/uploads");
+                File uploadDir = new File(uploadPath);
+                if (!uploadDir.exists()) {
+                    uploadDir.mkdirs();
+                }
+
+                File file = new File(uploadDir, attachment.getId() + fileExtension);
+
+                try (InputStream inputStream = item.getInputStream()) {
+                    Path outputPath = file.toPath();
+                    Files.copy(inputStream, outputPath, StandardCopyOption.REPLACE_EXISTING);
+                } catch (IOException e) {
+                    logger.log(Level.SEVERE, "Error writing file: {0}", e.getMessage());
+                    response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error processing file upload");
+                    return;
+                }
+                
+                uploadedFiles.add(file);
+            }
 
             GenericResponse result = discussionService.sendMessage(message);
             response.setContentType("application/json");
