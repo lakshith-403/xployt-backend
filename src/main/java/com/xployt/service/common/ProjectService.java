@@ -54,7 +54,7 @@ public class ProjectService {
 
     public GenericResponse getProjectById(String projectId) throws SQLException {
         logger.info("Fetching project of projectId: " + projectId);
-        Project project = projectDAO.getProject(projectId);
+        Project project = projectDAO.getProjectById(projectId);
         if(project != null) {
             return new GenericResponse(project, true, null, null);
         }

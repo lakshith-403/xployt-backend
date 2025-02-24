@@ -20,7 +20,7 @@ public class ProjectServlet extends HttpServlet {
     private static final Logger logger = CustomLogger.getLogger();
 
     @Override
-    public  void init() throws ServletException {
+    public void init() throws ServletException {
         projectService = new ProjectService();
     }
 

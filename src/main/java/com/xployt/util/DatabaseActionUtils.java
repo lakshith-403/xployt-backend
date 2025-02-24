@@ -47,7 +47,7 @@ public class DatabaseActionUtils {
       for (int i = 0; i < lastIndex; i++) {
         try {
           stmt = conn.prepareStatement(sqlStatements[i]);
-          // System.out.println("Executing non-SELECT statement: " + sqlStatements[i]);
+          System.out.println("Executing non-SELECT statement: " + sqlStatements[i]);
           // stmt.setQueryTimeout(10); // Prevents long waits
           setParameters(stmt, sqlParams.get(i));
           stmt.executeUpdate(); // No need to store the result
@@ -63,8 +63,8 @@ public class DatabaseActionUtils {
       String lastSQL = sqlStatements[lastIndex].trim().toLowerCase();
 
       if (lastSQL.startsWith("select")) {
-        // System.out.println("Executing SELECT statement: " +
-        // sqlStatements[lastIndex]);
+        System.out.println("Executing SELECT statement: " +
+            sqlStatements[lastIndex]);
         // ✅ If last statement is a SELECT, execute and return results
         stmt = conn.prepareStatement(sqlStatements[lastIndex]);
         // stmt.setQueryTimeout(10);
@@ -75,14 +75,14 @@ public class DatabaseActionUtils {
 
         // System.out.println("Executing SELECT statement parameters injected");
         rs = stmt.executeQuery();
+        // System.out.println("Results: " + rs);
         resultList = getResults(rs, resultList);
 
       } else {
         stmt = conn.prepareStatement(sqlStatements[lastIndex]);
         // stmt.setQueryTimeout(10);
         setParameters(stmt, sqlParams.get(lastIndex));
-        // System.out.println("Executing non-SELECT statement: " +
-        // sqlStatements[lastIndex]);
+        System.out.println("Executing non-SELECT statement: " + sqlStatements[lastIndex]);
         stmt.executeUpdate();
 
       }
@@ -134,7 +134,11 @@ public class DatabaseActionUtils {
     while (rs.next()) {
       Map<String, Object> row = new HashMap<>();
       for (int i = 1; i <= columnCount; i++) {
-        row.put(metaData.getColumnName(i), rs.getObject(i));
+        Object value = rs.getObject(i);
+        if (value == null) {
+          value = "null";
+        }
+        row.put(metaData.getColumnName(i), value);
       }
       resultList.add(row);
     }
@@ -142,30 +146,66 @@ public class DatabaseActionUtils {
     return resultList;
   }
 
-  private static void setParameters(PreparedStatement stmt, Object[] params) throws SQLException {
+  public static void executeBatchSQL(String sql, List<Object[]> batchParams) throws SQLException {
+    Connection conn = null;
+    PreparedStatement stmt = null;
+
     try {
-      if (params == null) {
-        // System.out.println("Warning: No parameters provided for statement.");
-        return;
+      System.out.println("Executing batch SQL: " + sql);
+      conn = DatabaseConfig.getConnection();
+      conn.setAutoCommit(false); // Start transaction
+
+      stmt = conn.prepareStatement(sql);
+
+      for (Object[] params : batchParams) {
+        setParameters(stmt, params);
+        stmt.addBatch();
       }
 
-      for (int i = 0; i < params.length; i++) {
-        if (params[i] instanceof Integer) {
-          stmt.setInt(i + 1, (Integer) params[i]);
-        } else if (params[i] instanceof String) {
-          stmt.setString(i + 1, (String) params[i]);
-        } else if (params[i] instanceof Double) {
-          stmt.setDouble(i + 1, (Double) params[i]);
-        } else if (params[i] instanceof Boolean) {
-          stmt.setBoolean(i + 1, (Boolean) params[i]);
-        } else if (params[i] == null) {
-          stmt.setNull(i + 1, java.sql.Types.NULL);
-        } else {
-          throw new SQLException("Unsupported parameter type: " + params[i].getClass().getName());
+      stmt.executeBatch(); // Execute batch
+      conn.commit(); // Commit transaction
+
+    } catch (SQLException e) {
+      if (conn != null) {
+        try {
+          conn.rollback(); // Rollback transaction on error
+        } catch (SQLException ex) {
+          throw new SQLException("Rollback failed: " + ex.getMessage());
         }
       }
-    } catch (Exception e) {
-      throw new SQLException("Error setting parameters: " + e.getMessage());
+      throw new SQLException("Batch execution failed: " + e.getMessage());
+    } finally {
+      try {
+        if (stmt != null)
+          stmt.close();
+        if (conn != null) {
+          // System.out.println("Closing connection");
+          // conn.close();
+        }
+      } catch (SQLException ex) {
+        // Log error closing resources
+      }
+    }
+  }
+
+  private static void setParameters(PreparedStatement stmt, Object[] params) throws SQLException {
+    if (params == null)
+      return;
+
+    for (int i = 0; i < params.length; i++) {
+      if (params[i] instanceof Integer) {
+        stmt.setInt(i + 1, (Integer) params[i]);
+      } else if (params[i] instanceof String) {
+        stmt.setString(i + 1, (String) params[i]);
+      } else if (params[i] instanceof Double) {
+        stmt.setDouble(i + 1, (Double) params[i]);
+      } else if (params[i] instanceof Boolean) {
+        stmt.setBoolean(i + 1, (Boolean) params[i]);
+      } else if (params[i] == null) {
+        stmt.setNull(i + 1, java.sql.Types.NULL);
+      } else {
+        throw new SQLException("Unsupported parameter type: " + params[i].getClass().getName());
+      }
     }
   }
 }

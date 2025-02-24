@@ -47,13 +47,15 @@ public class DatabaseConnectionListener implements ServletContextListener {
 
   @Override
   public void contextDestroyed(ServletContextEvent sce) {
+    System.out.println("DatabaseConnectionListener: contextDestroyed");
     if (connection != null) {
       try {
         connection.close();
         logger.log(Level.INFO, "Database connection closed.");
         ContextManager.removeContext("DBConnection");
-      } catch (SQLException e) {
-        logger.log(Level.SEVERE, "Failed to close database connection: " + e.getMessage(), e);
+      } catch (Exception e) {
+        logger.log(Level.SEVERE, "Failed to close database connection: " +
+            e.getMessage(), e);
       }
     }
 
@@ -74,7 +76,7 @@ public class DatabaseConnectionListener implements ServletContextListener {
       com.mysql.cj.jdbc.AbandonedConnectionCleanupThread.checkedShutdown();
       logger.log(Level.INFO, "Abandoned connection cleanup thread stopped.");
     } catch (Exception e) {
-      logger.log(Level.SEVERE, "Error stopping abandoned connection cleanup thread: ");
+      logger.log(Level.SEVERE, "Error stopping abandoned connection cleanup thread: " + e.getMessage(), e);
     }
   }
 }

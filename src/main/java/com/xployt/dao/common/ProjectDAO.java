@@ -92,7 +92,7 @@ public class ProjectDAO {
         }
     }
 
-    public Project getProject(String projectId) {
+    public Project getProjectById(String projectId) throws SQLException {
         logger.info("ProjectDAO: Inside getProject");
         Project project = null;
         String sql = "SELECT * FROM Projects WHERE projectId = ?";
@@ -104,7 +104,7 @@ public class ProjectDAO {
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, projectId);
             ResultSet rs = stmt.executeQuery();
-            logger.info("ProjectDAO: Fetching project");
+
             if (rs.next()) {
                 project = new Project();
                 project.setClientId(rs.getString("clientId"));
@@ -115,12 +115,39 @@ public class ProjectDAO {
                 project.setEndDate(rs.getString("endDate"));
                 project.setUrl(rs.getString("url"));
                 project.setTechnicalStack(rs.getString("technicalStack"));
+                project.setScope(getProjectScope(projectId));
             }
             logger.info("ProjectDAO: Project fetched successfully");
         } catch (SQLException e) {
             logger.severe("ProjectDAO: Error fetching project: " + e.getMessage());
+            throw e;
         }
         return project;
+    }
+
+    private String[] getProjectScope(String projectId){
+        logger.info("ProjectDAO: Inside getScope");
+        String[] scope = null;
+        String sql = "SELECT scopeItems.description FROM scopeItems " +
+                "INNER JOIN ProjectScope ON scopeItems.scopeId = ProjectScope.scopeId " +
+                "WHERE ProjectScope.projectId = ?";
+
+        ServletContext servletContext = ContextManager.getContext("DBConnection");
+        Connection conn = (Connection) servletContext.getAttribute("DBConnection");
+        logger.info("ProjectDAO: Connection established");
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, projectId);
+            ResultSet rs = stmt.executeQuery();
+            logger.info("ProjectDAO: Fetching scope");
+            if (rs.next()) {
+                scope = rs.getString("scope").split(",");
+            }
+            logger.info("ProjectDAO: Scope fetched successfully");
+        } catch (SQLException e) {
+            logger.severe("ProjectDAO: Error fetching scope: " + e.getMessage());
+        }
+        return scope;
     }
 
     public void updateProjectState(String projectId, String state) throws SQLException {
