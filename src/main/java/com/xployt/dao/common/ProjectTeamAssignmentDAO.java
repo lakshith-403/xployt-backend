@@ -1,5 +1,7 @@
 package com.xployt.dao.common;
 
+import com.xployt.model.PublicUser;
+import com.xployt.model.User;
 import com.xployt.util.ContextManager;
 import com.xployt.util.CustomLogger;
 
@@ -61,5 +63,55 @@ public class ProjectTeamAssignmentDAO {
         } finally {
             conn.setAutoCommit(true);
         }
+    }
+
+    public PublicUser getAssignedValidator(String projectId, String hackerId) {
+        UserDAO userDAO = new UserDAO();
+        logger.info("ProjectDAO: fetching assigned validator for hacker " + hackerId);
+        PublicUser validator = null;
+        String sql = "SELECT assignedValidatorId FROM ProjectHackers " +
+                "WHERE projectId = ? AND hackerId = ?";
+        ServletContext servletContext = ContextManager.getContext("DBConnection");
+        Connection conn = (Connection) servletContext.getAttribute("DBConnection");
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, projectId);
+            stmt.setString(2, hackerId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                String validatorId = rs.getString("assignedValidatorId");
+                User user = userDAO.getUserById(validatorId);
+                validator = new PublicUser(user.getUserId(), user.getName(), user.getEmail());
+            }
+        }catch (SQLException e) {
+            logger.severe("ProjectDAO: Error fetching assigned validator: " + e.getMessage());
+            return null;
+        }
+        return validator;
+    }
+
+    public PublicUser getAssignedHacker(String projectId, String validatorId){
+        UserDAO userDAO = new UserDAO();
+        logger.info("ProjectDAO: fetching assigned validator for hacker " + validatorId);
+        PublicUser validator = null;
+        String sql = "SELECT hackerId FROM ProjectHackers " +
+                "WHERE projectId = ? AND assignedValidatorId = ?";
+        ServletContext servletContext = ContextManager.getContext("DBConnection");
+        Connection conn = (Connection) servletContext.getAttribute("DBConnection");
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, projectId);
+            stmt.setString(2, validatorId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                String hackerId = rs.getString("assignedValidatorId");
+                User user = userDAO.getUserById(hackerId);
+                validator = new PublicUser(user.getUserId(), user.getName(), user.getEmail());
+            }
+        }catch (SQLException e) {
+            logger.severe("ProjectDAO: Error fetching assigned validator: " + e.getMessage());
+            return null;
+        }
+        return validator;
     }
 }

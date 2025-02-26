@@ -16,7 +16,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.logging.Logger;
 
-@WebServlet("/api/project/team/assign")
+@WebServlet("/api/project/team/assign/*")
 public class ProjectTeamAssignmentServlet extends HttpServlet {
     private ProjectTeamAssignmentService teamAssignmentService;
     private static final Logger logger = CustomLogger.getLogger();
@@ -24,6 +24,49 @@ public class ProjectTeamAssignmentServlet extends HttpServlet {
     @Override
     public void init() throws ServletException {
         teamAssignmentService = new ProjectTeamAssignmentService();
+    }
+
+    /**
+     * @pathParam  api/project/team/assign/requiredRole/projectId/userId
+     * returns PublicUser of requiredRole paired with userId
+     */
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        logger.info("ProjectTeamAssignmentServlet: Getting assigned users");
+        String pathInfo = request.getPathInfo();
+        if (pathInfo == null || pathInfo.isEmpty()) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Project ID not provided");
+            return;
+        }
+
+        String[] pathParts = pathInfo.split("/");
+        if (pathParts.length < 3) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid path parameters");
+            return;
+        }
+        String role = pathParts[1];
+        String projectId = pathParts[2];
+        String userId = pathParts[3];
+        logger.info("Role:" + role);
+        GenericResponse user;
+        try {
+            if(role.equals("validator")){
+                user = teamAssignmentService.getAssignedValidator(projectId, userId);
+            }
+            else if(role.equals("hacker")){
+                user = teamAssignmentService.getAssignedHacker(projectId, userId);
+            } else{
+                throw new Exception("Invalid role");
+            }
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error fetching project team");
+            return;
+        }
+
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(JsonUtil.useGson().toJson(user));
     }
 
     @Override
@@ -97,4 +140,6 @@ public class ProjectTeamAssignmentServlet extends HttpServlet {
         response.setStatus(statusCode);
         response.getWriter().write(JsonUtil.toJson(errorResponse));
     }
+
+
 }
