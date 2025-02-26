@@ -4,7 +4,7 @@ public class Project {
 
   private String projectId;
   private String clientId;
-  private String projectLeadId;
+  private String leadId;
   private String title;
   private String description;
   private String startDate;
@@ -26,9 +26,9 @@ public class Project {
     this.clientId = clientId;
   }
 
-  public String getProjectLeadId() { return projectLeadId; }
+  public String getLeadId() { return leadId; }
 
-  public void setProjectLeadId(String projectLeadId) { this.projectLeadId = projectLeadId; }
+  public void setLeadId(String leadId) { this.leadId = leadId; }
 
   public String getTitle() {
     return title;
