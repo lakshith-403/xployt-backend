@@ -2,8 +2,9 @@ package com.xployt.model;
 
 public class Project {
 
+  private String projectId;
   private String clientId;
-  private String projectLeadId;
+  private String leadId;
   private String title;
   private String description;
   private String startDate;
@@ -13,6 +14,10 @@ public class Project {
   private String[] scope;
 
   // Getters and setters
+  public String getProjectId() { return projectId; }
+
+  public void setProjectId(String projectId) { this.projectId = projectId; }
+
   public String getClientId() {
     return clientId;
   }
@@ -21,9 +26,9 @@ public class Project {
     this.clientId = clientId;
   }
 
-  public String getProjectLeadId() { return projectLeadId; }
+  public String getLeadId() { return leadId; }
 
-  public void setProjectLeadId(String projectLeadId) { this.projectLeadId = projectLeadId; }
+  public void setLeadId(String leadId) { this.leadId = leadId; }
 
   public String getTitle() {
     return title;

@@ -32,7 +32,7 @@ public class ProjectTeamDAO {
 
         projectTeam.setProjectId(projectId);
         projectTeam.setClient(retrieveAndMapUser(conn, project.getClientId()));
-        projectTeam.setProjectLead(retrieveAndMapUser(conn, project.getProjectLeadId()));
+        projectTeam.setProjectLead(retrieveAndMapUser(conn, project.getLeadId()));
         projectTeam.setProjectHackers(getProjectHackers(conn, projectId));
         projectTeam.setProjectValidators(getProjectValidators(conn, projectId));
 

@@ -81,7 +81,7 @@ public class NewProjectServlet extends HttpServlet {
     switch (userType) {
       case "Hacker":
       case "hacker":
-        return "SELECT p.* FROM Projects p JOIN ProjectHackers ph ON p.projectId = ph.projectId WHERE ph.hackerId = ? AND ph.status = 'Accepted'";
+        return "SELECT p.* FROM Projects p JOIN ProjectHackers ph ON p.projectId = ph.projectId WHERE ph.hackerId = ?";
       case "client":
       case "Client":
         return "SELECT * FROM Projects WHERE clientId = ?";
