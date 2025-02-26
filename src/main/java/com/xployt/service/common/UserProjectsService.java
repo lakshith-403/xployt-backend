@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 public class UserProjectsService {
     public GenericResponse fetchUserProjects(String userId, String userStatus) throws IOException {
         final List<String> INACTIVE_FILTER = Arrays.asList("Completed", "Rejected");
-        final List<String> REQUESTS_FILTER = Arrays.asList("Pending", "Unconfigured");
+        final List<String> REQUESTS_FILTER = Arrays.asList("Pending", "Unconfigured", "Configured");
         final Logger logger = CustomLogger.getLogger();
 
         logger.info("UserProjectsService: Inside fetchProjects");
@@ -36,8 +36,7 @@ public class UserProjectsService {
                 activeProjects.add(project);
             }
         }
-
-        logger.info("UserProjectsService: Filtered projects: " + requestedProjects.size());
+        logger.info("UserProjectsService: ActiveProjects: " + activeProjects.size());
         Map<String, List<ProjectBrief>> result = Map.of(
                 "activeProjects", activeProjects,
                 "requestedProjects", requestedProjects,

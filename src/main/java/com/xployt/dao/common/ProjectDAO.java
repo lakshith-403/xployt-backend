@@ -109,7 +109,7 @@ public class ProjectDAO {
                 project = new Project();
                 project.setProjectId(rs.getString("projectId"));
                 project.setClientId(rs.getString("clientId"));
-                project.setLeadId(rs.getString("leadId"));
+                project.setProjectLeadId(rs.getString("leadId"));
                 project.setTitle(rs.getString("title"));
                 project.setDescription(rs.getString("description"));
                 project.setStartDate(rs.getString("startDate"));
