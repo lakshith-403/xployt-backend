@@ -67,7 +67,7 @@ public class ProjectTeamAssignmentDAO {
 
     public PublicUser getAssignedValidator(String projectId, String hackerId) {
         UserDAO userDAO = new UserDAO();
-        logger.info("ProjectDAO: fetching assigned validator for hacker " + hackerId);
+        logger.info("ProjectTeamAssignmentDAO: fetching assigned validator for hacker " + hackerId);
         PublicUser validator = null;
         String sql = "SELECT assignedValidatorId FROM ProjectHackers " +
                 "WHERE projectId = ? AND hackerId = ?";
@@ -82,9 +82,10 @@ public class ProjectTeamAssignmentDAO {
                 String validatorId = rs.getString("assignedValidatorId");
                 User user = userDAO.getUserById(validatorId);
                 validator = new PublicUser(user.getUserId(), user.getName(), user.getEmail());
+                logger.info("ProjectTeamAssignmentDAO: Assigned validator fetched successfully" + validator);
             }
         }catch (SQLException e) {
-            logger.severe("ProjectDAO: Error fetching assigned validator: " + e.getMessage());
+            logger.severe("ProjectTeamAssignmentDAO: Error fetching assigned validator: " + e.getMessage());
             return null;
         }
         return validator;
@@ -92,8 +93,8 @@ public class ProjectTeamAssignmentDAO {
 
     public PublicUser getAssignedHacker(String projectId, String validatorId){
         UserDAO userDAO = new UserDAO();
-        logger.info("ProjectDAO: fetching assigned validator for hacker " + validatorId);
-        PublicUser validator = null;
+        logger.info("ProjectDAO: fetching assigned hacker for validator " + validatorId);
+        PublicUser hacker = null;
         String sql = "SELECT hackerId FROM ProjectHackers " +
                 "WHERE projectId = ? AND assignedValidatorId = ?";
         ServletContext servletContext = ContextManager.getContext("DBConnection");
@@ -104,14 +105,15 @@ public class ProjectTeamAssignmentDAO {
             stmt.setString(2, validatorId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                String hackerId = rs.getString("assignedValidatorId");
+                String hackerId = rs.getString("hackerId");
                 User user = userDAO.getUserById(hackerId);
-                validator = new PublicUser(user.getUserId(), user.getName(), user.getEmail());
+                hacker = new PublicUser(user.getUserId(), user.getName(), user.getEmail());
+                logger.info("ProjectDAO: Assigned validator fetched successfully" + hacker);
             }
         }catch (SQLException e) {
             logger.severe("ProjectDAO: Error fetching assigned validator: " + e.getMessage());
             return null;
         }
-        return validator;
+        return hacker;
     }
 }

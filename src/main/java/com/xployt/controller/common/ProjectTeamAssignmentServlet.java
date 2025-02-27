@@ -48,7 +48,7 @@ public class ProjectTeamAssignmentServlet extends HttpServlet {
         String role = pathParts[1];
         String projectId = pathParts[2];
         String userId = pathParts[3];
-        logger.info("Role:" + role);
+        logger.info("Role:" + role + " ProjectId:" + projectId + " UserId:" + userId);
         GenericResponse user;
         try {
             if(role.equals("validator")){
