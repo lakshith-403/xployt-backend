@@ -14,7 +14,19 @@ import com.xployt.service.common.UserProjectsService;
 import com.xployt.util.CustomLogger;
 import com.xployt.util.JsonUtil;
 
-@WebServlet("/api/projects/*")/// example: api/projects?userId=1&userStatus=client
+@WebServlet("/api/projects/*")
+/**
+ * example: api/projects?userId=1&userStatus=client
+ * UserProjects servlet is responsible for handling requests to fetch projects for a specific user.
+ * @queryParam {String} userId - The ID of the user whose projects are to be fetched.
+ * @queryParam {String} userStatus - The status of the user whose projects are to be fetched.
+ * @data: projects: {
+ *      active: [],
+ *      inactive: []
+ *      requested: []
+ *     }
+ * @service {UserProjectsService} - Service used to fetch projects for the user.
+ **/
 public class UserProjects extends HttpServlet {
     private UserProjectsService projectsService;
     private static final Logger logger = CustomLogger.getLogger();

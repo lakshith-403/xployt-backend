@@ -13,7 +13,19 @@ import com.xployt.model.GenericResponse;
 import com.xployt.service.common.ProjectTeamService;
 import com.xployt.util.CustomLogger;
 import com.xployt.util.JsonUtil;
-
+/**
+ * example: api/project/team/{projectId}
+ * ProjectTeamServlet is responsible for handling requests to fetch the team for a specific project.
+ * @pathParam {String} projectId - The ID of the project whose team is to be fetched.
+ * @data: {
+ *     projectId;
+ *     PublicUser client;
+ *     PublicUser projectLead;
+ *     List<PublicUser> projectValidators;
+ *     List<PublicUser> projectHackers;
+ * }
+ * @service {ProjectTeamService} - Service used to fetch the team for the project.
+ **/
 @WebServlet("/api/project/team/*")
 public class ProjectTeamServlet extends HttpServlet {
     private ProjectTeamService projectTeamService;

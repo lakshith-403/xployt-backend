@@ -68,6 +68,8 @@ public class UserServlet extends HttpServlet {
         return "SELECT * FROM Users WHERE userId = ?";
       case "validator":
         return "SELECT * FROM Users WHERE userId = ?";
+      case "hacker":
+        return "SELECT * FROM Users WHERE userId = ?";
       default:
         throw new SQLException("Invalid role");
     }

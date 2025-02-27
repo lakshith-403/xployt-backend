@@ -107,8 +107,9 @@ public class ProjectDAO {
 
             if (rs.next()) {
                 project = new Project();
+                project.setProjectId(rs.getString("projectId"));
                 project.setClientId(rs.getString("clientId"));
-                project.setProjectLeadId(rs.getString("leadId"));
+                project.setLeadId(rs.getString("leadId"));
                 project.setTitle(rs.getString("title"));
                 project.setDescription(rs.getString("description"));
                 project.setStartDate(rs.getString("startDate"));
@@ -141,7 +142,7 @@ public class ProjectDAO {
             ResultSet rs = stmt.executeQuery();
             logger.info("ProjectDAO: Fetching scope");
             if (rs.next()) {
-                scope = rs.getString("scope").split(",");
+                scope = rs.getString("description").split(",");
             }
             logger.info("ProjectDAO: Scope fetched successfully");
         } catch (SQLException e) {

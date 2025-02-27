@@ -25,6 +25,7 @@ public class ProjectServlet extends HttpServlet {
     }
 
     @Override
+    // add a description on servlet, services, return objects and parameters to be passed
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         logger.info("Fetching project");
         String pathInfo = request.getPathInfo();
