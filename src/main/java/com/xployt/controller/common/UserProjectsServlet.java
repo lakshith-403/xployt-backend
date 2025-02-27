@@ -27,7 +27,7 @@ import com.xployt.util.JsonUtil;
  *     }
  * @service {UserProjectsService} - Service used to fetch projects for the user.
  **/
-public class UserProjects extends HttpServlet {
+public class UserProjectsServlet extends HttpServlet {
     private UserProjectsService projectsService;
     private static final Logger logger = CustomLogger.getLogger();
 
@@ -39,7 +39,7 @@ public class UserProjects extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        logger.info("Fetching projects for Client");
+        logger.info("Fetching projects for user");
 
         String userId = request.getParameter("userId");
         String userStatus = request.getParameter("userStatus");
