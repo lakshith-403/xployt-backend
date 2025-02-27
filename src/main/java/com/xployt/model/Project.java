@@ -2,7 +2,12 @@ package com.xployt.model;
 
 public class Project {
 
+  public enum State {
+    Pending, Active, Completed, Unconfigured, Rejected, Closed, Configured
+  }
+
   private String projectId;
+  private State state;
   private String clientId;
   private String leadId;
   private String title;
@@ -17,6 +22,10 @@ public class Project {
   public String getProjectId() { return projectId; }
 
   public void setProjectId(String projectId) { this.projectId = projectId; }
+
+  public State getState() { return state; }
+
+  public void setState(State state) { this.state = state; }
 
   public String getClientId() {
     return clientId;

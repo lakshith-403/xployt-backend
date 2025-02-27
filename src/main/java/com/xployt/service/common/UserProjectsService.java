@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 
 public class UserProjectsService {
     public GenericResponse fetchUserProjects(String userId, String userStatus) throws IOException {
-        final List<String> INACTIVE_FILTER = Arrays.asList("Completed", "Rejected");
+        final List<String> INACTIVE_FILTER = Arrays.asList("Completed", "Rejected", "Closed");
         final List<String> REQUESTS_FILTER = Arrays.asList("Pending", "Unconfigured", "Configured");
         final Logger logger = CustomLogger.getLogger();
 
