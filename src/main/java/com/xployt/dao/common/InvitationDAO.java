@@ -31,13 +31,13 @@ public class InvitationDAO {
             logger.info("InvitationDAO: Fetching hacker's invitations");
             while (rs.next()) {
 //                if(rs.getString("status").equals("Pending")) {
-                    Invitation invitation = new Invitation(
-                            rs.getInt("HackerID"),
-                            rs.getInt("ProjectID"),
-                            rs.getString("Status"),
-                            rs.getString("InvitedAt")
-                    );
-                    invitations.add(invitation);
+                Invitation invitation = new Invitation(
+                        rs.getInt("HackerID"),
+                        rs.getInt("ProjectID"),
+                        rs.getString("Status"),
+                        rs.getString("InvitedAt")
+                );
+                invitations.add(invitation);
 //                }
             }
             logger.info("InvitationDAO: Hackers of a project fetched Successfully");
@@ -50,7 +50,7 @@ public class InvitationDAO {
         return invitations;
     }
 
-    public Invitation createInvitation(Invitation invitation) throws SQLException{
+    public Invitation createInvitation(Invitation invitation) throws SQLException {
         logger.info("InvitationDAO: creating invitation");
 
         String sql = "INSERT INTO Invitations (HackerID, ProjectID) VALUES (?, ?)";
@@ -72,7 +72,7 @@ public class InvitationDAO {
         return invitation;
     }
 
-    public Invitation acceptInvitation(Invitation invitation) throws SQLException{
+    public Invitation acceptInvitation(Invitation invitation) throws SQLException {
         logger.info("InvitationDAO: accepting invitation");
 
         String sql = "UPDATE Invitations SET Status = 'Accepted' WHERE HackerID = ? AND ProjectID = ?";
@@ -95,7 +95,7 @@ public class InvitationDAO {
         return invitation;
     }
 
-    public Invitation rejectInvitation(Invitation invitation) throws SQLException{
+    public Invitation rejectInvitation(Invitation invitation) throws SQLException {
         logger.info("InvitationDAO: rejecting invitation");
 
         String sql = "UPDATE Invitations SET Status = 'Declined' WHERE HackerID = ? AND ProjectID = ?";

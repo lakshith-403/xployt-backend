@@ -13,7 +13,6 @@ import java.util.logging.Logger;
 
 public class InvitationService {
     private final InvitationDAO invitationDAO;
-//    private static final List<String> STATUS_FILTER = Arrays.asList("Invited");
     private static final Logger logger = CustomLogger.getLogger();
 
     public InvitationService() {this.invitationDAO = new InvitationDAO();}
