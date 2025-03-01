@@ -1,6 +1,5 @@
 package com.xployt.dao.common;
 
-import com.xployt.model.BlastPoints;
 import com.xployt.util.ContextManager;
 import com.xployt.util.CustomLogger;
 
@@ -14,9 +13,9 @@ import java.util.logging.Logger;
 public class BlastPointsDAO {
     private final Logger logger = CustomLogger.getLogger();
 
-    public BlastPoints getBlastPoints(String category, String action) throws SQLException {
+    public int getBlastPoints(String category, String action) throws SQLException {
         logger.info("BlastPointsDAO: executing getBlastPoints");
-        BlastPoints blastPoints;
+        int blastPoints;
         String sql = "SELECT * FROM PointsConfig WHERE category = ? && action = ?";
 
         ServletContext servletContext = ContextManager.getContext("DBConnection");
@@ -30,11 +29,9 @@ public class BlastPointsDAO {
             logger.info("BlastPointsDAO: Fetching blast points for category " + category + " and action " + action);
 
                 if(rs.next()) {
-                    blastPoints = new BlastPoints(
-                            rs.getInt("points")
-                    );
+                    blastPoints = rs.getInt("points");
                 } else {
-                    blastPoints = new BlastPoints(0);
+                    blastPoints = 0;
                 }
             logger.info("BlastPointsDAO: Blast points fetched Successfully");
         } catch (SQLException e) {
@@ -45,11 +42,11 @@ public class BlastPointsDAO {
         return blastPoints;
     }
 
-    public BlastPoints getUserBlastPoints(String userId) {
+    public int getUserBlastPoints(String userId) {
         logger.info("BlastPointsDAO: executing getUserBlastPoints");
-        BlastPoints blastPoints = new BlastPoints();
+        int blastPoints = 0;
 
-        String sql = "SELECT points FROM HackerBlastPoints WHERE hackerId = ?";
+        String sql = "SELECT points FROM HackerBlastPoints WHERE userId = ?";
 
         ServletContext servletContext = ContextManager.getContext("DBConnection");
         Connection conn = (Connection) servletContext.getAttribute("DBConnection");
@@ -58,10 +55,9 @@ public class BlastPointsDAO {
             ResultSet rs = stmt.executeQuery();
             logger.info("BlastPointsDAO: Fetching blast points for user " + userId);
             if (rs.next()) {
-                blastPoints = new BlastPoints(
-                        rs.getInt("points")
-                );
+                blastPoints = rs.getInt("points");
             }
+            logger.info("BlastPoints: " + blastPoints);
             logger.info("BlastPointsDAO: Blast points fetched Successfully");
         } catch (SQLException e) {
             logger.severe("BlastPointsDAO: Error fetching blast points" + e.getMessage());
@@ -70,9 +66,9 @@ public class BlastPointsDAO {
         return blastPoints;
     }
 
-    public void addUserBlastPoints(int userID, String category, String action) throws SQLException {
+    public void addUserBlastPoints(int userId, String category, String action) throws SQLException {
         logger.info("BlastPointsDAO: executing addUserBlastPoints");
-        BlastPoints blastPoints = getBlastPoints(category, action);
+        int blastPoints = getBlastPoints(category, action);
 
         String sql = "UPDATE HackerBlastPoints SET points = points + ? WHERE userId = ?";
 
@@ -80,8 +76,8 @@ public class BlastPointsDAO {
         Connection conn = (Connection) servletContext.getAttribute("DBConnection");
 
         try(PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, blastPoints.getPoints());
-            stmt.setInt(2, userID);
+            stmt.setInt(1, blastPoints);
+            stmt.setInt(2, userId);
             stmt.executeUpdate();
             logger.info("BlastPointsDAO: Blast points added Successfully");
         } catch (SQLException e) {
