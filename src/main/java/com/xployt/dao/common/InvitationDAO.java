@@ -40,10 +40,43 @@ public class InvitationDAO {
                 invitations.add(invitation);
 //                }
             }
-            logger.info("InvitationDAO: Hackers of a project fetched Successfully");
+            logger.info("InvitationDAO: Invitations of hacker fetched Successfully");
             logger.info("InvitationDAO: Number of invitations fetched " + invitations.size());
         } catch (SQLException e) {
-            logger.severe("InvitationDAO: Error fetching hackers" + e.getMessage());
+            logger.severe("InvitationDAO: Error fetching hacker invitations" + e.getMessage());
+            throw e;
+        }
+
+        return invitations;
+    }
+
+    public List<Invitation> getProjectInvitations(String projectId) throws SQLException {
+        logger.info("InvitationDAO: executing getProjectInvitations");
+        List<Invitation> invitations = new ArrayList<>();
+        String sql = "SELECT * FROM Invitations WHERE projectID = ?";
+
+        ServletContext servletContext = ContextManager.getContext("DBConnection");
+        Connection conn = (Connection) servletContext.getAttribute("DBConnection");
+        logger.info("InvitationDAO: Connection Established");
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, projectId);
+            ResultSet rs = stmt.executeQuery();
+            logger.info("InvitationDAO: Fetching project invitations for " + projectId);
+            while (rs.next()) {
+                if (rs.getString("status").equals("Pending")) {
+                    Invitation invitation = new Invitation(
+                            rs.getInt("HackerID"),
+                            rs.getInt("ProjectID"),
+                            rs.getString("Status"),
+                            rs.getString("InvitedAt")
+                    );
+                    invitations.add(invitation);
+                }
+            }
+            logger.info("InvitationDAO: Number of project invitations fetched " + invitations.size());
+        } catch (SQLException e) {
+            logger.severe("InvitationDAO: Error fetching project invitations" + e.getMessage());
             throw e;
         }
 
