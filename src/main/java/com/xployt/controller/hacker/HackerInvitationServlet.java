@@ -32,7 +32,7 @@ public class HackerInvitationServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        logger.info("Servlet: Fetching project invitations");
+        logger.info("Servlet: Fetching hacker invitations");
         String pathInfo = request.getPathInfo();
         if (pathInfo == null || !pathInfo.startsWith("/")) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid path info");
@@ -53,10 +53,7 @@ public class HackerInvitationServlet extends HttpServlet {
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-
-        String jsonResponse = JsonUtil.toJson(HackerInvitations);
-        logger.info("response: " + jsonResponse);
-        response.getWriter().write(jsonResponse);
+        response.getWriter().write(JsonUtil.useGson().toJson(HackerInvitations));
     }
 
     @SuppressWarnings("unchecked")
@@ -71,52 +68,6 @@ public class HackerInvitationServlet extends HttpServlet {
         String requestBody = sb.toString();
         Gson gson = new Gson();
         return gson.fromJson(requestBody, Map.class);
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        logger.info("Creating Invitation");
-
-        Map<String, Object> jsonObject;
-        try {
-            jsonObject = parseRequestBody(request);
-        } catch (Exception e) {
-            logger.severe("Error parsing JSON: " + e.getMessage());
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid JSON format");
-            return;
-        }
-
-        String hackerId = jsonObject.get("hackerId") != null
-                ? String.valueOf(jsonObject.get("hackerId")).replace(".0", "")
-                : null;
-        String projectId = jsonObject.get("projectId") != null
-                ? String.valueOf(jsonObject.get("projectId")).replace(".0", "")
-                : null;
-
-        if (hackerId == null || projectId == null) {
-            logger.severe("Missing parameters: hackerId or projectId is null");
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing parameters");
-            return;
-        }
-
-        Invitation invitation = new Invitation();
-        invitation.setHackerId(hackerId);
-        invitation.setProjectId(projectId);
-
-        GenericResponse HackerInvitation;
-
-        try {
-            HackerInvitation = invitationService.createInvitation(invitation);
-            response.setStatus(HttpServletResponse.SC_CREATED);
-        } catch (Exception e) {
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error creating invitation");
-            return;
-        }
-
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(JsonUtil.toJson(HackerInvitation));
     }
 
     @Override
