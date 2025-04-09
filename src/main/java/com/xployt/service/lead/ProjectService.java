@@ -134,6 +134,59 @@ public class ProjectService {
     }
   }
 
+  public void createHackerValidatorDiscussion(String projectId, String hackerId, String validatorId) {
+    try {
+      logger.info("Creating discussion between hacker and validator for project: " + projectId);
+      
+      ProjectTeamDAO projectTeamDAO = new ProjectTeamDAO();
+      ProjectTeam projectTeam = projectTeamDAO.getProjectTeam(projectId);
+      
+      // Get hacker and validator information
+      PublicUser hacker = null;
+      PublicUser validator = null;
+      
+      // Find the hacker from the team
+      for (PublicUser h : projectTeam.getProjectHackers()) {
+        if (h.getUserId().equals(hackerId)) {
+          hacker = h;
+          break;
+        }
+      }
+      
+      // Find the validator from the team
+      for (PublicUser v : projectTeam.getProjectValidators()) {
+        if (v.getUserId().equals(validatorId)) {
+          validator = v;
+          break;
+        }
+      }
+      
+      if (hacker != null && validator != null) {
+        // Create the list of participants
+        List<PublicUser> participants = new ArrayList<>();
+        participants.add(hacker);
+        participants.add(validator);
+        
+        // Create and save the discussion
+        DiscussionDAO discussionDAO = new DiscussionDAO();
+        Discussion discussion = new Discussion(
+            UUID.randomUUID().toString(),
+            "Hacker-Validator Discussion",
+            participants,
+            new Date(),
+            projectId,
+            new ArrayList<>()
+        );
+        discussionDAO.createDiscussion(discussion);
+        logger.info("Successfully created hacker-validator discussion for project: " + projectId);
+      } else {
+        logger.warning("Hacker or validator not found for project: " + projectId);
+      }
+    } catch (Exception e) {
+      logger.severe("Error creating discussion between hacker and validator: " + e.getMessage());
+    }
+  }
+
   public void acceptProject(String projectId, HttpServletResponse response, HttpServletRequest request)
       throws IOException {
     ProjectDAO projectDAO = new ProjectDAO();
