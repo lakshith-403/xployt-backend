@@ -13,11 +13,28 @@ import com.xployt.util.RequestProtocol;
 import com.xployt.util.ResponseProtocol;
 import com.xployt.util.DatabaseActionUtils;
 
+/**
+ * Servlet for handling project configuration requests.
+ * 
+ * This servlet handles the configuration of projects, including the assignment
+ * of validators.
+ * It provides functionality for inserting project scopes, payment levels,
+ * payment level amounts,
+ * and project configurations.
+ */
 @WebServlet("/api/lead/project/*")
 public class ProjectConfigServlet extends HttpServlet {
 
   private Map<String, Object> requestBody;
 
+  /**
+   * Handles GET requests for project configuration.
+   * 
+   * This method retrieves project and user information based on the provided
+   * project ID.
+   * It executes a combined SQL query to fetch the project details along with the
+   * associated user.
+   */
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
       throws IOException {
@@ -59,6 +76,14 @@ public class ProjectConfigServlet extends HttpServlet {
     }
   }
 
+  /**
+   * Handles POST requests for project configuration.
+   * 
+   * This method processes the request body to extract project configuration data,
+   * including project scopes, payment levels, payment level amounts, and project
+   * configurations.
+   * 
+   **/
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
     System.out.println("\n------------ ProjectConfigServlet | doPost ------------");
@@ -147,6 +172,51 @@ public class ProjectConfigServlet extends HttpServlet {
       paymentLevelAmountParams = new ArrayList<>(new HashSet<>(paymentLevelAmountParams));
       insertPaymentLevelAmountsBatch(paymentLevelAmountParams);
 
+      // Process project configuration data
+      String outOfScope = (String) requestBody.get("outOfScope");
+      String objectives = (String) requestBody.get("objectives");
+      String securityRequirements = (String) requestBody.get("securityRequirements");
+
+      // Get hacker count if available, default to 0
+      int noOfHackers = 0;
+      if (requestBody.get("noOfHackers") != null) {
+        Object hackersObj = requestBody.get("noOfHackers");
+        if (hackersObj instanceof Double) {
+          noOfHackers = ((Double) hackersObj).intValue();
+        } else if (hackersObj instanceof String) {
+          noOfHackers = Integer.parseInt((String) hackersObj);
+        }
+      }
+
+      // Calculate validator count as ceiling of square root of hacker count
+      int noOfValidators = (int) Math.ceil(Math.sqrt(noOfHackers));
+
+      // Get initial funding if available
+      String initialFunding = null;
+      if (requestBody.get("initialFunding") != null) {
+        Object fundingObj = requestBody.get("initialFunding");
+        if (fundingObj instanceof Double) {
+          initialFunding = Double.toString((Double) fundingObj);
+        } else {
+          initialFunding = (String) fundingObj;
+        }
+      }
+
+      // Insert into ProjectConfigs table
+      String configSql = "INSERT INTO ProjectConfigs (projectId, outOfScope, objectives, securityRequirements, initialFunding, noOfHackers, noOfValidators) VALUES (?, ?, ?, ?, ?, ?, ?)";
+      List<Object[]> configParams = new ArrayList<>();
+      configParams.add(new Object[] {
+          Integer.parseInt(projectId),
+          outOfScope,
+          objectives,
+          securityRequirements,
+          initialFunding,
+          noOfHackers,
+          noOfValidators
+      });
+
+      DatabaseActionUtils.executeSQL(new String[] { configSql }, configParams);
+
       ResponseProtocol.sendSuccess(request, response, this, "Data inserted successfully",
           Map.of("projectId", projectId), HttpServletResponse.SC_CREATED);
 
@@ -223,6 +293,11 @@ public class ProjectConfigServlet extends HttpServlet {
       sqlParams.add(new Object[] { projectId });
       sqlParams.add(new Object[] { projectId });
       DatabaseActionUtils.executeSQL(deleteProjectScopeSql, sqlParams);
+
+      String deleteProjectConfigsSql = "DELETE FROM ProjectConfigs WHERE projectId = ?";
+      DatabaseActionUtils.executeSQL(
+          new String[] { deleteProjectConfigsSql },
+          Collections.singletonList(new Object[] { projectId }));
     } catch (SQLException ex) {
       System.err.println("Cleanup failed for projectId " + projectId + ": " + ex.getMessage());
     }
