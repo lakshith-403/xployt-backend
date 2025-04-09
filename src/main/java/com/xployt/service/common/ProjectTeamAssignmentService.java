@@ -1,11 +1,13 @@
 package com.xployt.service.common;
 
+import java.util.List;
+import java.util.logging.Logger;
+
 import com.xployt.dao.common.ProjectTeamAssignmentDAO;
 import com.xployt.model.GenericResponse;
 import com.xployt.model.PublicUser;
+import com.xployt.service.lead.ProjectService;
 import com.xployt.util.CustomLogger;
-import java.util.List;
-import java.util.logging.Logger;
 
 public class ProjectTeamAssignmentService {
     private final ProjectTeamAssignmentDAO teamAssignmentDAO;
@@ -26,6 +28,13 @@ public class ProjectTeamAssignmentService {
                     "No validators available", 
                     "Could not find any validators to assign"
                 );
+            }
+            
+            // Create a discussion with all validators and the project lead
+            if (!assignedValidators.isEmpty()) {
+                logger.info("Creating validator discussion for project: " + projectId);
+                ProjectService projectService = new ProjectService();
+                projectService.createValidatorDiscussion(projectId);
             }
     
             return new GenericResponse(

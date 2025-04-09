@@ -25,8 +25,8 @@ import com.xployt.model.ProjectTeam;
 import com.xployt.model.PublicUser;
 import com.xployt.util.CustomLogger;
 import com.xployt.util.JsonUtil;
-import com.xployt.util.ResponseUtil;
 import com.xployt.util.ResponseProtocol;
+import com.xployt.util.ResponseUtil;
 
 public class ProjectService {
 
@@ -88,6 +88,49 @@ public class ProjectService {
       logger.severe("SQL Error in updateProjectConfigInfo: " + e.getMessage());
       ResponseUtil.writeResponse(response, JsonUtil.toJson(new GenericResponse(null, false, e.getMessage(), null)));
       return;
+    }
+  }
+
+  public void createValidatorDiscussion(String projectId) {
+    try {
+      logger.info("Creating discussion with validators and lead for project: " + projectId);
+      ProjectTeamDAO projectTeamDAO = new ProjectTeamDAO();
+      ProjectTeam projectTeam = projectTeamDAO.getProjectTeam(projectId);
+
+      // Create a list of participants with the project lead and all validators
+      List<PublicUser> participants = new ArrayList<>();
+      
+      // Add project lead
+      participants.add(new PublicUser(projectTeam.getProjectLead().getUserId(), 
+                                     projectTeam.getProjectLead().getName(),
+                                     projectTeam.getProjectLead().getEmail()));
+      
+      // Add all validators
+      List<PublicUser> validators = projectTeam.getProjectValidators();
+      if (validators != null && !validators.isEmpty()) {
+        for (PublicUser validator : validators) {
+          participants.add(new PublicUser(validator.getUserId(), 
+                                         validator.getName(), 
+                                         validator.getEmail()));
+        }
+        
+        // Create and save the discussion
+        DiscussionDAO discussionDAO = new DiscussionDAO();
+        Discussion discussion = new Discussion(
+            UUID.randomUUID().toString(), 
+            "Validator Team Discussion", 
+            participants, 
+            new Date(),
+            projectId, 
+            new ArrayList<>()
+        );
+        discussionDAO.createDiscussion(discussion);
+        logger.info("Successfully created validator discussion for project: " + projectId);
+      } else {
+        logger.warning("No validators found for project: " + projectId);
+      }
+    } catch (Exception e) {
+      logger.severe("Error creating discussion with validators and lead: " + e.getMessage());
     }
   }
 
