@@ -22,6 +22,21 @@ public class SingleProjectServlet extends HttpServlet {
   private static final List<Map<String, Object>> results = new ArrayList<>();
   private static final Map<String, Object> queryParams = new HashMap<>();
 
+  /**
+   * Get the project details for the given project id and role
+   * 
+   * gets the following details:
+   * - project id
+   * - project name
+   * - project description
+   * - project technical stack
+   * - project start date
+   * - project state
+   * - project initial funding
+   * @param request
+   * @param response
+   * @throws IOException
+   */
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     System.out.println("\n------------ SingleProjectServlet | doGet ------------");
@@ -68,7 +83,7 @@ public class SingleProjectServlet extends HttpServlet {
       case "ProjectLead":
       case "Lead":
       case "lead":
-        return "SELECT * FROM Projects WHERE projectId = ?";
+        return "SELECT p.*, pc.* FROM Projects p LEFT JOIN ProjectConfigs pc ON p.projectId = pc.projectId WHERE p.projectId = ?";
       case "Admin":
       case "admin":
         return "SELECT * FROM Projects WHERE projectId = ?";
