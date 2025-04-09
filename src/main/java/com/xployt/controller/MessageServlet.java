@@ -2,12 +2,7 @@ package com.xployt.controller;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -20,16 +15,12 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
-
 import com.google.gson.Gson;
-import com.xployt.model.Attachment;
 import com.xployt.model.GenericResponse;
 import com.xployt.model.Message;
 import com.xployt.service.common.DiscussionService;
 import com.xployt.util.CustomLogger;
+import com.xployt.util.FileUploadUtil;
 import com.xployt.util.JsonUtil;
 
 @WebServlet("/api/messages/*")
@@ -49,33 +40,14 @@ public class MessageServlet extends HttpServlet {
             throws ServletException, IOException {
         logger.info("Sending message");
 
-        // Check that we have a file upload request
-        boolean isMultipart = ServletFileUpload.isMultipartContent(request);
-        if (!isMultipart) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Request is not multipart");
-            return;
-        }
-
-        DiskFileItemFactory factory = new DiskFileItemFactory();
-        ServletFileUpload upload = new ServletFileUpload(factory);
-        
         try {
-            List<FileItem> items = upload.parseRequest(request);
-            String messageJson = null;
-            List<File> uploadedFiles = new ArrayList<>();
-            
-            List<FileItem> files = new ArrayList<>();
-
-            for (FileItem item : items) {
-                if (item.isFormField()) {
-                    if ("message".equals(item.getFieldName())) {
-                        messageJson = item.getString();
-                    }
-                } else {
-                    files.add(item);
-                }
+            // Process multipart request
+            FileUploadUtil.UploadResult uploadResult = FileUploadUtil.processMultipartRequest(request, response);
+            if (uploadResult == null) {
+                return; // Error already sent to client
             }
-
+            
+            String messageJson = uploadResult.getFormField("message");
             if (messageJson == null) {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Message is required");
                 return;
@@ -85,45 +57,13 @@ public class MessageServlet extends HttpServlet {
             Message message = gson.fromJson(messageJson, Message.class);
             logger.log(Level.INFO, "Message: {0}", message);
 
-            for (FileItem item : files) {
-                // get relevant attachment from message
-                Attachment attachment = message.getAttachments().stream()
-                    .filter(a -> a.getName().equals(item.getName()))
-                    .findFirst()
-                    .orElse(null);
-
-                if (attachment == null) {
-                    logger.log(Level.SEVERE, "Attachment not found: {0}", item.getName());
-                    response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Attachment not found");
-                    return;
-                }
-
-                String fileExtension = "";
-                String originalFileName = item.getName();
-                int lastDot = originalFileName.lastIndexOf('.');
-                if (lastDot > 0) {
-                    fileExtension = originalFileName.substring(lastDot);
-                }
-                
-                String uploadPath = getServletContext().getRealPath("/uploads");
-                File uploadDir = new File(uploadPath);
-                if (!uploadDir.exists()) {
-                    uploadDir.mkdirs();
-                }
-
-                File file = new File(uploadDir, attachment.getId() + fileExtension);
-
-                try (InputStream inputStream = item.getInputStream()) {
-                    Path outputPath = file.toPath();
-                    Files.copy(inputStream, outputPath, StandardCopyOption.REPLACE_EXISTING);
-                } catch (IOException e) {
-                    logger.log(Level.SEVERE, "Error writing file: {0}", e.getMessage());
-                    response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error processing file upload");
-                    return;
-                }
-                
-                uploadedFiles.add(file);
-            }
+            // Process file attachments
+            List<File> uploadedFiles = FileUploadUtil.processAttachments(
+                uploadResult.getFileItems(), 
+                message, 
+                getServletContext(), 
+                response
+            );
 
             GenericResponse result = discussionService.sendMessage(message);
             response.setContentType("application/json");

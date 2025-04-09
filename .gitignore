@@ -9,3 +9,5 @@
 /db-scripts
 /my-assets
 /xployt.session.sql
+.DS_Store
+src/main/webapp/uploads/*
