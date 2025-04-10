@@ -4,12 +4,19 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import com.xployt.util.ResponseProtocol;
+
 import java.io.IOException;
 import java.util.Map;
-import com.xployt.util.RequestProtocol;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.stream.Collectors;
+import java.sql.SQLException;
+// import java.util.Arrays;
+
+import com.xployt.util.ResponseProtocol;
+import com.xployt.util.RequestProtocol;
 import com.xployt.util.DatabaseActionUtils;
 import com.xployt.util.PasswordUtil;
 
@@ -28,6 +35,19 @@ public class ManageValidatorServlet extends HttpServlet {
     try {
       Map<String, Object> requestBody = RequestProtocol.parseRequest(request);
       System.out.println("Request body: " + requestBody);
+
+      // Extract areaOfExpertise from request body
+      List<String> expertiseAreas = new ArrayList<>();
+      Object areaOfExpertiseObj = requestBody.get("areaOfExpertise");
+      
+      if (areaOfExpertiseObj instanceof Map) {
+        Map<?, ?> expertiseMap = (Map<?, ?>) areaOfExpertiseObj;
+        expertiseAreas = expertiseMap.values()
+                                   .stream()
+                                   .map(Object::toString)
+                                   .collect(Collectors.toList());
+        System.out.println("Expertise Areas: " + expertiseAreas);
+      }
 
       String[] sqlStatements = {
           "INSERT INTO Users (email, passwordHash, name, role, status) VALUES (?, ?, ?, 'Validator', 'inactive')",
@@ -77,16 +97,28 @@ public class ManageValidatorServlet extends HttpServlet {
       }
       // String address = (String) requestBody.get("address");
       String linkedin = (String) requestBody.get("linkedin");
+      String skills = (String) requestBody.get("skills");
+      String relevantExperience = (String) requestBody.get("relevantExperience");
+      String references = (String) requestBody.get("references");
 
       sqlStatements = new String[] {
-          "INSERT INTO UserProfiles (userId, firstName, lastName, phone, dob, linkedin) VALUES (?, ?, ?, ?, ?, ?)"
+          "INSERT INTO UserProfiles (userId, firstName, lastName, phone, dob, linkedin) VALUES (?, ?, ?, ?, ?, ?)",
+          "INSERT INTO ValidatorInfo (validatorId, skills, experience, reference) VALUES (?, ?, ?, ?)"
       };
 
       sqlParams = new ArrayList<>();
       sqlParams.add(new Object[] { validatorId, firstName, lastName, phone, year + "-" + month + "-" + day, linkedin });
+      sqlParams.add(new Object[] { validatorId, skills, relevantExperience, references });
 
       DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
       System.out.println("Validator created successfully");
+
+
+
+      // After creating the validator and ValidatorInfo entry, insert expertise areas
+      if (!expertiseAreas.isEmpty()) {
+        insertValidatorExpertise(validatorId, expertiseAreas);
+      }
 
       ResponseProtocol.sendSuccess(request, response, this, "Validator created successfully",
           Map.of("validatorId", validatorId),
@@ -97,9 +129,15 @@ public class ManageValidatorServlet extends HttpServlet {
 
       if (validatorId != 0) {
         String[] sqlStatements = {
-            "DELETE FROM Users WHERE userId = ?"
+            "DELETE FROM Users WHERE userId = ?",
+            "DELETE FROM UserProfiles WHERE userId = ?",
+            "DELETE FROM ValidatorInfo WHERE validatorId = ?",
+            "DELETE FROM ValidatorSkillSet WHERE validatorId = ?",
         };
         List<Object[]> sqlParams = new ArrayList<>();
+        sqlParams.add(new Object[] { validatorId });
+        sqlParams.add(new Object[] { validatorId });
+        sqlParams.add(new Object[] { validatorId });
         sqlParams.add(new Object[] { validatorId });
         try {
           DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
@@ -124,4 +162,52 @@ public class ManageValidatorServlet extends HttpServlet {
     System.out.println("\n------------ ManageValidatorServlet | doDelete ------------");
   }
 
+  // Add this method to get expertise IDs
+  private Map<String, Integer> getExpertiseIds(List<String> expertiseNames) throws SQLException {
+    if (expertiseNames.isEmpty()) {
+        return Collections.emptyMap();
+    }
+    
+    String placeholders = expertiseNames.stream()
+        .map(s -> "?")
+        .collect(Collectors.joining(","));
+        
+    String selectSql = "SELECT expertiseName, expertiseId FROM ValidatorExpertise WHERE expertiseName IN (" + placeholders + ")";
+
+    List<Object[]> selectParams = new ArrayList<>();
+    selectParams.add(expertiseNames.toArray());
+
+    List<Map<String, Object>> results = DatabaseActionUtils.executeSQL(
+        new String[] { selectSql }, selectParams);
+        
+    Map<String, Integer> expertiseIdMap = new HashMap<>();
+    for (Map<String, Object> result : results) {
+        expertiseIdMap.put((String) result.get("expertiseName"), (Integer) result.get("expertiseId"));
+    }
+    return expertiseIdMap;
+  }
+
+  private void insertValidatorExpertise(int validatorId, List<String> expertiseNames) throws SQLException {
+    if (expertiseNames.isEmpty()) {
+        return;
+    }
+
+    // Get expertise IDs for the provided names
+    Map<String, Integer> expertiseIdMap = getExpertiseIds(expertiseNames);
+    
+    // Prepare batch parameters for ValidatorExpertiseSet insertion
+    List<Object[]> expertiseParams = new ArrayList<>();
+    for (String expertiseName : expertiseNames) {
+        Integer expertiseId = expertiseIdMap.get(expertiseName);
+        if (expertiseId != null) {
+            expertiseParams.add(new Object[] { validatorId, expertiseId });
+        }
+    }
+
+    // Insert into ValidatorExpertiseSet table
+    if (!expertiseParams.isEmpty()) {
+        String insertSql = "INSERT INTO ValidatorExpertiseSet (validatorId, skillId) VALUES (?, ?)";
+        DatabaseActionUtils.executeBatchSQL(insertSql, expertiseParams);
+    }
+  }
 }
