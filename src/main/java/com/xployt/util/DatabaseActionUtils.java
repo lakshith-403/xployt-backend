@@ -136,7 +136,7 @@ public class DatabaseActionUtils {
       for (int i = 1; i <= columnCount; i++) {
         Object value = rs.getObject(i);
         if (value == null) {
-          value = "null";
+          value = "";
         }
         row.put(metaData.getColumnName(i), value);
       }
