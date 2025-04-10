@@ -81,13 +81,18 @@ public class PromoteToLeadServlet extends HttpServlet {
       String userId = requestBody.get("userId").toString();
 
       String[] sqlStatements = {
-          "UPDATE Users SET role = 'ProjectLead' WHERE userId = ?"
+          "UPDATE Users SET role = 'ProjectLead' WHERE userId = ?",
+          "INSERT INTO ProjectLeadInfo (projectLeadId, activeProjectCount, completedProjectCount, rejectedProjectCount) VALUES (?, 0, 0, 0)"
       };
       sqlParams.clear();
       sqlParams.add(new Object[] { userId });
+      sqlParams.add(new Object[] { userId });
 
       results = DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
-      System.out.println("promoted to lead successfully");
+      System.out.println("promoted to lead successfully and added to ProjectLeadInfo");
+      
+      ResponseProtocol.sendSuccess(request, response, this, "User promoted to Project Lead successfully", 
+          Map.of("userId", userId), HttpServletResponse.SC_OK);
 
     } catch (Exception e) {
       System.out.println("Error parsing request: " + e.getMessage());

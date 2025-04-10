@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import com.xployt.util.DatabaseActionUtils;
 import com.xployt.util.ResponseProtocol;
+import com.xployt.util.RequestProtocol;
+import java.util.Map;
 
 @WebServlet("/api/lead/initiate/project/*")
 public class ProjectActionServlet extends HttpServlet {
@@ -20,6 +22,11 @@ public class ProjectActionServlet extends HttpServlet {
   private final ProjectService projectService = new ProjectService();
   private static final Logger logger = CustomLogger.getLogger();
 
+  /**
+   * ProjectActionServlet handles actions related to project management by project leads.
+   * This servlet processes requests for accepting, rejecting, or proceeding with projects.
+   * It updates the project state and maintains project lead statistics accordingly.
+   */
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
     String pathInfo = request.getPathInfo();
@@ -40,6 +47,8 @@ public class ProjectActionServlet extends HttpServlet {
 
     String action = pathParts[1];
     String projectId = pathParts[2];
+    Map<String, Object> requestBody = RequestProtocol.parseRequest(request);
+    int projectLeadId = ((Number) requestBody.get("projectLeadId")).intValue();
 
     try {
       switch (action) {
@@ -48,13 +57,24 @@ public class ProjectActionServlet extends HttpServlet {
           break;
         case "reject":
           projectService.rejectProject(projectId, response, request);
+          
+          String[] rejectSql = {
+            "UPDATE ProjectLeadInfo SET rejectedProjectCount = rejectedProjectCount + 1 WHERE projectLeadId = ?",
+            "UPDATE ProjectLeadInfo SET activeProjectCount = activeProjectCount - 1 WHERE projectLeadId = ?"
+          };
+          List<Object[]> rejectParams = new ArrayList<>();
+          rejectParams.add(new Object[] { projectLeadId });
+          rejectParams.add(new Object[] { projectLeadId });
+          DatabaseActionUtils.executeSQL(rejectSql, rejectParams);
           break;
         case "proceed":
-          String sql = "UPDATE Projects SET state = 'Active' WHERE projectId = ?";
-          List<Object[]> sqlParams = new ArrayList<>();
-          sqlParams.add(new Object[] { projectId });
-          DatabaseActionUtils.executeSQL(
-              new String[] { sql }, sqlParams);
+          String[] proceedSql = {
+            "UPDATE Projects SET state = 'Active' WHERE projectId = ?",
+          };
+          List<Object[]> proceedParams = new ArrayList<>();
+          proceedParams.add(new Object[] { projectId });
+          DatabaseActionUtils.executeSQL(proceedSql, proceedParams);
+          
           ResponseProtocol.sendSuccess(request, response, this, "Project updated to Active",
               "Project updated to Active", HttpServletResponse.SC_OK);
           break;
