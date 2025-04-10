@@ -79,7 +79,7 @@ public class SingleProjectServlet extends HttpServlet {
     switch (role) {
       case "Client":
       case "client":
-        return "SELECT * FROM Projects WHERE projectId = ?";
+        return "SELECT p.*, pc.* FROM Projects p LEFT JOIN ProjectConfigs pc ON p.projectId = pc.projectId WHERE p.projectId = ?";
       case "ProjectLead":
       case "Lead":
       case "lead":
