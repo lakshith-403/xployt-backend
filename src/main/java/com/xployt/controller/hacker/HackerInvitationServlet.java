@@ -133,114 +133,172 @@ public class HackerInvitationServlet extends HttpServlet {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error accepting invitation");
             return;
         }
-        // If invitation was accepted, assign a suitable validator for the project and hacker
+
+        // Send response with updated invitation status
+        response.setContentType("application/json");
+        response.getWriter().write(new Gson().toJson(updatedInvitation));
+        
+        // Check if we need to assign a validator (only if invitation was accepted)
         if (Boolean.TRUE.equals(accepted)) {
-            System.out.println("Finding suitable validator for project: " + projectId);
+            int validatorId = 0;
             
             try {
-                // Get project scopes
-                String scopeQuery = "SELECT ps.scopeId FROM ProjectScope ps WHERE ps.projectId = ?";
-                List<Object[]> scopeParams = new ArrayList<>();
-                scopeParams.add(new Object[] { projectId });
-                List<Map<String, Object>> scopeResults = DatabaseActionUtils.executeSQL(new String[] { scopeQuery }, scopeParams);
+                // Get the maximum number of validators allowed for this project
+                String configQuery = "SELECT noOfValidators FROM ProjectConfigs WHERE projectId = ?";
+                List<Object[]> configParams = new ArrayList<>();
+                configParams.add(new Object[] { projectId });
+                List<Map<String, Object>> configResults = DatabaseActionUtils.executeSQL(new String[] { configQuery }, configParams);
                 
-                if (scopeResults.isEmpty()) {
-                    System.out.println("No scopes found for project: " + projectId);
-                } else {
-                    // Extract scope IDs
-                    List<Integer> scopeIds = new ArrayList<>();
-                    for (Map<String, Object> scopeRow : scopeResults) {
-                        scopeIds.add(Integer.parseInt(scopeRow.get("scopeId").toString()));
+                if (configResults.isEmpty()) {
+                    System.out.println("No configuration found for project: " + projectId);
+                    return;
+                }
+                
+                int maxValidators = Integer.parseInt(configResults.get(0).get("noOfValidators").toString());
+                System.out.println("Max validators for project " + projectId + ": " + maxValidators);
+                
+                // Get current number of validators assigned to this project
+                String validatorCountQuery = "SELECT COUNT(*) as validatorCount FROM ProjectValidators WHERE projectId = ?";
+                List<Object[]> countParams = new ArrayList<>();
+                countParams.add(new Object[] { projectId });
+                List<Map<String, Object>> countResults = DatabaseActionUtils.executeSQL(new String[] { validatorCountQuery }, countParams);
+                
+                int currentValidatorCount = Integer.parseInt(countResults.get(0).get("validatorCount").toString());
+                System.out.println("Current validator count for project " + projectId + ": " + currentValidatorCount);
+                
+                // Check if we've reached the maximum number of validators
+                if (currentValidatorCount >= maxValidators) {
+                    System.out.println("Maximum validators reached for project " + projectId);
+                    // Get a validator from among those currently assigned with the lowest active project count
+                    String lowestLoadValidatorQuery = 
+                        "SELECT pv.validatorId, COUNT(pv2.projectId) as projectCount " +
+                        "FROM ProjectValidators pv " +
+                        "LEFT JOIN ProjectValidators pv2 ON pv.validatorId = pv2.validatorId " +
+                        "WHERE pv.projectId = ? " +
+                        "GROUP BY pv.validatorId " +
+                        "ORDER BY projectCount ASC LIMIT 1";
+                    
+                    List<Object[]> validatorParams = new ArrayList<>();
+                    validatorParams.add(new Object[] { projectId });
+                    List<Map<String, Object>> validatorResults = DatabaseActionUtils.executeSQL(
+                        new String[] { lowestLoadValidatorQuery }, validatorParams);
+                    
+                    if (!validatorResults.isEmpty()) {
+                        validatorId = Integer.parseInt(validatorResults.get(0).get("validatorId").toString());
+                        System.out.println("Selected existing validator with ID " + validatorId + " for project " + projectId);
                     }
+                } else {
+                    // Max not reached, find a suitable validator based on expertise
+                    System.out.println("Finding suitable validator for project: " + projectId);
                     
-                    System.out.println("Project scopes: " + scopeIds);
+                    // Get project scopes
+                    String scopeQuery = "SELECT ps.scopeId FROM ProjectScope ps WHERE ps.projectId = ?";
+                    List<Object[]> scopeParams = new ArrayList<>();
+                    scopeParams.add(new Object[] { projectId });
+                    List<Map<String, Object>> scopeResults = DatabaseActionUtils.executeSQL(new String[] { scopeQuery }, scopeParams);
                     
-                    // Get expertise IDs mapped to these scopes
-                    String expertiseQuery = "SELECT se.skillId FROM scopeToExpertise se WHERE se.scopeId IN (" + 
-                                         String.join(",", Collections.nCopies(scopeIds.size(), "?")) + ")";
-                    List<Object[]> expertiseParams = new ArrayList<>();
-                    expertiseParams.add(scopeIds.toArray());
-                    List<Map<String, Object>> expertiseResults = DatabaseActionUtils.executeSQL(new String[] { expertiseQuery }, expertiseParams);
-                    
-                    if (expertiseResults.isEmpty()) {
-                        System.out.println("No expertise mappings found for scopes");
-                    } else {
-                        // Extract expertise IDs
-                        List<Integer> expertiseIds = new ArrayList<>();
-                        for (Map<String, Object> expertiseRow : expertiseResults) {
-                            expertiseIds.add(Integer.parseInt(expertiseRow.get("skillId").toString()));
+                    if (!scopeResults.isEmpty()) {
+                        // Extract scope IDs
+                        List<Integer> scopeIds = new ArrayList<>();
+                        for (Map<String, Object> scopeRow : scopeResults) {
+                            scopeIds.add(Integer.parseInt(scopeRow.get("scopeId").toString()));
                         }
                         
-                        System.out.println("Required expertise IDs: " + expertiseIds);
+                        System.out.println("Project scopes: " + scopeIds);
                         
-                        // Find validators with matching expertise
-                        StringBuilder inClause = new StringBuilder();
-                        for (int i = 0; i < expertiseIds.size(); i++) {
-                            inClause.append(expertiseIds.get(i));
-                            if (i < expertiseIds.size() - 1) {
-                                inClause.append(",");
+                        // Get expertise IDs mapped to these scopes
+                        String expertiseQuery = "SELECT se.skillId FROM scopeToExpertise se WHERE se.scopeId IN (" + 
+                                             String.join(",", Collections.nCopies(scopeIds.size(), "?")) + ")";
+                        List<Object[]> expertiseParams = new ArrayList<>();
+                        expertiseParams.add(scopeIds.toArray());
+                        List<Map<String, Object>> expertiseResults = DatabaseActionUtils.executeSQL(new String[] { expertiseQuery }, expertiseParams);
+                        
+                        if (!expertiseResults.isEmpty()) {
+                            // Extract expertise IDs
+                            List<Integer> expertiseIds = new ArrayList<>();
+                            for (Map<String, Object> expertiseRow : expertiseResults) {
+                                expertiseIds.add(Integer.parseInt(expertiseRow.get("skillId").toString()));
                             }
-                        }
-                        
-                        String validatorQuery = "SELECT u.userId AS userId, " +
-                                             "COUNT(ves.skillId) AS matchCount, " +
-                                             "COALESCE(vi.activeProjectCount, 0) AS activeCount " +
-                                             "FROM Users u " +
-                                             "LEFT JOIN ValidatorInfo vi ON u.userId = vi.validatorId " +
-                                             "LEFT JOIN ValidatorExpertiseSet ves ON u.userId = ves.validatorId " +
-                                             "AND ves.skillId IN (" + inClause.toString() + ") " +
-                                             "WHERE u.role = 'Validator' AND u.status = 'active' " +
-                                             "GROUP BY u.userId, vi.activeProjectCount " +
-                                             "ORDER BY (0.7 * COUNT(ves.skillId) - 0.3 * COALESCE(vi.activeProjectCount, 0)) DESC " +
-                                             "LIMIT 1";
-                        
-                        System.out.println("Executing validator selection query with expertise IDs: " + expertiseIds);
-                        
-                        // Execute the query with proper parameter handling
-                        List<Object[]> validatorParams = new ArrayList<>();
-                        validatorParams.add(new Object[0]); // Empty array since we've directly inserted the IDs in the query
-                        List<Map<String, Object>> validatorResults = DatabaseActionUtils.executeSQL(
-                            new String[] { validatorQuery },
-                            validatorParams
-                        );
-                        if (validatorResults == null || validatorResults.isEmpty()) {
-                            System.out.println("No suitable validator found with matching expertise");
-                        } else {
-
-                            Map<String, Object> validatorRow = validatorResults.get(0);
-                            System.out.println("validatorResults: " + validatorRow);
-                            int validatorId = Integer.parseInt(validatorRow.get("userId").toString());
-                            int matchCount = Integer.parseInt(validatorRow.get("matchCount").toString());
                             
-                            System.out.println("Selected validator ID: " + validatorId + " with " + matchCount + " matching expertise areas");
+                            System.out.println("Required expertise IDs: " + expertiseIds);
                             
-                            // Update ProjectHackers record with the selected validator
-                            String updateHackerQuery = "UPDATE ProjectHackers SET assignedValidatorId = ? " +
-                                                      "WHERE projectId = ? AND hackerId = ?";
+                            // Find validators with matching expertise
+                            StringBuilder inClause = new StringBuilder();
+                            for (int i = 0; i < expertiseIds.size(); i++) {
+                                inClause.append(expertiseIds.get(i));
+                                if (i < expertiseIds.size() - 1) {
+                                    inClause.append(",");
+                                }
+                            }
                             
-                            // Add entry to ProjectValidators table
-                            String insertValidatorQuery = "INSERT INTO ProjectValidators (projectId, validatorId) " +
-                                                        "VALUES (?, ?)";
-
-                            // Increase the activeProjectCount for the validator
-                            String updateValidatorQuery = "UPDATE ValidatorInfo SET activeProjectCount = activeProjectCount + 1 " +
-                                                         "WHERE validatorId = ?";
+                            String validatorQuery = "SELECT u.userId AS userId, " +
+                                                 "COUNT(ves.skillId) AS matchCount, " +
+                                                 "COALESCE(vi.activeProjectCount, 0) AS activeCount " +
+                                                 "FROM Users u " +
+                                                 "LEFT JOIN ValidatorInfo vi ON u.userId = vi.validatorId " +
+                                                 "LEFT JOIN ValidatorExpertiseSet ves ON u.userId = ves.validatorId " +
+                                                 "AND ves.skillId IN (" + inClause.toString() + ") " +
+                                                 "WHERE u.role = 'Validator' AND u.status = 'active' " +
+                                                 "GROUP BY u.userId, vi.activeProjectCount " +
+                                                 "ORDER BY (0.7 * COUNT(ves.skillId) - 0.3 * COALESCE(vi.activeProjectCount, 0)) DESC " +
+                                                 "LIMIT 1";
                             
+                            System.out.println("Executing validator selection query with expertise IDs: " + expertiseIds);
                             
-                            List<Object[]> sqlParams = new ArrayList<>();
-                            sqlParams.add(new Object[] { validatorId, projectId, hackerId });
-                            sqlParams.add(new Object[] { projectId, validatorId });
-                            sqlParams.add(new Object[] { validatorId });
-                            
-                            DatabaseActionUtils.executeSQL(
-                                new String[] { updateHackerQuery, insertValidatorQuery, updateValidatorQuery }, 
-                                sqlParams
+                            // Execute the query with proper parameter handling
+                            List<Object[]> validatorParams = new ArrayList<>();
+                            validatorParams.add(new Object[0]); // Empty array since we've directly inserted the IDs in the query
+                            List<Map<String, Object>> validatorResults = DatabaseActionUtils.executeSQL(
+                                new String[] { validatorQuery },
+                                validatorParams
                             );
                             
-                            System.out.println("Validator " + validatorId + " assigned to project " + projectId + " for hacker " + hackerId);
+                            if (!validatorResults.isEmpty()) {
+                                Map<String, Object> validatorRow = validatorResults.get(0);
+                                System.out.println("validatorResults: " + validatorRow);
+                                validatorId = Integer.parseInt(validatorRow.get("userId").toString());
+                                int matchCount = Integer.parseInt(validatorRow.get("matchCount").toString());
+                                System.out.println("Selected validator ID: " + validatorId + " with " + matchCount + " matching expertise areas");
+                            } else {
+                                System.out.println("No suitable validator found with matching expertise");
+                            }
+                        } else {
+                            System.out.println("No expertise mappings found for scopes");
                         }
+                    } else {
+                        System.out.println("No scopes found for project: " + projectId);
                     }
                 }
+                
+                // Common integration logic for the selected validator
+                if (validatorId > 0) {
+                    // Update ProjectHackers record with the selected validator
+                    String updateHackerQuery = "UPDATE ProjectHackers SET assignedValidatorId = ? " +
+                                              "WHERE projectId = ? AND hackerId = ?";
+                    
+                    // Add entry to ProjectValidators table if not already there
+                    String insertValidatorQuery = "INSERT INTO ProjectValidators (projectId, validatorId) " +
+                                                "VALUES (?, ?) ON DUPLICATE KEY UPDATE validatorId = validatorId";
+
+                    // Increase the activeProjectCount for the validator
+                    String updateValidatorQuery = "UPDATE ValidatorInfo SET activeProjectCount = activeProjectCount + 1 " +
+                                                 "WHERE validatorId = ?";
+                    
+                    List<Object[]> sqlParams = new ArrayList<>();
+                    sqlParams.add(new Object[] { validatorId, projectId, hackerId });
+                    sqlParams.add(new Object[] { projectId, validatorId });
+                    sqlParams.add(new Object[] { validatorId });
+                    
+                    DatabaseActionUtils.executeSQL(
+                        new String[] { updateHackerQuery, insertValidatorQuery, updateValidatorQuery }, 
+                        sqlParams
+                    );
+                    
+                    System.out.println("Validator " + validatorId + " assigned to project " + projectId + " for hacker " + hackerId);
+                } else {
+                    System.out.println("No validator could be assigned for project " + projectId + " and hacker " + hackerId);
+                }
+                
             } catch (Exception e) {
                 System.out.println("Error assigning validator: " + e);
                 // Rollback any changes made in the try block
@@ -264,21 +322,8 @@ public class HackerInvitationServlet extends HttpServlet {
                         );
                         
                         System.out.println("Reset invitation status to Pending for project " + projectId + " and hacker " + hackerId);
-                        // Check if a validator was assigned
-                        String checkValidatorQuery = "SELECT validatorId FROM ProjectValidators " +
-                                                    "WHERE projectId = ?";
                         
-                        List<Object[]> checkParams = new ArrayList<>();
-                        checkParams.add(new Object[] { projectId });
-                        
-                        List<Map<String, Object>> checkResults = DatabaseActionUtils.executeSQL(
-                            new String[] { checkValidatorQuery }, 
-                            checkParams
-                        );
-                        
-                        if (!checkResults.isEmpty() && checkResults.get(0).get("validatorId") != null) {
-                            int validatorId = Integer.parseInt(checkResults.get(0).get("validatorId").toString());
-
+                        if (validatorId > 0) {
                             // Decrease the activeProjectCount for the validator
                             String updateValidatorQuery = "UPDATE ValidatorInfo SET activeProjectCount = GREATEST(activeProjectCount - 1, 0) " +
                                                          "WHERE validatorId = ?";
@@ -288,12 +333,11 @@ public class HackerInvitationServlet extends HttpServlet {
                                                          "WHERE projectId = ? AND validatorId = ?";
                             
                             List<Object[]> rollbackParams = new ArrayList<>();
-                            rollbackParams.add(new Object[] { projectId, hackerId });
                             rollbackParams.add(new Object[] { validatorId });
                             rollbackParams.add(new Object[] { projectId, validatorId });
                             
                             DatabaseActionUtils.executeSQL(
-                                new String[] {updateValidatorQuery, deleteValidatorQuery }, 
+                                new String[] { updateValidatorQuery, deleteValidatorQuery }, 
                                 rollbackParams
                             );
              
@@ -306,7 +350,6 @@ public class HackerInvitationServlet extends HttpServlet {
                 // Continue processing as this is not critical for the invitation acceptance
             }
         }
-        
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write(JsonUtil.toJson(updatedInvitation));
