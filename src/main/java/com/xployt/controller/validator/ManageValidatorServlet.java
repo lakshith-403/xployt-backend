@@ -132,7 +132,7 @@ public class ManageValidatorServlet extends HttpServlet {
             "DELETE FROM Users WHERE userId = ?",
             "DELETE FROM UserProfiles WHERE userId = ?",
             "DELETE FROM ValidatorInfo WHERE validatorId = ?",
-            "DELETE FROM ValidatorSkillSet WHERE validatorId = ?",
+            "DELETE FROM ValidatorExpertiseSet WHERE validatorId = ?",
         };
         List<Object[]> sqlParams = new ArrayList<>();
         sqlParams.add(new Object[] { validatorId });
@@ -181,8 +181,12 @@ public class ManageValidatorServlet extends HttpServlet {
         new String[] { selectSql }, selectParams);
         
     Map<String, Integer> expertiseIdMap = new HashMap<>();
-    for (Map<String, Object> result : results) {
-        expertiseIdMap.put((String) result.get("expertiseName"), (Integer) result.get("expertiseId"));
+    if (!results.isEmpty()) {
+        // The results from executeSQL are already a List<Map<String, Object>>
+        // No need to cast results.get(0) to a List
+        for (Map<String, Object> row : results) {
+            expertiseIdMap.put((String) row.get("expertiseName"), (Integer) row.get("expertiseId"));
+        }
     }
     return expertiseIdMap;
   }
