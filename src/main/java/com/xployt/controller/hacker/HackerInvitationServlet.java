@@ -133,6 +133,69 @@ public class HackerInvitationServlet extends HttpServlet {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error accepting invitation");
             return;
         }
+
+        // Send response with updated invitation status
+        response.setContentType("application/json");
+        response.getWriter().write(new Gson().toJson(updatedInvitation));
+        
+        // Check if we need to assign a validator (only if invitation was accepted)
+        if (Boolean.TRUE.equals(accepted)) {
+            try {
+                // Get the maximum number of validators allowed for this project
+                String configQuery = "SELECT noOfValidators FROM ProjectConfigs WHERE projectId = ?";
+                List<Object[]> configParams = new ArrayList<>();
+                configParams.add(new Object[] { projectId });
+                List<Map<String, Object>> configResults = DatabaseActionUtils.executeSQL(new String[] { configQuery }, configParams);
+                
+                if (configResults.isEmpty()) {
+                    System.out.println("No configuration found for project: " + projectId);
+                    return;
+                }
+                
+                int maxValidators = Integer.parseInt(configResults.get(0).get("noOfValidators").toString());
+                System.out.println("Max validators for project " + projectId + ": " + maxValidators);
+                
+                // Get current number of validators assigned to this project
+                String validatorCountQuery = "SELECT COUNT(*) as validatorCount FROM ProjectValidators WHERE projectId = ?";
+                List<Object[]> countParams = new ArrayList<>();
+                countParams.add(new Object[] { projectId });
+                List<Map<String, Object>> countResults = DatabaseActionUtils.executeSQL(new String[] { validatorCountQuery }, countParams);
+                
+                int currentValidatorCount = Integer.parseInt(countResults.get(0).get("validatorCount").toString());
+                System.out.println("Current validator count for project " + projectId + ": " + currentValidatorCount);
+                
+                // Check if we've reached the maximum number of validators
+                if (currentValidatorCount >= maxValidators) {
+                    System.out.println("Maximum validators reached for project " + projectId);
+                    // Get a validator from among those currently assigned with the lowest active project count
+                    String lowestLoadValidatorQuery = 
+                        "SELECT pv.validatorId, COUNT(pv2.projectId) as projectCount " +
+                        "FROM ProjectValidators pv " +
+                        "LEFT JOIN ProjectValidators pv2 ON pv.validatorId = pv2.validatorId " +
+                        "WHERE pv.projectId = ? " +
+                        "GROUP BY pv.validatorId " +
+                        "ORDER BY projectCount ASC LIMIT 1";
+                    
+                    List<Object[]> validatorParams = new ArrayList<>();
+                    validatorParams.add(new Object[] { projectId });
+                    List<Map<String, Object>> validatorResults = DatabaseActionUtils.executeSQL(
+                        new String[] { lowestLoadValidatorQuery }, validatorParams);
+                    
+                    if (!validatorResults.isEmpty()) {
+                        int validatorId = Integer.parseInt(validatorResults.get(0).get("validatorId").toString());
+                        System.out.println("Selected existing validator with ID " + validatorId + " for project " + projectId);
+                        // Logic to assign this validator to the hacker would go here
+                    }
+                } else {
+                    // Max not reached, proceed with original validator assignment logic
+                    System.out.println("Finding suitable validator for project: " + projectId);
+                    // The existing validator assignment logic will continue after this insert block
+                }
+            } catch (Exception e) {
+                System.out.println("Error checking validator limits: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
         // If invitation was accepted, assign a suitable validator for the project and hacker
         if (Boolean.TRUE.equals(accepted)) {
             System.out.println("Finding suitable validator for project: " + projectId);
