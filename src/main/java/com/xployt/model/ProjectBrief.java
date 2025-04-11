@@ -2,16 +2,22 @@ package com.xployt.model;
 
 public class ProjectBrief {
     private int id;
-    private String status;
+    private String state;
     private String title;
     private String leadId;
+    private String clientId;
+    private String startDate;
+    private String endDate;
     private int pendingReports;
 
-    public ProjectBrief(int id, String status, String title, String leadId, int pendingReports) {
+    public ProjectBrief(int id, String state, String title, String leadId, String clientId, String startDate, String endDate, int pendingReports) {
         this.id = id;
-        this.status = status;
+        this.state = state;
         this.title = title;
         this.leadId = leadId;
+        this.clientId = clientId;
+        this.startDate = startDate;
+        this.endDate = endDate;
         this.pendingReports = pendingReports;
     }
 
@@ -20,8 +26,8 @@ public class ProjectBrief {
         return id;
     }
 
-    public String getStatus() {
-        return status;
+    public String getState() {
+        return state;
     }
 
     public String getTitle() {
@@ -30,6 +36,16 @@ public class ProjectBrief {
 
     public String getLeadId() {
         return leadId;
+    }
+
+    public String getClientId() { return clientId; }
+
+    public String getStartDate() {
+        return startDate;
+    }
+
+    public String getEndDate() {
+        return endDate;
     }
 
     public int getPendingReports() {

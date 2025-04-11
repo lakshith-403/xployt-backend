@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 
 public class ProjectDAO {
     // private static ServletContext servletContext;
-    private Logger logger = CustomLogger.getLogger();
+    private final Logger logger = CustomLogger.getLogger();
 
     // public static void setServletContext(ServletContext context) {
     // servletContext = context;
@@ -40,9 +40,12 @@ public class ProjectDAO {
             while (rs.next()) {
                 ProjectBrief project = new ProjectBrief(
                         rs.getInt("projectId"),
-                        rs.getString("status"),
+                        rs.getString("state"),
                         rs.getString("title"),
+                        rs.getString("leadId"),
                         rs.getString("clientId"),
+                        rs.getString("startDate"),
+                        rs.getString("endDate"),
                         rs.getInt("pendingReports"));
                 projects.add(project);
             }
@@ -69,9 +72,12 @@ public class ProjectDAO {
                     while (rs.next()) {
                         ProjectBrief project = new ProjectBrief(
                                 rs.getInt("projectId"),
-                                rs.getString("status"),
+                                rs.getString("state"),
                                 rs.getString("title"),
+                                rs.getString("leadId"),
                                 rs.getString("clientId"),
+                                rs.getString("startDate"),
+                                rs.getString("endDate"),
                                 rs.getInt("pendingReports"));
                         projects.add(project);
                     }
@@ -86,7 +92,7 @@ public class ProjectDAO {
         }
     }
 
-    public Project getProject(String projectId) {
+    public Project getProjectById(String projectId) throws SQLException {
         logger.info("ProjectDAO: Inside getProject");
         Project project = null;
         String sql = "SELECT * FROM Projects WHERE projectId = ?";
@@ -98,33 +104,62 @@ public class ProjectDAO {
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, projectId);
             ResultSet rs = stmt.executeQuery();
-            logger.info("ProjectDAO: Fetching project");
+
             if (rs.next()) {
                 project = new Project();
+                project.setProjectId(rs.getString("projectId"));
+                project.setState(Project.State.valueOf(rs.getString("state")));
                 project.setClientId(rs.getString("clientId"));
-                project.setProjectLeadId(rs.getString("leadId"));
+                project.setLeadId(rs.getString("leadId"));
                 project.setTitle(rs.getString("title"));
                 project.setDescription(rs.getString("description"));
                 project.setStartDate(rs.getString("startDate"));
                 project.setEndDate(rs.getString("endDate"));
                 project.setUrl(rs.getString("url"));
                 project.setTechnicalStack(rs.getString("technicalStack"));
+                project.setScope(getProjectScope(projectId));
             }
             logger.info("ProjectDAO: Project fetched successfully");
         } catch (SQLException e) {
             logger.severe("ProjectDAO: Error fetching project: " + e.getMessage());
+            throw e;
         }
         return project;
     }
 
-    public void updateProjectStatus(String projectId, String status) throws SQLException {
-        String sql = "UPDATE Projects SET status = ? WHERE projectId = ?";
+    private String[] getProjectScope(String projectId){
+        logger.info("ProjectDAO: Inside getScope");
+        String[] scope = null;
+        String sql = "SELECT scopeItems.description FROM scopeItems " +
+                "INNER JOIN ProjectScope ON scopeItems.scopeId = ProjectScope.scopeId " +
+                "WHERE ProjectScope.projectId = ?";
+
         ServletContext servletContext = ContextManager.getContext("DBConnection");
         Connection conn = (Connection) servletContext.getAttribute("DBConnection");
         logger.info("ProjectDAO: Connection established");
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, status);
+            stmt.setString(1, projectId);
+            ResultSet rs = stmt.executeQuery();
+            logger.info("ProjectDAO: Fetching scope");
+            if (rs.next()) {
+                scope = rs.getString("description").split(",");
+            }
+            logger.info("ProjectDAO: Scope fetched successfully");
+        } catch (SQLException e) {
+            logger.severe("ProjectDAO: Error fetching scope: " + e.getMessage());
+        }
+        return scope;
+    }
+
+    public void updateProjectState(String projectId, String state) throws SQLException {
+        String sql = "UPDATE Projects SET state = ? WHERE projectId = ?";
+        ServletContext servletContext = ContextManager.getContext("DBConnection");
+        Connection conn = (Connection) servletContext.getAttribute("DBConnection");
+        logger.info("ProjectDAO: Connection established");
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, state);
             stmt.setString(2, projectId);
             stmt.executeUpdate();
         }

@@ -21,18 +21,18 @@ public class ProjectTeamDAO {
     public ProjectTeam getProjectTeam(String projectId) throws SQLException {
         logger.info("ProjectTeamDAO: executing getProjectTeam");
         ProjectTeam projectTeam = new ProjectTeam();
-        Project project = new Project();
+        Project project;
 
         ServletContext servletContext = ContextManager.getContext("DBConnection");
         Connection conn = (Connection) servletContext.getAttribute("DBConnection");
         logger.info("ProjectTeamDAO: Connection Established");
 
         ProjectDAO projectDAO = new ProjectDAO();
-        project = projectDAO.getProject(projectId);
+        project = projectDAO.getProjectById(projectId);
 
         projectTeam.setProjectId(projectId);
         projectTeam.setClient(retrieveAndMapUser(conn, project.getClientId()));
-        projectTeam.setProjectLead(retrieveAndMapUser(conn, project.getProjectLeadId()));
+        projectTeam.setProjectLead(retrieveAndMapUser(conn, project.getLeadId()));
         projectTeam.setProjectHackers(getProjectHackers(conn, projectId));
         projectTeam.setProjectValidators(getProjectValidators(conn, projectId));
 

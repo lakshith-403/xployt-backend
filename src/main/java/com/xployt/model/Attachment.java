@@ -3,7 +3,7 @@ package com.xployt.model;
 public class Attachment {
     private final String id;
     private final String name;
-    private final String url;
+    private String url;
 
     public Attachment(String id, String name, String url) {
         this.id = id;
@@ -21,5 +21,9 @@ public class Attachment {
 
     public String getUrl() {
         return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 }

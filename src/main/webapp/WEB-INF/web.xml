@@ -42,4 +42,8 @@
         <location>/error</location>
     </error-page>
 
+    <session-config>
+        <session-timeout>60</session-timeout>
+    </session-config>
+
 </web-app>

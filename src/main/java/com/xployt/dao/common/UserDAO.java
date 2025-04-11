@@ -38,16 +38,6 @@ public class UserDAO {
             rs.next();
             String userId = rs.getString("userId");
             logger.info("User created successfully. User ID: " + userId);
-            if (user.getRole().equals("ProjectLead")) {
-                sql = "INSERT INTO ProjectLeadInfo (projectLeadId) VALUES (?)";
-                try (PreparedStatement stmt3 = conn.prepareStatement(sql)) {
-                    stmt3.setString(1, userId);
-                    stmt3.executeUpdate();
-                } catch (SQLException e) {
-                    logger.log(Level.SEVERE, "Error creating user: {0}", e.getMessage());
-                    throw e;
-                }
-            }
             conn.commit();
             return new User(userId, user.getEmail(), user.getPasswordHash(), user.getName(), user.getRole(), null,
                     null);

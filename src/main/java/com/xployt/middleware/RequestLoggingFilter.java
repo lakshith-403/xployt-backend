@@ -1,10 +1,16 @@
 package com.xployt.middleware;
 
-import javax.servlet.*;
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
-// import java.util.stream.Collectors;
+
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 
 public class RequestLoggingFilter implements Filter {
 
@@ -21,23 +27,15 @@ public class RequestLoggingFilter implements Filter {
             throws IOException, ServletException {
         if (request instanceof HttpServletRequest) {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
-            CachedBodyHttpServletRequest wrappedRequest = new CachedBodyHttpServletRequest(httpRequest);
 
-            String method = wrappedRequest.getMethod();
-            String requestURI = wrappedRequest.getRequestURI();
-            String queryString = wrappedRequest.getQueryString();
+            String method = httpRequest.getMethod();
+            String requestURI = httpRequest.getRequestURI();
+            String queryString = httpRequest.getQueryString();
             String fullURL = requestURI + (queryString != null ? "?" + queryString : "");
 
-            logger.info("Incoming request: " + method + " " + fullURL + "\n");
+            logger.log(Level.INFO, "Incoming request: {0} {1}\n", new Object[]{method, fullURL});
 
-            // if ("POST".equalsIgnoreCase(method)) {
-            // // Log the body of the POST request
-            // String requestBody = wrappedRequest.getReader().lines()
-            // .collect(Collectors.joining(System.lineSeparator()));
-            // logger.info("Request body: " + requestBody);
-            // }
-
-            chain.doFilter(wrappedRequest, response);
+            chain.doFilter(request, response);
         } else {
             chain.doFilter(request, response);
         }

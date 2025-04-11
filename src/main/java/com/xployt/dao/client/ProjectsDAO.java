@@ -24,6 +24,10 @@ public class ProjectsDAO {
     // Access the specific ServletContext by its name
     ServletContext servletContext = ContextManager.getContext("DBConnection");
     Connection conn = (Connection) servletContext.getAttribute("DBConnection");
+    if (conn == null) {
+      logger.severe("Client ProjectsDAO: Database connection is null");
+      return projects;
+    }
     logger.info("Client ProjectsDAO: Connection established");
 
     try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -33,9 +37,12 @@ public class ProjectsDAO {
       while (rs.next()) {
         ProjectBrief project = new ProjectBrief(
             rs.getInt("projectId"),
-            rs.getString("status"),
+            rs.getString("state"),
             rs.getString("title"),
             rs.getString("leadId"),
+            rs.getString("clientId"),
+            rs.getString("startDate"),
+            rs.getString("endDate"),
             rs.getInt("pendingReports"));
         projects.add(project);
       }

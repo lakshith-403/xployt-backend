@@ -32,7 +32,7 @@ public class HackerInvitationServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        logger.info("Servlet: Fetching project invitations");
+        logger.info("Servlet: Fetching hacker invitations");
         String pathInfo = request.getPathInfo();
         if (pathInfo == null || !pathInfo.startsWith("/")) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid path info");
@@ -53,10 +53,7 @@ public class HackerInvitationServlet extends HttpServlet {
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-
-        String jsonResponse = JsonUtil.toJson(HackerInvitations);
-        logger.info("response: " + jsonResponse);
-        response.getWriter().write(jsonResponse);
+        response.getWriter().write(JsonUtil.useGson().toJson(HackerInvitations));
     }
 
     @SuppressWarnings("unchecked")
@@ -74,56 +71,16 @@ public class HackerInvitationServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        logger.info("Creating Invitation");
-
-        Map<String, Object> jsonObject;
-        try {
-            jsonObject = parseRequestBody(request);
-        } catch (Exception e) {
-            logger.severe("Error parsing JSON: " + e.getMessage());
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid JSON format");
-            return;
-        }
-
-        String hackerId = jsonObject.get("hackerId") != null
-                ? String.valueOf(jsonObject.get("hackerId")).replace(".0", "")
-                : null;
-        String projectId = jsonObject.get("projectId") != null
-                ? String.valueOf(jsonObject.get("projectId")).replace(".0", "")
-                : null;
-
-        if (hackerId == null || projectId == null) {
-            logger.severe("Missing parameters: hackerId or projectId is null");
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing parameters");
-            return;
-        }
-
-        Invitation invitation = new Invitation();
-        invitation.setHackerId(hackerId);
-        invitation.setProjectId(projectId);
-
-        try {
-            invitationService.createInvitation(invitation);
-            response.setStatus(HttpServletResponse.SC_CREATED);
-        } catch (Exception e) {
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error creating invitation");
-        }
-
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(JsonUtil.toJson(invitation));
-    }
-
-    @Override
     protected void doPut(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         logger.info("Accepting Invitation");
 
         Map<String, Object> jsonObject;
+        logger.info("Parsing request body");
         try {
+            logger.info("Parsing request body");
             jsonObject = parseRequestBody(request);
+            logger.info("jsonObject: " + jsonObject);
         } catch (Exception e) {
             logger.severe("Error parsing JSON: " + e.getMessage());
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid JSON format");
@@ -131,30 +88,49 @@ public class HackerInvitationServlet extends HttpServlet {
         }
 
         String hackerId = jsonObject.get("hackerId") != null
-                ? String.valueOf(jsonObject.get("hackerId")).replace(".0", "")
+                ? new Gson().toJson(jsonObject.get("hackerId")).replace(".0", "").replace("\"", "")
                 : null;
+        logger.info("hackerId: " + hackerId);
         String projectId = jsonObject.get("projectId") != null
-                ? String.valueOf(jsonObject.get("projectId")).replace(".0", "")
+                ? new Gson().toJson(jsonObject.get("projectId")).replace(".0", "").replace("\"", "")
                 : null;
+        logger.info("projectId: " + projectId);
+        Boolean accepted = jsonObject.get("accept") != null
+                ? new Gson().fromJson(jsonObject.get("accept").toString(), Boolean.class)
+                : null;
+        logger.info("accepted: " + accepted);
 
-        if (hackerId == null || projectId == null) {
+        if (hackerId == null || projectId == null || accepted == null) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing parameters");
             return;
         }
+
+        logger.info("Accepting invitation for projectId: " + projectId + ", hackerId: " + hackerId + ", accepted: " + accepted);
 
         Invitation invitation = new Invitation();
         invitation.setHackerId(hackerId);
         invitation.setProjectId(projectId);
 
+
+        GenericResponse updatedInvitation;
+
         try {
-            invitationService.acceptInvitation(invitation);
+            if (Boolean.TRUE.equals(accepted)) {
+                invitation.setStatus("Accepted");
+                updatedInvitation = invitationService.acceptInvitation(invitation);
+            } else {
+                invitation.setStatus("Declined");
+                updatedInvitation = invitationService.rejectInvitation(invitation);
+            }
+
             response.setStatus(HttpServletResponse.SC_OK);
         } catch (Exception e) {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error accepting invitation");
+            return;
         }
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(JsonUtil.toJson(invitation));
+        response.getWriter().write(JsonUtil.toJson(updatedInvitation));
     }
 }
