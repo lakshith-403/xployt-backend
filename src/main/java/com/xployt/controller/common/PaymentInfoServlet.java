@@ -22,7 +22,7 @@ import com.xployt.util.DatabaseActionUtils;
 @WebServlet("/api/common/paymentInfo/*")
 public class PaymentInfoServlet extends HttpServlet {
 
-  private static String[] sqlStatements = {};
+  // private static String[] sqlStatements = {};
   private static List<Object[]> sqlParams = new ArrayList<>();
   private static List<Map<String, Object>> results = new ArrayList<>();
   // private static Map<String, Object> requestBody = new HashMap<>();
