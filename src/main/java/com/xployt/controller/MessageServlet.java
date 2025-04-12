@@ -57,10 +57,15 @@ public class MessageServlet extends HttpServlet {
             Message message = gson.fromJson(messageJson, Message.class);
             logger.log(Level.INFO, "Message: {0}", message);
 
-            // Process file attachments
+            // Extract attachment IDs from message
+            List<String> attachmentIds = message.getAttachments().stream()
+                .map(attachment -> attachment.getId())
+                .collect(Collectors.toList());
+
+            // Process file attachments with the new generic method
             List<File> uploadedFiles = FileUploadUtil.processAttachments(
-                uploadResult.getFileItems(), 
-                message, 
+                uploadResult.getFileItems(),
+                attachmentIds,
                 getServletContext(), 
                 response
             );
