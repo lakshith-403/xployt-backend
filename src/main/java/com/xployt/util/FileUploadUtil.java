@@ -21,9 +21,6 @@ import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
-import com.xployt.model.Attachment;
-import com.xployt.model.Message;
-
 public class FileUploadUtil {
     private static final Logger logger = CustomLogger.getLogger();
 
@@ -90,22 +87,13 @@ public class FileUploadUtil {
         }
     }
     
-    public static List<File> processAttachments(List<FileItem> files, Message message, 
+    public static List<File> processAttachments(List<FileItem> files, List<String> fileIds, 
                                                ServletContext context, HttpServletResponse response) throws IOException {
         List<File> uploadedFiles = new ArrayList<>();
         
-        for (FileItem item : files) {
-            // get relevant attachment from message
-            Attachment attachment = message.getAttachments().stream()
-                .filter(a -> a.getName().equals(item.getName()))
-                .findFirst()
-                .orElse(null);
-
-            if (attachment == null) {
-                logger.log(Level.SEVERE, "Attachment not found: {0}", item.getName());
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Attachment not found");
-                return uploadedFiles;
-            }
+        for (int i = 0; i < files.size(); i++) {
+            FileItem item = files.get(i);
+            String fileId = fileIds.get(i);
 
             String fileExtension = "";
             String originalFileName = item.getName();
@@ -120,7 +108,7 @@ public class FileUploadUtil {
                 uploadDir.mkdirs();
             }
 
-            File file = new File(uploadDir, attachment.getId() + fileExtension);
+            File file = new File(uploadDir, fileId + fileExtension);
 
             try (InputStream inputStream = item.getInputStream()) {
                 Path outputPath = file.toPath();
