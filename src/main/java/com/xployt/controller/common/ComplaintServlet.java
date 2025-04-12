@@ -69,6 +69,17 @@ public class ComplaintServlet extends HttpServlet {
                 // Get all complaints for user
                 List<Complaint> complaints = complaintDAO.getComplaintsByUser(user.getUserId());
                 sendJsonResponse(response, complaints);
+            } else if (pathInfo.startsWith("/discussion/")) {
+                // Get complaint by discussion ID
+                String discussionId = pathInfo.substring("/discussion/".length());
+                Complaint complaint = complaintDAO.getComplaintByDiscussionId(discussionId);
+                
+                if (complaint == null) {
+                    sendNotFound(response, "Complaint not found for the given discussion");
+                    return;
+                }
+                
+                sendJsonResponse(response, complaint);
             } else {
                 // Get specific complaint
                 String complaintId = pathInfo.substring(1);
@@ -230,5 +241,58 @@ public class ComplaintServlet extends HttpServlet {
 
     private void sendNotFound(HttpServletResponse response, String message) throws IOException {
         sendErrorResponse(response, HttpServletResponse.SC_NOT_FOUND, message);
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        User user = AuthUtil.getSignedInUser(request);
+        
+        if (user == null) {
+            sendUnauthorized(response);
+            return;
+        }
+        
+        if (!"ProjectLead".equals(user.getRole())) {
+            sendErrorResponse(response, HttpServletResponse.SC_FORBIDDEN, "Only project leads can resolve complaints");
+            return;
+        }
+        
+        String pathInfo = request.getPathInfo();
+        
+        if (pathInfo == null || pathInfo.equals("/")) {
+            sendErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST, "Discussion ID is required");
+            return;
+        }
+        
+        // The URL format is /api/complaints/{discussionId}
+        String discussionId = pathInfo.substring(1);
+        
+        try {
+            // Find the complaint by discussion ID
+            Complaint complaint = complaintDAO.getComplaintByDiscussionId(discussionId);
+            
+            if (complaint == null) {
+                sendNotFound(response, "Complaint not found for the given discussion");
+                return;
+            }
+            
+            // Mark the complaint as resolved
+            complaint.setResolved(true);
+            complaintDAO.updateComplaint(complaint);
+            
+            // Return success response
+            GenericResponse genericResponse = new GenericResponse(
+                "",
+                true,
+                "Complaint resolved successfully",
+                null
+            );
+            
+            sendJsonResponse(response, genericResponse);
+            
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error resolving complaint: {0}", e.getMessage());
+            sendErrorResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error resolving complaint: " + e.getMessage());
+        }
     }
 } 

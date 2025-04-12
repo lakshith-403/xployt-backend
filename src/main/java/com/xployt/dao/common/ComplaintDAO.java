@@ -125,10 +125,59 @@ public class ComplaintDAO {
                 teamMembers = Arrays.asList(teamMembersStr.split(","));
             }
             String discussionId = rs.getString("discussion_id");
+            boolean resolved = rs.getBoolean("resolved");
 
-            return new Complaint(id, title, notes, projectId, createdBy, createdAt, teamMembers, discussionId);
+            Complaint complaint = new Complaint(id, title, notes, projectId, createdBy, createdAt, teamMembers, discussionId);
+            complaint.setResolved(resolved);
+            return complaint;
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error mapping result set to complaint: {0}", e.getMessage());
+            throw e;
+        }
+    }
+
+    public Complaint getComplaintByDiscussionId(String discussionId) throws SQLException {
+        String sql = "SELECT * FROM complaints WHERE discussion_id = ?";
+        
+        ServletContext servletContext = ContextManager.getContext("DBConnection");
+        Connection conn = (Connection) servletContext.getAttribute("DBConnection");
+        
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, discussionId);
+            ResultSet rs = pstmt.executeQuery();
+            
+            if (rs.next()) {
+                return mapResultSetToComplaint(rs);
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error retrieving complaint by discussion ID: {0}", e.getMessage());
+            throw e;
+        }
+        
+        return null;
+    }
+
+    public void updateComplaint(Complaint complaint) throws SQLException {
+        String sql = "UPDATE complaints SET title = ?, notes = ?, project_id = ?, created_by = ?, " +
+                    "team_members = ?, discussion_id = ?, resolved = ? WHERE id = ?";
+                
+        ServletContext servletContext = ContextManager.getContext("DBConnection");
+        Connection conn = (Connection) servletContext.getAttribute("DBConnection");
+        
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, complaint.getTitle());
+            pstmt.setString(2, complaint.getNotes());
+            pstmt.setString(3, complaint.getProjectId());
+            pstmt.setString(4, complaint.getCreatedBy());
+            pstmt.setString(5, String.join(",", complaint.getTeamMembers()));
+            pstmt.setString(6, complaint.getDiscussionId());
+            pstmt.setBoolean(7, complaint.isResolved());
+            pstmt.setInt(8, complaint.getId());
+            
+            pstmt.executeUpdate();
+            logger.log(Level.INFO, "Complaint updated successfully with ID: {0}", complaint.getId());
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error updating complaint: {0}", e.getMessage());
             throw e;
         }
     }

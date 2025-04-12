@@ -12,6 +12,7 @@ public class Complaint {
     private Date createdAt;
     private List<String> teamMembers;
     private String discussionId;
+    private boolean resolved;
 
     public Complaint() {
     }
@@ -26,6 +27,7 @@ public class Complaint {
         this.createdAt = createdAt;
         this.teamMembers = teamMembers;
         this.discussionId = discussionId;
+        this.resolved = false;
     }
 
     public int getId() {
@@ -90,5 +92,13 @@ public class Complaint {
 
     public void setDiscussionId(String discussionId) {
         this.discussionId = discussionId;
+    }
+
+    public boolean isResolved() {
+        return resolved;
+    }
+
+    public void setResolved(boolean resolved) {
+        this.resolved = resolved;
     }
 } 
