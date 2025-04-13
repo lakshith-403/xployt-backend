@@ -5,7 +5,7 @@ import java.util.List;
 public class ReportStep {
     private final int stepNumber;
     private final String description;
-    private final List<Attachment> attachments;
+    private List<Attachment> attachments;
 
     public ReportStep(int stepNumber, String description, List<Attachment> attachments) {
         this.stepNumber = stepNumber;
@@ -25,9 +25,7 @@ public class ReportStep {
         return attachments;
     }
 
-    public void setAttachments(List<String> filePaths) {
-        for (int i = 0; i < filePaths.size(); i++) {
-            this.attachments.get(i).setUrl(filePaths.get(i));
-        }
+    public void setAttachments(List<Attachment> attachments) {
+        this.attachments = attachments;
     }
 }
