@@ -3,17 +3,17 @@ package com.xployt.model;
 import java.util.List;
 
 public class ReportStep {
-    private final String stepNumber;
+    private final int stepNumber;
     private final String description;
     private final List<Attachment> attachments;
 
-    public ReportStep(String stepNumber, int reportId, String description, List<Attachment> attachments) {
+    public ReportStep(int stepNumber, String description, List<Attachment> attachments) {
         this.stepNumber = stepNumber;
         this.description = description;
         this.attachments = attachments;
     }
 
-    public String getStepNumber() {
+    public int getStepNumber() {
         return stepNumber;
     }
 
