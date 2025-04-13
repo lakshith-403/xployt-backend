@@ -86,10 +86,10 @@ public class SingleProjectServlet extends HttpServlet {
         return "SELECT p.*, pc.* FROM Projects p LEFT JOIN ProjectConfigs pc ON p.projectId = pc.projectId WHERE p.projectId = ?";
       case "Admin":
       case "admin":
-        return "SELECT * FROM Projects WHERE projectId = ?";
+        return "SELECT p.*, pc.* FROM Projects p LEFT JOIN ProjectConfigs pc ON p.projectId = pc.projectId WHERE p.projectId = ?";
       case "Validator":
       case "validator":
-        return "SELECT * FROM Projects WHERE projectId = ?";
+        return "SELECT p.*, pc.* FROM Projects p LEFT JOIN ProjectConfigs pc ON p.projectId = pc.projectId WHERE p.projectId = ?";
       case "Hacker":
       case "hacker":
         return "SELECT * FROM Projects WHERE projectId = ?";
