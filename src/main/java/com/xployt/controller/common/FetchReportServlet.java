@@ -21,7 +21,7 @@ import com.xployt.util.DatabaseActionUtils;
  * It is used to be used to setup a new Controller
  * Try out theese ednpoints to se how it works
  */
-@WebServlet("/api/reports/*")
+@WebServlet("/api/fetch-reports/*")
 public class FetchReportServlet extends HttpServlet {
 
   private static String[] sqlStatements = {};
