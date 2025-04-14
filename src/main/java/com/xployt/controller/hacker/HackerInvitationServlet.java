@@ -158,7 +158,7 @@ public class HackerInvitationServlet extends HttpServlet {
                 System.out.println("Max validators for project " + projectId + ": " + maxValidators);
                 
                 // Get current number of validators assigned to this project
-                String validatorCountQuery = "SELECT COUNT(*) as validatorCount FROM ProjectValidators WHERE projectId = ?";
+                String validatorCountQuery = "SELECT COUNT(DISTINCT assignedValidatorId) as validatorCount FROM ProjectHackers WHERE projectId = ? AND assignedValidatorId IS NOT NULL";
                 List<Object[]> countParams = new ArrayList<>();
                 countParams.add(new Object[] { projectId });
                 List<Map<String, Object>> countResults = DatabaseActionUtils.executeSQL(new String[] { validatorCountQuery }, countParams);
@@ -171,11 +171,10 @@ public class HackerInvitationServlet extends HttpServlet {
                     System.out.println("Maximum validators reached for project " + projectId);
                     // Get a validator from among those currently assigned with the lowest active project count
                     String lowestLoadValidatorQuery = 
-                        "SELECT pv.validatorId, COUNT(pv2.projectId) as projectCount " +
-                        "FROM ProjectValidators pv " +
-                        "LEFT JOIN ProjectValidators pv2 ON pv.validatorId = pv2.validatorId " +
-                        "WHERE pv.projectId = ? " +
-                        "GROUP BY pv.validatorId " +
+                        "SELECT assignedValidatorId as assignedValidatorId, COUNT(DISTINCT projectId) as projectCount " +
+                        "FROM ProjectHackers " +
+                        "WHERE projectId = ? AND assignedValidatorId IS NOT NULL " +
+                        "GROUP BY assignedValidatorId " +
                         "ORDER BY projectCount ASC LIMIT 1";
                     
                     List<Object[]> validatorParams = new ArrayList<>();
@@ -184,7 +183,7 @@ public class HackerInvitationServlet extends HttpServlet {
                         new String[] { lowestLoadValidatorQuery }, validatorParams);
                     
                     if (!validatorResults.isEmpty()) {
-                        validatorId = Integer.parseInt(validatorResults.get(0).get("validatorId").toString());
+                        validatorId = Integer.parseInt(validatorResults.get(0).get("assignedValidatorId").toString());
                         System.out.println("Selected existing validator with ID " + validatorId + " for project " + projectId);
                     }
                 } else {
@@ -275,10 +274,6 @@ public class HackerInvitationServlet extends HttpServlet {
                     // Update ProjectHackers record with the selected validator
                     String updateHackerQuery = "UPDATE ProjectHackers SET assignedValidatorId = ? " +
                                               "WHERE projectId = ? AND hackerId = ?";
-                    
-                    // Add entry to ProjectValidators table if not already there
-                    String insertValidatorQuery = "INSERT INTO ProjectValidators (projectId, validatorId) " +
-                                                "VALUES (?, ?) ON DUPLICATE KEY UPDATE validatorId = validatorId";
 
                     // Increase the activeProjectCount for the validator
                     String updateValidatorQuery = "UPDATE ValidatorInfo SET activeProjectCount = activeProjectCount + 1 " +
@@ -286,11 +281,10 @@ public class HackerInvitationServlet extends HttpServlet {
                     
                     List<Object[]> sqlParams = new ArrayList<>();
                     sqlParams.add(new Object[] { validatorId, projectId, hackerId });
-                    sqlParams.add(new Object[] { projectId, validatorId });
                     sqlParams.add(new Object[] { validatorId });
                     
                     DatabaseActionUtils.executeSQL(
-                        new String[] { updateHackerQuery, insertValidatorQuery, updateValidatorQuery }, 
+                        new String[] { updateHackerQuery, updateValidatorQuery }, 
                         sqlParams
                     );
                     
@@ -328,16 +322,12 @@ public class HackerInvitationServlet extends HttpServlet {
                             String updateValidatorQuery = "UPDATE ValidatorInfo SET activeProjectCount = GREATEST(activeProjectCount - 1, 0) " +
                                                          "WHERE validatorId = ?";
                             
-                            // Remove entry from ProjectValidators table
-                            String deleteValidatorQuery = "DELETE FROM ProjectValidators " +
-                                                         "WHERE projectId = ? AND validatorId = ?";
                             
                             List<Object[]> rollbackParams = new ArrayList<>();
                             rollbackParams.add(new Object[] { validatorId });
-                            rollbackParams.add(new Object[] { projectId, validatorId });
                             
                             DatabaseActionUtils.executeSQL(
-                                new String[] { updateValidatorQuery, deleteValidatorQuery }, 
+                                new String[] { updateValidatorQuery }, 
                                 rollbackParams
                             );
              

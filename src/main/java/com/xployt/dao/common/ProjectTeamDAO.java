@@ -79,12 +79,12 @@ public class ProjectTeamDAO {
 
     public List<PublicUser> getProjectValidators(Connection conn, String projectId) throws SQLException {
         List<PublicUser> validators = new ArrayList<>();
-        String sql = "SELECT validatorId FROM ProjectValidators WHERE projectId = ?";
+        String sql = "SELECT DISTINCT assignedValidatorId FROM ProjectHackers WHERE projectId = ? AND assignedValidatorId IS NOT NULL";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, projectId);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                String validatorId = rs.getString("validatorId");
+                String validatorId = rs.getString("assignedValidatorId");
                 PublicUser validator = retrieveAndMapUser(conn, validatorId);
                 if (validator != null) {
                     validators.add(validator);
