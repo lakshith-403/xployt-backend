@@ -93,7 +93,7 @@ public class NewProjectServlet extends HttpServlet {
         return "SELECT * FROM Projects";
       case "validator":
       case "Validator":
-        return "SELECT p.* FROM Projects p JOIN ProjectValidators pv ON p.projectId = pv.projectId WHERE pv.validatorId = ?";
+        return "SELECT DISTINCT p.* FROM Projects p JOIN ProjectHackers ph ON p.projectId = ph.projectId WHERE ph.assignedValidatorId = ?";
       default:
         throw new SQLException("Invalid user type");
     }
