@@ -95,7 +95,7 @@ public class DashboardStatsServlet extends HttpServlet {
       case "admin":
         return "SELECT state, COUNT(*) as count FROM Projects GROUP BY state";
       case "validator":
-        return "SELECT p.state, COUNT(*) as count FROM Projects p JOIN ProjectValidators pv ON p.projectId = pv.projectId WHERE pv.validatorId = ? GROUP BY p.state";
+        return "SELECT p.state, COUNT(DISTINCT p.projectId) as count FROM Projects p JOIN ProjectHackers pv ON p.projectId = pv.projectId WHERE pv.assignedValidatorId = ? GROUP BY p.state";
       default:
         throw new SQLException("Invalid user type");
     }
@@ -124,7 +124,7 @@ public class DashboardStatsServlet extends HttpServlet {
       case "admin":
         return "SELECT * FROM Projects ORDER BY projectId DESC LIMIT 5";
       case "validator":
-        return "SELECT p.* FROM Projects p JOIN ProjectValidators pv ON p.projectId = pv.projectId WHERE pv.validatorId = ? ORDER BY p.projectId DESC LIMIT 5";
+        return "SELECT p.* FROM Projects p JOIN ProjectHackers pv ON p.projectId = pv.projectId WHERE pv.assignedValidatorId = ? ORDER BY p.projectId DESC LIMIT 5";
       default:
         throw new SQLException("Invalid user type");
     }
