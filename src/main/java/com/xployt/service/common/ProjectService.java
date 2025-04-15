@@ -60,4 +60,13 @@ public class ProjectService {
         }
         return new GenericResponse(null, false, "Failed to fetch project", null);
     }
+
+    public GenericResponse getProjectSeverityLevels(int projectId) {
+        logger.info("Fetching project severity levels for projectId: " + projectId);
+        ArrayList<String[]> severityLevels = projectDAO.getProjectSeverityLevels(projectId);
+        if (severityLevels != null) {
+            return new GenericResponse(severityLevels, true, null, null);
+        }
+        return new GenericResponse(null, false, "Failed to fetch severity levels", null);
+    }
 }

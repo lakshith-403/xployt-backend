@@ -164,4 +164,28 @@ public class ProjectDAO {
             stmt.executeUpdate();
         }
     }
+
+    public ArrayList<String[]> getProjectSeverityLevels(int projectId){
+        String sql = "SELECT item, level FROM PaymentLevels WHERE projectId = ?";
+        ServletContext servletContext = ContextManager.getContext("DBConnection");
+        Connection conn = (Connection) servletContext.getAttribute("DBConnection");
+
+        ArrayList<String[]> severityLevels = new ArrayList<>();
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, projectId);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                String item = rs.getString("item");
+                String level = rs.getString("level");
+                severityLevels.add(new String[]{item, level});
+            }
+
+        } catch (SQLException e) {
+            logger.severe("ProjectDAO: Error fetching severity levels: " + e.getMessage());
+        }
+
+        return severityLevels;
+    }
 }
