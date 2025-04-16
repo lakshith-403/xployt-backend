@@ -51,15 +51,16 @@ public class ReportActionServlet extends HttpServlet {
       System.out.println("Action type: " + actionType);
       System.out.println("Feedback: " + feedback);
       sqlStatements = new String[] {
-          "UPDATE BugReports SET status = ? WHERE reportId = ?"
-
+          "UPDATE BugReports SET status = ?, feedback = ? WHERE reportId = ?"
       };
 
       sqlParams.clear();
-      sqlParams.add(new Object[] { actionType, reportId });
+      sqlParams.add(new Object[] { actionType, feedback, reportId });
 
       DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
       System.out.println("Report status updated successfully with status: " + actionType);
+
+      //
 
       ResponseProtocol.sendSuccess(request, response, this, "Report status updated successfully",
           Map.of("reportId", requestBody.get("reportId")),
