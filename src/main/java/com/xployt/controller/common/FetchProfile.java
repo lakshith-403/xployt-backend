@@ -69,14 +69,30 @@ public class FetchProfile extends HttpServlet {
           }
           
           int userId = Integer.parseInt(userIdStr.trim());
+
           System.out.println("Parsed User ID: " + userId);
-          sqlStatements = new String[] { getSQLForUserType("hacker") };
+          
+          // First get the user's role
+          sqlStatements = new String[] { "SELECT role FROM Users WHERE userId = ?" };
           sqlParams.clear();
-          sqlParams.add(new Object[] { userId});
-          System.out.println("SQL Statements: " + sqlStatements);
-          System.out.println("SQL Params: " + sqlParams);
+          sqlParams.add(new Object[] { userId });
+          
           results.clear();
           results.addAll(DatabaseActionUtils.executeSQL(sqlStatements, sqlParams));
+          
+          String userRole = "";
+          if (!results.isEmpty()) {
+              userRole = (String) results.get(0).get("role");
+          }
+          
+          // Now fetch the full profile using the correct role
+          sqlStatements = new String[] { getSQLForUserType(userRole) };
+          sqlParams.clear();
+          sqlParams.add(new Object[] { userId });
+          
+          results.clear();
+          results.addAll(DatabaseActionUtils.executeSQL(sqlStatements, sqlParams));
+
           
           ResponseProtocol.sendSuccess(request, response, this, "Profile fetched successfully",
               Map.of("results", results),
@@ -104,19 +120,19 @@ public class FetchProfile extends HttpServlet {
     switch (userType) {
       case "Hacker":
       case "hacker":
-        return "SELECT u.userId, u.email, u.name, u.role, u.createdAt, u.updatedAt, u.status, up.username, up.firstName, up.lastName, up.phone, up.companyName, up.dob, up.linkedIn FROM Users u LEFT JOIN UserProfiles up ON u.userId = up.userId WHERE u.userId = ?";
+        return "SELECT u.userId, u.email, u.name, u.role, u.createdAt, u.updatedAt, u.status, up.username, up.firstName, up.lastName, up.phone, up.companyName, up.dob, up.linkedIn, GROUP_CONCAT(hs.skill) as skills FROM Users u LEFT JOIN UserProfiles up ON u.userId = up.userId LEFT JOIN HackerSkillSet hs ON u.userId = hs.hackerId WHERE u.userId = ? GROUP BY u.userId";
       case "client":
       case "Client":
         return "SELECT u.userId, u.email, u.name, u.role, u.createdAt, u.updatedAt, u.status, up.username, up.firstName, up.lastName, up.phone, up.companyName, up.dob FROM Users u LEFT JOIN UserProfiles up ON u.userId = up.userId WHERE u.userId = ?";
       case "lead":
       case "ProjectLead":
-        return "SELECT u.userId, u.email, u.name, u.role, u.createdAt, u.updatedAt, u.status, up.username, up.firstName, up.lastName, up.phone, up.companyName, up.dob, up.linkedIn FROM Users u LEFT JOIN UserProfiles up ON u.userId = up.userId WHERE u.userId = ?";
+        return "SELECT u.userId, u.email, u.name, u.role, u.createdAt, u.updatedAt, u.status, up.username, up.firstName, up.lastName, up.phone, up.companyName, up.dob, up.linkedIn, vi.skills, vi.experience, vi.cvLink, vi.reference, vi.activeProjectCount FROM Users u LEFT JOIN UserProfiles up ON u.userId = up.userId LEFT JOIN ValidatorInfo vi ON u.userId = vi.validatorId WHERE u.userId = ?";
       case "admin":
       case "Admin":
         return "SELECT u.userId, u.email, u.name, u.role, u.createdAt, u.updatedAt, u.status, up.username, up.firstName, up.lastName, up.phone, up.companyName, up.dob FROM Users u LEFT JOIN UserProfiles up ON u.userId = up.userId WHERE u.userId = ?";
       case "validator":
       case "Validator":
-        return "SELECT u.userId, u.email, u.name, u.role, u.createdAt, u.updatedAt, u.status, up.username, up.firstName, up.lastName, up.phone, up.companyName, up.dob, up.linkedIn FROM Users u LEFT JOIN UserProfiles up ON u.userId = up.userId WHERE u.userId = ?";
+        return "SELECT u.userId, u.email, u.name, u.role, u.createdAt, u.updatedAt, u.status, up.username, up.firstName, up.lastName, up.phone, up.companyName, up.dob, up.linkedIn, vi.skills, vi.experience, vi.cvLink, vi.reference, vi.activeProjectCount FROM Users u LEFT JOIN UserProfiles up ON u.userId = up.userId LEFT JOIN ValidatorInfo vi ON u.userId = vi.validatorId WHERE u.userId = ?";
     }
     return null;
   }
