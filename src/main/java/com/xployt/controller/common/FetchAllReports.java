@@ -106,6 +106,16 @@ public class FetchAllReports extends HttpServlet {
             sqlParams.add(new Object[] { userId });
             break;
 
+          case "Admin":
+            sqlStatements = new String[] {
+              "SELECT r.reportId, r.severity, r.vulnerabilityType, r.title, r.createdAt, r.status, p.projectId, p.title as projectTitle " +
+              "FROM BugReports r " +
+              "JOIN Projects p ON r.projectId = p.projectId " +
+              "ORDER BY r.createdAt DESC"
+            };
+            sqlParams.clear();
+            break;
+
           default:
             ResponseProtocol.sendError(request, response, this, "Invalid user role",
                 Map.of("userRole", userRole),

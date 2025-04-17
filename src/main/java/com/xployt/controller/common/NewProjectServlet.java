@@ -46,7 +46,7 @@ public class NewProjectServlet extends HttpServlet {
 
       if (!pathParams.isEmpty()) {
         String userType = pathParams.get(0);
-        String userId = pathParams.size() > 1 ? pathParams.get(1) : null;
+        String userId = (userType.equalsIgnoreCase("admin")) ? null : (pathParams.size() > 1 ? pathParams.get(1) : null);
 
         sqlStatements = new String[] { getSQLForUserType(userType) };
         sqlParams.clear();
