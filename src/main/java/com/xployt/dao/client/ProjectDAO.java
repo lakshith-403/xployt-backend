@@ -5,7 +5,11 @@ import java.sql.PreparedStatement;
 import java.util.logging.Logger;
 import java.sql.ResultSet;
 // import com.xployt.util.SQLLoader;
+import com.xployt.model.Project;
+import com.xployt.util.ContextManager;
 import com.xployt.util.CustomLogger;
+
+import javax.servlet.ServletContext;
 
 public class ProjectDAO {
 
@@ -156,5 +160,18 @@ public class ProjectDAO {
       logger.severe("Error getting suited lead: " + e.getMessage());
     }
     return -1;
+  }
+
+  public Project closeProject(int projectId){
+    String sql = "UPDATE Projects SET state = 'CLOSED' WHERE projectId = ?";
+    ServletContext servletContext = ContextManager.getContext("DBConnection");
+    Connection conn = (Connection) servletContext.getAttribute("DBConnection");
+    try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+      preparedStatement.setInt(1, projectId);
+      preparedStatement.executeUpdate();
+    } catch (Exception e) {
+      logger.severe("Error closing project: " + e.getMessage());
+    }
+    return null;
   }
 }
