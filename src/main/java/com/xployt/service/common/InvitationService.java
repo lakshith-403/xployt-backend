@@ -37,7 +37,7 @@ public class InvitationService {
 
     public GenericResponse fetchProjectInvitations(String projectId) throws SQLException {
         logger.info("InvitationService: Fetching invitations of project " + projectId);
-        List<Invitation> invitations = invitationDAO.getProjectInvitations(projectId);
+        List<Invitation> invitations = invitationDAO.getProjectInvitations(projectId, true);
         if (!invitations.isEmpty()) {
             return new GenericResponse(invitations, true, null, null);
         }
@@ -46,7 +46,7 @@ public class InvitationService {
 
     public GenericResponse fetchInvitedHackers(String projectId) throws SQLException {
         logger.info("InvitationsService: Fetching invited hackers for project " + projectId);
-        List<Invitation> invitations = invitationDAO.getProjectInvitations(projectId);
+        List<Invitation> invitations = invitationDAO.getProjectInvitations(projectId, true);
         List<Hacker> hackers = new ArrayList<>();
 
         if (invitations.isEmpty()) {
