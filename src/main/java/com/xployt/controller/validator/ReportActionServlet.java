@@ -11,6 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
 
+import com.xployt.dao.common.BlastPointsDAO;
+import com.xployt.dao.common.VulnerabilityReportDAO;
+import com.xployt.model.VulnerabilityReport;
 import com.xployt.util.RequestProtocol;
 import com.xployt.util.ResponseProtocol;
 import com.xployt.util.DatabaseActionUtils;
@@ -60,7 +63,31 @@ public class ReportActionServlet extends HttpServlet {
       DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
       System.out.println("Report status updated successfully with status: " + actionType);
 
-      //
+        // Add blast points for the user based on the action taken
+      BlastPointsDAO blastPointsDAO = new BlastPointsDAO();
+      String blastPointsCategory = "report_submission";
+      try {
+
+        VulnerabilityReport report = new VulnerabilityReportDAO().getVulnerabilityReportById(Integer.parseInt(reportId));
+        String action = "";
+        switch (actionType) {
+          case "More Info":
+            action = "flagged_for_more_info";
+            break;
+          case "Rejected":
+            action = "rejected";
+            break;
+          case "Validated":
+            action = report.getSeverity().toLowerCase();
+            break;
+        }
+        if (!action.isEmpty()) {
+          blastPointsDAO.addUserBlastPoints(Integer.parseInt(report.getHackerId()), blastPointsCategory, action);
+        }
+        System.out.println("Blast points added for user: " + report.getHackerId() + " with action: " + action);
+      } catch (Exception e) {
+        System.out.println("Error adding blast points: " + e.getMessage());
+      }
 
       ResponseProtocol.sendSuccess(request, response, this, "Report status updated successfully",
           Map.of("reportId", requestBody.get("reportId")),
