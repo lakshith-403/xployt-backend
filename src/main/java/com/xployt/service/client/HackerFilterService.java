@@ -79,6 +79,7 @@ public class HackerFilterService {
 
     private List<Hacker> selectHackersWithSpreadBlastPoints(List<Hacker> hackers) {
         if (hackers.size() <= MAX_SELECTED_HACKERS) {
+            System.out.println("Returned hackers: " + hackers.size());
             return new ArrayList<>(hackers);
         }
 
@@ -97,7 +98,7 @@ public class HackerFilterService {
         }
 
         selectedHackers = new ArrayList<>(uniqueHackers);
-        System.out.println("Final selected hackers: " + selectedHackers);
+        System.out.println("Returned hackers: " + hackers.size());
         return selectedHackers;
     }
 
