@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 
 public class InvitationDAO {
     private final Logger logger = CustomLogger.getLogger();
+    private final BlastPointsDAO blastPointsDAO = new BlastPointsDAO();
 
     public List<Invitation> getHackerInvitations(String userId) throws SQLException {
         logger.info("InvitationDAO: executing getHackerInvitations");
@@ -160,10 +161,14 @@ public class InvitationDAO {
         Connection conn = (Connection) servletContext.getAttribute("DBConnection");
 
         try (PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+
             stmt.setInt(2, invitation.getHackerId());
             stmt.setInt(1, invitation.getProjectId());
             stmt.executeUpdate();
             logger.info("InvitationDAO: Hacker added successfully");
+
+            blastPointsDAO.addUserBlastPoints(invitation.getHackerId(), "participation", "project_participation");
+
         } catch (SQLException e) {
             logger.severe("InvitationDAO: Error adding hacker" + e.getMessage());
             throw e;
