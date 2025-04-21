@@ -27,7 +27,7 @@ public class PaymentInfoServlet extends HttpServlet {
   private static List<Map<String, Object>> results = new ArrayList<>();
   // private static Map<String, Object> requestBody = new HashMap<>();
   private static ArrayList<String> pathParams = new ArrayList<>();
-  private static Map<String, String[]> queryParams = new HashMap<>();
+  private static Map<String, Object> queryParams = new HashMap<>();
 
   /**
    * Get payment information for a project based on user role
@@ -53,7 +53,9 @@ public class PaymentInfoServlet extends HttpServlet {
       throws IOException {
     System.out.println("\n------------ PaymentInfoServlet | doGet ------------");
     pathParams = RequestProtocol.parsePathParams(request);
-    queryParams = request.getParameterMap();
+    queryParams = RequestProtocol.parseQueryParams(request);
+    System.out.println("pathParams: " + pathParams);
+    System.out.println("queryParams: " + queryParams);
     
     if (pathParams.size() == 0) {
       ResponseProtocol.sendError(request, response, this, "Project ID is required",
@@ -62,7 +64,7 @@ public class PaymentInfoServlet extends HttpServlet {
     }
 
     String projectId = pathParams.get(0);
-    String role = queryParams.get("role")[0];
+    String role = (String) queryParams.get("role");
     
     try {
       String sql;
@@ -73,7 +75,7 @@ public class PaymentInfoServlet extends HttpServlet {
               "COUNT(CASE WHEN b.status = 'Validated' THEN 1 END) as reportCount " +
               "FROM PaymentLevelAmounts p " +
               "LEFT JOIN BugReports b ON b.projectId = p.projectId " +
-              "AND UPPER(b.severity) = p.level " +
+              "AND UPPER(b.severity) = UPPER(p.level) " +
               "AND b.hackerId = ? " +
               "WHERE p.projectId = ? " +
               "GROUP BY p.level, p.amount " +
@@ -84,7 +86,7 @@ public class PaymentInfoServlet extends HttpServlet {
       if (role.equals("ProjectLead") || role.equals("Client") || role.equals("Admin")) {
         sqlParams.add(new Object[] { projectId });
       } else {
-        String userId = queryParams.get("userId")[0];
+        String userId = (String) queryParams.get("userId");
         sqlParams.add(new Object[] { userId, projectId });
       }
 
