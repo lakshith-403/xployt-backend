@@ -5,7 +5,6 @@ import java.sql.PreparedStatement;
 import java.util.logging.Logger;
 import java.sql.ResultSet;
 import com.xployt.dao.common.NotificationDAO;
-import com.xployt.model.Notification;
 import com.xployt.model.Project;
 import com.xployt.util.ContextManager;
 import com.xployt.util.CustomLogger;
@@ -108,15 +107,12 @@ public class ProjectDAO {
 
 //      Notification
       NotificationDAO notificationDAO = new NotificationDAO();
-      Notification notification = new Notification(
-              leadId,
+      notificationDAO.createNotification(
+              String.valueOf(leadId),
               "New Project #" + projectId,
-              "New project assigned to you",
-              new java.sql.Timestamp(System.currentTimeMillis()),
-              false,
+              "A new project has been assigned to you",
               "/projects/" + projectId
       );
-      notificationDAO.createNotification(notification);
 
     } catch (Exception e) {
       logger.severe("Error assigning project lead: " + e.getMessage());

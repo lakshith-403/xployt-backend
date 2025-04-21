@@ -205,15 +205,12 @@ public class ProjectService {
 
       //    Notification
       NotificationDAO notificationDAO = new NotificationDAO();
-      Notification notification = new Notification(
-              Integer.parseInt(projectTeam.getClient().getUserId()),
+      notificationDAO.createNotification(
+              projectTeam.getClient().getUserId(),
               "Project #" + projectId,
               "Project accepted by " + projectTeam.getProjectLead().getName(),
-              new java.sql.Timestamp(System.currentTimeMillis()),
-              false,
               "/projects/" + projectId
       );
-      notificationDAO.createNotification(notification);
 
     } catch (Exception e) {
       logger.severe("Error creating discussion with client and lead: " + e.getMessage());

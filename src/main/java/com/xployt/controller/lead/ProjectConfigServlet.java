@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 
 import com.xployt.dao.common.NotificationDAO;
 import com.xployt.dao.common.ProjectTeamDAO;
-import com.xployt.model.Notification;
 import com.xployt.model.ProjectTeam;
 import com.xployt.util.RequestProtocol;
 import com.xployt.util.ResponseProtocol;
@@ -233,15 +232,12 @@ public class ProjectConfigServlet extends HttpServlet {
       ProjectTeamDAO projectTeamDAO = new ProjectTeamDAO();
       ProjectTeam projectTeam = projectTeamDAO.getProjectTeam(projectId);
       NotificationDAO notificationDAO = new NotificationDAO();
-      Notification notification = new Notification(
-              Integer.parseInt(projectTeam.getProjectLead().getUserId()),
+      notificationDAO.createNotification(
+              projectTeam.getProjectLead().getUserId(),
               "Project #" + projectId,
               "Client" + projectTeam.getClient().getName() + "has configured the project",
-              new java.sql.Timestamp(System.currentTimeMillis()),
-              false,
               "/projects/" + projectId
       );
-      notificationDAO.createNotification(notification);
 
     } catch (Exception e) {
       System.out.println("Error processing request: " + e.getMessage());
