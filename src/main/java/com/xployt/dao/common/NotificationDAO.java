@@ -9,6 +9,8 @@ import javax.servlet.ServletContext;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class NotificationDAO {
     public NotificationDAO() {}
@@ -41,40 +43,43 @@ public class NotificationDAO {
     }
 
    public void sendNotificationsToProjectTeam(int projectId, String message) {
+       try {
+           ProjectTeamDAO projectTeamDAO = new ProjectTeamDAO();
+           ProjectTeam projectTeam = projectTeamDAO.getProjectTeam(String.valueOf(projectId));
+
+           // Collect all users in a single list
+           List<PublicUser> allUsers = new ArrayList<>();
+           if (projectTeam.getClient() != null) {
+               allUsers.add(projectTeam.getClient());
+           }
+           if (projectTeam.getProjectLead() != null) {
+               allUsers.add(projectTeam.getProjectLead());
+           }
+           allUsers.addAll(projectTeam.getProjectValidators());
+           allUsers.addAll(projectTeam.getProjectHackers());
+
+           // Send notifications to all users
+           sendNotificationToMultipleUsers(allUsers, message, projectId);
+       } catch (Exception e) {
+           System.err.println("Error sending notifications to team members: " + e.getMessage());
+       }
+   }
+
+    public void sendNotificationToMultipleUsers(List<PublicUser> users, String message, int projectId) {
         try {
-            ProjectTeamDAO projectTeamDAO = new ProjectTeamDAO();
-            ProjectTeam projectTeam = projectTeamDAO.getProjectTeam(String.valueOf(projectId));
-            NotificationDAO notificationDAO = new NotificationDAO();
-
-            prepareAndSendNotification(notificationDAO, projectTeam.getClient(), message, projectId);
-            prepareAndSendNotification(notificationDAO, projectTeam.getProjectLead(), message, projectId);
-
-            projectTeam.getProjectValidators().forEach(validator -> sendNotificationToUser(notificationDAO, validator, message, projectId));
-            projectTeam.getProjectHackers().forEach(hacker -> sendNotificationToUser(notificationDAO, hacker, message, projectId));
-        } catch (Exception e) {
-            System.err.println("Error sending notifications to team members: " + e.getMessage());
-        }
-    }
-
-    private void sendNotificationToUser(NotificationDAO notificationDAO, PublicUser user, String message, int projectId) {
-        try {
-            prepareAndSendNotification(notificationDAO, user, message, projectId);
+            for (PublicUser user : users) {
+                Notification notification = new Notification(
+                        Integer.parseInt(user.getUserId()),
+                        "Project Update - #" + projectId,
+                        message,
+                        new java.sql.Timestamp(System.currentTimeMillis()),
+                        false,
+                        "/projects/" + projectId
+                );
+                createNotification(notification);
+            }
         } catch (SQLException e) {
-            System.err.println("Error sending notification to user: " + e.getMessage());
-        }
-    }
-
-    private void prepareAndSendNotification(NotificationDAO notificationDAO, PublicUser user, String message, int projectId) throws SQLException {
-        if (user != null) {
-            Notification notification = new Notification(
-                    Integer.parseInt(user.getUserId()),
-                    "Project Update - #" + projectId,
-                    message,
-                    new java.sql.Timestamp(System.currentTimeMillis()),
-                    false,
-                    "/projects/" + projectId
-            );
-            notificationDAO.createNotification(notification);
+            System.err.println("Error sending notifications to multiple users: " + e.getMessage());
         }
     }
 }
