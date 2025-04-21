@@ -1,6 +1,7 @@
 package com.xployt.dao.common;
 
 import com.xployt.model.Invitation;
+import com.xployt.model.ProjectTeam;
 import com.xployt.util.ContextManager;
 import com.xployt.util.CustomLogger;
 
@@ -75,7 +76,7 @@ public class InvitationDAO {
                 invitations.add(invitation);
             }
             if(filter){
-                invitations.removeIf(invitation -> invitation.getStatus().equals("Accepted"));
+                invitations.removeIf(invitation -> invitation.getStatus().equals("Accepted") || invitation.getStatus().equals("Rejected"));
             }
             logger.info("InvitationDAO: Number of project invitations fetched " + invitations.size());
         } catch (SQLException e) {
@@ -99,6 +100,14 @@ public class InvitationDAO {
             stmt.setInt(2, invitation.getProjectId());
             stmt.setString(3, "Pending");
             stmt.executeUpdate();
+
+            NotificationDAO notificationDAO = new NotificationDAO();
+            notificationDAO.createNotification(
+                    String.valueOf(invitation.getHackerId()),
+                    "New Invitation",
+                    "You have been invited to join the project " + invitation.getProjectId(),
+                    "/dashboard"
+            );
             logger.info("InvitationDAO: Invitation created successfully");
         } catch (SQLException e) {
             logger.severe("InvitationDAO: Error creating invitation" + e.getMessage());
@@ -120,6 +129,17 @@ public class InvitationDAO {
             stmt.setInt(1, invitation.getHackerId());
             stmt.setInt(2, invitation.getProjectId());
             stmt.executeUpdate();
+
+            ProjectTeamDAO projectTeamDAO = new ProjectTeamDAO();
+            ProjectTeam projectTeam = projectTeamDAO.getProjectTeam(String.valueOf(invitation.getProjectId()));
+            NotificationDAO notificationDAO = new NotificationDAO();
+            notificationDAO.sendNotificationToMultipleUsers(
+                    List.of(projectTeam.getClient(), projectTeam.getProjectLead()),
+                    "Invitation - #" + invitation.getProjectId(),
+                    "Hacker " + invitation.getHackerId() + " has accepted the invitation to join the project ",
+                    "/projects/" + invitation.getProjectId()
+            );
+
             logger.info("InvitationDAO: Invitation accepted successfully");
         } catch (SQLException e) {
             logger.severe("InvitationDAO: Error accepting invitation" + e.getMessage());

@@ -9,7 +9,6 @@ import java.io.IOException;
 
 import com.xployt.dao.common.NotificationDAO;
 import com.xployt.dao.common.ProjectTeamDAO;
-import com.xployt.model.Notification;
 import com.xployt.model.ProjectTeam;
 import com.xployt.service.lead.ProjectService;
 import java.util.logging.Logger;
@@ -89,18 +88,16 @@ public class ProjectActionServlet extends HttpServlet {
               "Unknown action", HttpServletResponse.SC_BAD_REQUEST);
       }
 
+//      Notification
       ProjectTeamDAO projectTeamDAO = new ProjectTeamDAO();
       ProjectTeam projectTeam = projectTeamDAO.getProjectTeam(projectId);
       NotificationDAO notificationDAO = new NotificationDAO();
-      Notification notification = new Notification(
-              Integer.parseInt(projectTeam.getProjectLead().getUserId()),
+      notificationDAO.createNotification(
+              projectTeam.getProjectLead().getUserId(),
               "Project #" + projectId,
               "The project is now active.",
-              new java.sql.Timestamp(System.currentTimeMillis()),
-              false,
               "/projects/" + projectId
       );
-      notificationDAO.createNotification(notification);
 
     } catch (Exception e) {
       logger.severe("Lead ProjectActionServlet: Error processing request");

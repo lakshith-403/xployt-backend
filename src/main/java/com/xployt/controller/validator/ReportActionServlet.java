@@ -15,7 +15,6 @@ import com.xployt.dao.common.BlastPointsDAO;
 import com.xployt.dao.common.VulnerabilityReportDAO;
 import com.xployt.model.VulnerabilityReport;
 import com.xployt.dao.common.NotificationDAO;
-import com.xployt.model.Notification;
 import com.xployt.util.RequestProtocol;
 import com.xployt.util.ResponseProtocol;
 import com.xployt.util.DatabaseActionUtils;
@@ -96,15 +95,12 @@ public class ReportActionServlet extends HttpServlet {
         } else {
           notificationMessage = "Bug report " + report.getReportId() + " has been " + actionType;
         }
-        Notification notification = new Notification(
-                Integer.parseInt(report.getHackerId()),
+        notificationDAO.createNotification(
+                report.getHackerId(),
                 "Report Submission #" + report.getProjectId(),
                 notificationMessage,
-                new java.sql.Timestamp(System.currentTimeMillis()),
-                false,
                 "/report/vulnerability/" + report.getProjectId() + "/" + report.getReportId()
         );
-        notificationDAO.createNotification(notification);
 
       } catch (Exception e) {
         System.out.println("Error adding blast points: " + e.getMessage());
