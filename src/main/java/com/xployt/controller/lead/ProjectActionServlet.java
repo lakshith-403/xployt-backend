@@ -6,6 +6,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.ServletException;
 import java.io.IOException;
+
+import com.xployt.dao.common.NotificationDAO;
+import com.xployt.dao.common.ProjectTeamDAO;
+import com.xployt.model.Notification;
+import com.xployt.model.ProjectTeam;
 import com.xployt.service.lead.ProjectService;
 import java.util.logging.Logger;
 import com.xployt.util.CustomLogger;
@@ -83,6 +88,20 @@ public class ProjectActionServlet extends HttpServlet {
           ResponseProtocol.sendError(request, response, this, "Unknown action",
               "Unknown action", HttpServletResponse.SC_BAD_REQUEST);
       }
+
+      ProjectTeamDAO projectTeamDAO = new ProjectTeamDAO();
+      ProjectTeam projectTeam = projectTeamDAO.getProjectTeam(projectId);
+      NotificationDAO notificationDAO = new NotificationDAO();
+      Notification notification = new Notification(
+              Integer.parseInt(projectTeam.getProjectLead().getUserId()),
+              "Project #" + projectId,
+              "The project is now active.",
+              new java.sql.Timestamp(System.currentTimeMillis()),
+              false,
+              "/projects/" + projectId
+      );
+      notificationDAO.createNotification(notification);
+
     } catch (Exception e) {
       logger.severe("Lead ProjectActionServlet: Error processing request");
       e.printStackTrace();

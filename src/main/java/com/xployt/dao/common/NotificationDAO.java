@@ -1,6 +1,8 @@
 package com.xployt.dao.common;
 
 import com.xployt.model.Notification;
+import com.xployt.model.ProjectTeam;
+import com.xployt.model.PublicUser;
 import com.xployt.util.ContextManager;
 
 import javax.servlet.ServletContext;
@@ -36,5 +38,43 @@ public class NotificationDAO {
             throw e;
         }
         return notification;
+    }
+
+   public void sendNotificationsToProjectTeam(int projectId, String message) {
+        try {
+            ProjectTeamDAO projectTeamDAO = new ProjectTeamDAO();
+            ProjectTeam projectTeam = projectTeamDAO.getProjectTeam(String.valueOf(projectId));
+            NotificationDAO notificationDAO = new NotificationDAO();
+
+            prepareAndSendNotification(notificationDAO, projectTeam.getClient(), message, projectId);
+            prepareAndSendNotification(notificationDAO, projectTeam.getProjectLead(), message, projectId);
+
+            projectTeam.getProjectValidators().forEach(validator -> sendNotificationToUser(notificationDAO, validator, message, projectId));
+            projectTeam.getProjectHackers().forEach(hacker -> sendNotificationToUser(notificationDAO, hacker, message, projectId));
+        } catch (Exception e) {
+            System.err.println("Error sending notifications to team members: " + e.getMessage());
+        }
+    }
+
+    private void sendNotificationToUser(NotificationDAO notificationDAO, PublicUser user, String message, int projectId) {
+        try {
+            prepareAndSendNotification(notificationDAO, user, message, projectId);
+        } catch (SQLException e) {
+            System.err.println("Error sending notification to user: " + e.getMessage());
+        }
+    }
+
+    private void prepareAndSendNotification(NotificationDAO notificationDAO, PublicUser user, String message, int projectId) throws SQLException {
+        if (user != null) {
+            Notification notification = new Notification(
+                    Integer.parseInt(user.getUserId()),
+                    "Project Update - #" + projectId,
+                    message,
+                    new java.sql.Timestamp(System.currentTimeMillis()),
+                    false,
+                    "/projects/" + projectId
+            );
+            notificationDAO.createNotification(notification);
+        }
     }
 }

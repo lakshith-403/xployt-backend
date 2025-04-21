@@ -14,6 +14,8 @@ import java.util.HashMap;
 import com.xployt.dao.common.BlastPointsDAO;
 import com.xployt.dao.common.VulnerabilityReportDAO;
 import com.xployt.model.VulnerabilityReport;
+import com.xployt.dao.common.NotificationDAO;
+import com.xployt.model.Notification;
 import com.xployt.util.RequestProtocol;
 import com.xployt.util.ResponseProtocol;
 import com.xployt.util.DatabaseActionUtils;
@@ -85,6 +87,25 @@ public class ReportActionServlet extends HttpServlet {
           blastPointsDAO.addUserBlastPoints(Integer.parseInt(report.getHackerId()), blastPointsCategory, action);
         }
         System.out.println("Blast points added for user: " + report.getHackerId() + " with action: " + action);
+
+        //      Notification
+        NotificationDAO notificationDAO = new NotificationDAO();
+        String notificationMessage;
+        if (actionType.equals("More Info")) {
+          notificationMessage = "Bug report " + report.getReportId() + " requests more information";
+        } else {
+          notificationMessage = "Bug report " + report.getReportId() + " has been " + actionType;
+        }
+        Notification notification = new Notification(
+                Integer.parseInt(report.getHackerId()),
+                "Report Submission #" + report.getProjectId(),
+                notificationMessage,
+                new java.sql.Timestamp(System.currentTimeMillis()),
+                false,
+                "/report/vulnerability/" + report.getProjectId() + "/" + report.getReportId()
+        );
+        notificationDAO.createNotification(notification);
+
       } catch (Exception e) {
         System.out.println("Error adding blast points: " + e.getMessage());
       }
@@ -92,6 +113,7 @@ public class ReportActionServlet extends HttpServlet {
       ResponseProtocol.sendSuccess(request, response, this, "Report status updated successfully",
           Map.of("reportId", requestBody.get("reportId")),
           HttpServletResponse.SC_CREATED);
+
 
     } catch (Exception e) {
       System.out.println("Error updating report status: " + e.getMessage());
