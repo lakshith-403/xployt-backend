@@ -1,5 +1,6 @@
 package com.xployt.dao.common;
 
+import com.xployt.model.Notification;
 import com.xployt.model.ProjectTeam;
 import com.xployt.model.PublicUser;
 import com.xployt.util.ContextManager;
@@ -76,5 +77,35 @@ public class NotificationDAO {
         } catch (SQLException e) {
             System.err.println("Error sending notifications to multiple users: " + e.getMessage());
         }
+    }
+
+    public List<Notification> getNotificationsByUserId(String userId) throws SQLException {
+        String sql = "SELECT * FROM Notifications WHERE userId = ? ORDER BY timestamp DESC";
+        List<Notification> notifications = new ArrayList<>();
+
+        ServletContext servletContext = ContextManager.getContext("DBConnection");
+        Connection conn = (Connection) servletContext.getAttribute("DBConnection");
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, Integer.parseInt(userId));
+            var rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Notification notification = new Notification();
+                notification.setId(rs.getInt("id"));
+                notification.setUserId(rs.getInt("userId"));
+                notification.setTitle(rs.getString("title"));
+                notification.setMessage(rs.getString("message"));
+                notification.setTimestamp(rs.getTimestamp("timestamp"));
+                notification.setRead(rs.getBoolean("isRead"));
+                notification.setUrl(rs.getString("url"));
+                notifications.add(notification);
+            }
+        } catch (SQLException e) {
+            System.err.println("SQL Exception: " + e.getMessage());
+            throw e;
+        }
+
+        return notifications;
     }
 }
