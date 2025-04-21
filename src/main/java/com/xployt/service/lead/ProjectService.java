@@ -13,16 +13,12 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xployt.dao.common.DiscussionDAO;
+import com.xployt.dao.common.NotificationDAO;
 import com.xployt.dao.common.ProjectTeamDAO;
 import com.xployt.dao.lead.ProjectConfigDAO;
 import com.xployt.dao.lead.ProjectConfigInfoDAO;
 import com.xployt.dao.lead.ProjectDAO;
-import com.xployt.model.Discussion;
-import com.xployt.model.GenericResponse;
-import com.xployt.model.ProjectConfig;
-import com.xployt.model.ProjectConfigInfo;
-import com.xployt.model.ProjectTeam;
-import com.xployt.model.PublicUser;
+import com.xployt.model.*;
 import com.xployt.util.CustomLogger;
 import com.xployt.util.JsonUtil;
 import com.xployt.util.ResponseProtocol;
@@ -191,7 +187,7 @@ public class ProjectService {
       throws IOException {
     ProjectDAO projectDAO = new ProjectDAO();
 
-    // create a discussion and add to the project
+    // create a discussion and add to the project and send notification
     try {
       ProjectTeamDAO projectTeamDAO = new ProjectTeamDAO();
       ProjectTeam projectTeam = projectTeamDAO.getProjectTeam(projectId);
@@ -206,6 +202,19 @@ public class ProjectService {
       Discussion discussion = new Discussion(UUID.randomUUID().toString(), "Init Project", participants, new Date(),
           projectId, new ArrayList<>());
       discussionDAO.createDiscussion(discussion);
+
+      //    Notification
+      NotificationDAO notificationDAO = new NotificationDAO();
+      Notification notification = new Notification(
+              Integer.parseInt(projectTeam.getClient().getUserId()),
+              "Project #" + projectId,
+              "Project accepted by " + projectTeam.getProjectLead().getName(),
+              new java.sql.Timestamp(System.currentTimeMillis()),
+              false,
+              "/projects/" + projectId
+      );
+      notificationDAO.createNotification(notification);
+
     } catch (Exception e) {
       logger.severe("Error creating discussion with client and lead: " + e.getMessage());
       response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
