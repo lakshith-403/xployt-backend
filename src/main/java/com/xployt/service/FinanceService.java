@@ -19,6 +19,7 @@ public class FinanceService {
     }
 
     public GenericResponse getUserBalance(int userId) {
+        logger.log(Level.INFO, "Getting balance for user ID: {0}", userId);
         try {
             double balance = financeDAO.getUserBalance(userId);
             return new GenericResponse(balance, true, "Balance retrieved successfully", null);
@@ -29,6 +30,8 @@ public class FinanceService {
     }
 
     public GenericResponse addFunds(int userId, double amount, String description) {
+        logger.log(Level.INFO, "Adding funds for user ID: {0}, amount: {1}, description: {2}", new Object[]{userId, amount, description});
+        
         if (amount <= 0) {
             return new GenericResponse(null, false, null, "Amount must be greater than zero");
         }

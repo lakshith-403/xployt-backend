@@ -1,6 +1,8 @@
 package com.xployt.controller;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -10,6 +12,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.xployt.model.GenericResponse;
 import com.xployt.service.FinanceService;
@@ -61,7 +64,12 @@ public class FinanceServlet extends HttpServlet {
             
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
-            response.getWriter().write(JsonUtil.toJson(result));
+            Map<String, Object> responseMap = new HashMap<>();
+            responseMap.put("userId", userId);
+            responseMap.put("balance", result.getData());
+
+            GenericResponse genericResponse = new GenericResponse(responseMap, true, "Success", null);
+            response.getWriter().write(JsonUtil.toJson(genericResponse));
             
         } catch (NumberFormatException e) {
             logger.warning("FinanceServlet: Invalid user ID format: " + pathInfo);
@@ -102,7 +110,9 @@ public class FinanceServlet extends HttpServlet {
                 return;
             }
             
-            JsonObject jsonObject = JsonUtil.fromJson(requestBody, JsonObject.class);
+            Gson gson = JsonUtil.useGson();
+            JsonObject jsonObject = gson.fromJson(requestBody, JsonObject.class);
+            System.out.println(jsonObject);
             if (!jsonObject.has("amount") || !jsonObject.has("description")) {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Amount and description are required");
                 return;
