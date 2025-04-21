@@ -69,11 +69,20 @@ public class PaymentInfoServlet extends HttpServlet {
     try {
       String sql;
       if (role.equals("ProjectLead") || role.equals("Client") || role.equals("Admin")) {
-        sql = "SELECT level, amount, reportCount FROM PaymentLevelAmounts WHERE projectId = ? ORDER BY amount DESC";
+        sql = "SELECT p.level, p.amount, " +
+              "GROUP_CONCAT(DISTINCT pl.item) as items, " +
+              "p.reportCount " +
+              "FROM PaymentLevelAmounts p " +
+              "LEFT JOIN PaymentLevels pl ON p.projectId = pl.projectId AND p.level = pl.level " +
+              "WHERE p.projectId = ? " +
+              "GROUP BY p.level, p.amount, p.reportCount " +
+              "ORDER BY p.amount DESC";
       } else {
         sql = "SELECT p.level, p.amount, " +
+              "GROUP_CONCAT(DISTINCT pl.item) as items, " +
               "COUNT(CASE WHEN b.status = 'Validated' THEN 1 END) as reportCount " +
               "FROM PaymentLevelAmounts p " +
+              "LEFT JOIN PaymentLevels pl ON p.projectId = pl.projectId AND p.level = pl.level " +
               "LEFT JOIN BugReports b ON b.projectId = p.projectId " +
               "AND UPPER(b.severity) = UPPER(p.level) " +
               "AND b.hackerId = ? " +
