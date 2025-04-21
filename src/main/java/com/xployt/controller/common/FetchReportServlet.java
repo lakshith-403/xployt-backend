@@ -88,6 +88,16 @@ public class FetchReportServlet extends HttpServlet {
           
           sqlParams.clear();
           sqlParams.add(new Object[] { projectId, userId, status });
+        } else if ("Admin".equals(userRole)) {
+          sqlStatements = new String[] {
+            "SELECT r.reportId, r.severity, r.vulnerabilityType, r.title, r.createdAt " +
+            "FROM BugReports r " +
+            "WHERE r.projectId = ? AND r.status = ? " +
+            "ORDER BY r.reportId"
+          };
+          
+          sqlParams.clear();
+          sqlParams.add(new Object[] { projectId, status });
         }
         
         reports = DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
