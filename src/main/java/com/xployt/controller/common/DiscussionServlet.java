@@ -8,11 +8,14 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import com.google.gson.Gson;
 import com.xployt.model.Discussion;
 import com.xployt.model.GenericResponse;
+import com.xployt.model.PublicUser;
 import com.xployt.service.common.DiscussionService;
+import com.xployt.util.AuthUtil;
 import com.xployt.util.CustomLogger;
 import com.xployt.util.JsonUtil;
 
@@ -29,7 +32,16 @@ public class DiscussionServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        logger.info("Fetching discussion by ID");
+        // Check user authentication
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("userId") == null) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User not authenticated");
+            return;
+        }
+        
+        String userId = (String) session.getAttribute("userId");
+        logger.info("Fetching discussion by ID for user: " + userId);
+        
         String pathInfo = request.getPathInfo();
         if (pathInfo == null || pathInfo.isEmpty()) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Discussion ID not provided");
@@ -37,9 +49,30 @@ public class DiscussionServlet extends HttpServlet {
         }
 
         String discussionId = pathInfo.substring(1);
-        GenericResponse discussion;
+        GenericResponse discussionResponse;
         try {
-            discussion = discussionService.fetchDiscussionById(discussionId);
+            discussionResponse = discussionService.fetchDiscussionById(discussionId);
+            
+            // Check if user is admin - admins can access all discussions
+            boolean isAdmin = AuthUtil.isAdmin(request);
+            System.out.println("isAdmin: " + isAdmin);
+            
+            // Verify user is a participant in the discussion (unless admin)
+            if (!isAdmin && discussionResponse.isIs_successful() && discussionResponse.getData() != null) {
+                Discussion discussion = (Discussion) discussionResponse.getData();
+                boolean isAuthorized = false;
+                for (PublicUser participant : discussion.getParticipants()) {
+                    if (participant.getUserId().equals(userId)) {
+                        isAuthorized = true;
+                        break;
+                    }
+                }
+                
+                if (!isAuthorized) {
+                    response.sendError(HttpServletResponse.SC_FORBIDDEN, "User not authorized to access this discussion");
+                    return;
+                }
+            }
         } catch (Exception e) {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error fetching discussion");
             return;
@@ -47,39 +80,48 @@ public class DiscussionServlet extends HttpServlet {
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(JsonUtil.useGson().toJson(discussion));
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        logger.info("Creating discussion");
- 
-        Gson gson = JsonUtil.useGson();
-
-        Discussion discussion = gson.fromJson(request.getReader(), Discussion.class);
-
-        GenericResponse result;
-        try {
-            result = discussionService.createDiscussion(discussion);
-        } catch (Exception e) {
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error creating discussion");
-            return;
-        }
-
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(JsonUtil.useGson().toJson(result));
+        response.getWriter().write(JsonUtil.useGson().toJson(discussionResponse));
     }
 
     @Override
     protected void doPut(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        logger.info("Updating discussion");
+        // Check user authentication
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("userId") == null) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User not authenticated");
+            return;
+        }
+        
+        String userId = (String) session.getAttribute("userId");
+        logger.info("Updating discussion for user: " + userId);
 
         Gson gson = JsonUtil.useGson();
-
         Discussion discussion = gson.fromJson(request.getReader(), Discussion.class);
+        
+        // Verify user is a participant in the discussion
+        try {
+            GenericResponse existingDiscussionRes = discussionService.fetchDiscussionById(discussion.getId());
+            if (existingDiscussionRes.isIs_successful() && existingDiscussionRes.getData() != null) {
+                Discussion existingDiscussion = (Discussion) existingDiscussionRes.getData();
+                boolean isAuthorized = false;
+                for (PublicUser participant : existingDiscussion.getParticipants()) {
+                    if (participant.getUserId().equals(userId)) {
+                        isAuthorized = true;
+                        break;
+                    }
+                }
+                
+                if (!isAuthorized) {
+                    response.sendError(HttpServletResponse.SC_FORBIDDEN, "User not authorized to update this discussion");
+                    return;
+                }
+            }
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error validating discussion access");
+            return;
+        }
+        
         GenericResponse result;
         try {
             result = discussionService.updateDiscussion(discussion);
