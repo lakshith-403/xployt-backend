@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.xployt.dao.lead.ProjectConfigDAO;
 import com.xployt.dao.lead.ProjectConfigInfoDAO;
 import com.xployt.dao.lead.ProjectDAO;
@@ -15,6 +16,13 @@ import com.xployt.model.GenericResponse;
 import com.xployt.model.ProjectConfig;
 import com.xployt.model.ProjectConfigInfo;
 import com.xployt.service.common.DiscussionService;
+
+
+import com.xployt.dao.common.NotificationDAO;
+import com.xployt.dao.common.ProjectTeamDAO;
+
+import com.xployt.model.*;
+
 import com.xployt.util.CustomLogger;
 import com.xployt.util.JsonUtil;
 import com.xployt.util.ResponseProtocol;
@@ -87,11 +95,27 @@ public class ProjectService {
       throws IOException {
     ProjectDAO projectDAO = new ProjectDAO();
 
-    // create a discussion and add to the project
+    // create a discussion and add to the project and send notification
     try {
+
       // Create a lead-client discussion using the DiscussionService
       DiscussionService discussionService = new DiscussionService();
       discussionService.createLeadClientDiscussion(projectId);
+
+      ProjectTeamDAO projectTeamDAO = new ProjectTeamDAO();
+      ProjectTeam projectTeam = projectTeamDAO.getProjectTeam(projectId);
+
+
+      //    Notification
+      NotificationDAO notificationDAO = new NotificationDAO();
+      notificationDAO.createNotification(
+              projectTeam.getClient().getUserId(),
+              "Project #" + projectId,
+              "Project accepted by " + projectTeam.getProjectLead().getName(),
+              "/projects/" + projectId
+      );
+
+
     } catch (Exception e) {
       logger.severe("Error creating discussion with client and lead: " + e.getMessage());
       response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,

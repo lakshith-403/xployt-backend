@@ -2,6 +2,7 @@ package com.xployt.dao.hacker;
 
 import com.xployt.dao.common.BlastPointsDAO;
 import com.xployt.model.Hacker;
+import com.xployt.model.PublicUser;
 import com.xployt.util.ContextManager;
 import com.xployt.util.CustomLogger;
 
@@ -78,5 +79,34 @@ public class HackerDAO {
             throw e;
         }
         return skills;
+    }
+
+    public PublicUser getAssignedValidator(String hackerId, String projectId) throws SQLException {
+        logger.info("HackerDAO: executing getAssignedValidator");
+
+        PublicUser validator = null;
+        String sql = "SELECT * FROM Users WHERE userId = (SELECT assignedValidatorId FROM ProjectHackers WHERE hackerId = ? AND projectId = ?)";
+
+        ServletContext servletContext = ContextManager.getContext("DBConnection");
+        Connection conn = (Connection) servletContext.getAttribute("DBConnection");
+        logger.info("HackerDAO: Connection Established");
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, Integer.parseInt(hackerId));
+            stmt.setInt(2, Integer.parseInt(projectId));
+            ResultSet rs = stmt.executeQuery();
+            logger.info("HackerDAO: Fetching assigned validator");
+            if (rs.next()) {
+                validator = new PublicUser(
+                        String.valueOf(rs.getInt("userId")),
+                        rs.getString("name"),
+                        rs.getString("email")
+                );
+            }
+        } catch (SQLException e) {
+            logger.severe("HackerDAO: Error fetching assigned validator" + e.getMessage());
+            throw e;
+        }
+        return validator;
     }
 }

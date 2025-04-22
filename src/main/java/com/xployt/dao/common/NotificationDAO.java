@@ -1,0 +1,80 @@
+package com.xployt.dao.common;
+
+import com.xployt.model.ProjectTeam;
+import com.xployt.model.PublicUser;
+import com.xployt.util.ContextManager;
+
+import javax.servlet.ServletContext;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class NotificationDAO {
+    public NotificationDAO() {}
+
+    public void createNotification(String userId, String title, String message, String url) throws SQLException {
+        String sql = "INSERT INTO Notifications (userId, title, message, timestamp, isRead, url) VALUES (?, ?, ?, ?, ?, ?)";
+
+        ServletContext servletContext = ContextManager.getContext("DBConnection");
+        Connection conn = (Connection) servletContext.getAttribute("DBConnection");
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)){
+            stmt.setInt(1, Integer.parseInt(userId));
+            stmt.setString(2, title);
+            stmt.setString(3, message);
+            stmt.setTimestamp(4, new java.sql.Timestamp(System.currentTimeMillis()));
+            stmt.setBoolean(5, false);
+            stmt.setString(6, url);
+            int affectedRows = stmt.executeUpdate();
+
+            if (affectedRows > 0){
+                System.out.println("Notification recorded successfully");
+            } else {
+                throw new SQLException("Creating notification failed, no rows affected.");
+            }
+        }catch (SQLException e){
+            System.err.println("SQL Exception: " + e.getMessage());
+            throw e;
+        }
+    }
+
+   public void sendNotificationsToProjectTeam(int projectId, String message) {
+       try {
+           ProjectTeamDAO projectTeamDAO = new ProjectTeamDAO();
+           ProjectTeam projectTeam = projectTeamDAO.getProjectTeam(String.valueOf(projectId));
+
+           // Collect all users in a single list
+           List<PublicUser> allUsers = new ArrayList<>();
+           if (projectTeam.getClient() != null) {
+               allUsers.add(projectTeam.getClient());
+           }
+           if (projectTeam.getProjectLead() != null) {
+               allUsers.add(projectTeam.getProjectLead());
+           }
+           allUsers.addAll(projectTeam.getProjectValidators());
+           allUsers.addAll(projectTeam.getProjectHackers());
+
+           // Send notifications to all users
+           sendNotificationToMultipleUsers(allUsers, "Project Update - #" + projectId, message, "/projects/" + projectId);
+       } catch (Exception e) {
+           System.err.println("Error sending notifications to team members: " + e.getMessage());
+       }
+   }
+
+    public void sendNotificationToMultipleUsers(List<PublicUser> users, String title, String message, String url) throws SQLException {
+        try {
+            for (PublicUser user : users) {
+                createNotification(
+                    user.getUserId(),
+                    title,
+                    message,
+                    url
+                );
+            }
+        } catch (SQLException e) {
+            System.err.println("Error sending notifications to multiple users: " + e.getMessage());
+        }
+    }
+}
