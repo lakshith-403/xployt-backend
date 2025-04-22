@@ -11,24 +11,7 @@ public class Notification {
     private boolean isRead;
     private String url;
 
-    public Notification(int userId, String title, String message, Date timestamp, boolean isRead, String url) {
-        this.userId = userId;
-        this.title = title;
-        this.message = message;
-        this.timestamp = timestamp;
-        this.isRead = isRead;
-        this.url = url;
-    }
-
-    public Notification(int id, int userId, String title, String message, Date timestamp, boolean isRead, String url) {
-        this.id = id;
-        this.userId = userId;
-        this.title = title;
-        this.message = message;
-        this.timestamp = timestamp;
-        this.isRead = isRead;
-        this.url = url;
-    }
+    public Notification() {}
 
     public int getId() {
         return id;

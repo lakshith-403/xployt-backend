@@ -19,6 +19,7 @@ public class ProjectServlet extends HttpServlet {
     private final ProjectService projectService = new ProjectService();
     private static final Logger logger = CustomLogger.getLogger();
 
+//    Closes a project
     @Override
     protected void doPut(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

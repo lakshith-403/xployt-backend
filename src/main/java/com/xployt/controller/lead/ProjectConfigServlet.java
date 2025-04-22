@@ -235,7 +235,7 @@ public class ProjectConfigServlet extends HttpServlet {
       notificationDAO.createNotification(
               projectTeam.getProjectLead().getUserId(),
               "Project #" + projectId,
-              "Client" + projectTeam.getClient().getName() + "has configured the project",
+              "Client " + projectTeam.getClient().getName() + " has configured the project",
               "/projects/" + projectId
       );
 

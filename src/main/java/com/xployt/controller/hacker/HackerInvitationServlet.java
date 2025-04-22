@@ -35,6 +35,7 @@ public class HackerInvitationServlet extends HttpServlet {
         invitationService = new InvitationService();
     }
 
+    // Handles GET requests to fetch hacker invitations for a specific hacker (All states).
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
