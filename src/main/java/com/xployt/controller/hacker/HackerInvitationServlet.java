@@ -1,27 +1,28 @@
 package com.xployt.controller.hacker;
 
-import com.xployt.model.GenericResponse;
-import com.xployt.model.Invitation;
-import com.xployt.service.common.InvitationService;
-import com.xployt.util.JsonUtil;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.util.Map;
-import java.util.logging.Logger;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Collections;
-// import java.sql.SQLException;
-import com.xployt.util.DatabaseActionUtils;
 
 import com.google.gson.Gson;
+import com.xployt.model.GenericResponse;
+import com.xployt.model.Invitation;
+import com.xployt.service.common.DiscussionService;
+import com.xployt.service.common.InvitationService;
 import com.xployt.util.CustomLogger;
+import com.xployt.util.DatabaseActionUtils;
+import com.xployt.util.JsonUtil;
 
 @WebServlet("/api/invitations/hacker/*")
 
@@ -289,6 +290,11 @@ public class HackerInvitationServlet extends HttpServlet {
                     );
                     
                     System.out.println("Validator " + validatorId + " assigned to project " + projectId + " for hacker " + hackerId);
+
+                    logger.log(Level.INFO, "Creating validator discussion for project: {0}", projectId);
+                    DiscussionService discussionService = new DiscussionService();
+                    discussionService.createOrAddValidatorDiscussion(projectId, String.valueOf(validatorId));
+                    discussionService.createValidatorHackerDiscussion(projectId, String.valueOf(validatorId), String.valueOf(hackerId));
                 } else {
                     System.out.println("No validator could be assigned for project " + projectId + " and hacker " + hackerId);
                 }

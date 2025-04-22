@@ -79,47 +79,6 @@ public class DiscussionServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        // Check user authentication
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("userId") == null) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User not authenticated");
-            return;
-        }
-        
-        String userId = (String) session.getAttribute("userId");
-        logger.info("Creating discussion for user: " + userId);
- 
-        Gson gson = JsonUtil.useGson();
-        Discussion discussion = gson.fromJson(request.getReader(), Discussion.class);
-        
-        // We need to ensure the current user is part of the participants
-        boolean userIsParticipant = false;
-        for (PublicUser participant : discussion.getParticipants()) {
-            if (participant.getUserId().equals(userId)) {
-                userIsParticipant = true;
-                break;
-            }
-        }
-        
-        // Since Discussion uses a final field, we can't modify it directly
-        // The frontend should ensure the user is added as a participant
-
-        GenericResponse result;
-        try {
-            result = discussionService.createDiscussion(discussion);
-        } catch (Exception e) {
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error creating discussion");
-            return;
-        }
-
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(JsonUtil.useGson().toJson(result));
-    }
-
-    @Override
     protected void doPut(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         // Check user authentication
