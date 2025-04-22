@@ -48,8 +48,31 @@ public class NotificationsServlet extends HttpServlet {
             response.getWriter().write(JsonUtil.useGson().toJson(notificationResponse));
 
         } catch (SQLException e) {
-            System.out.println("Error retrieving notifications" + e.getMessage());
+            System.err.println("Error retrieving notifications" + e.getMessage());
         }
 
+    }
+
+    @Override
+    protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String pathInfo = request.getPathInfo();
+        if (pathInfo == null || pathInfo.isEmpty()) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "User ID not provided");
+            return;
+        }
+
+        try{
+            String userId = pathInfo.substring(1);
+            notificationDAO.markAsRead(Integer.parseInt(userId));
+
+            String data = "Notification marked as read successfully.";
+
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().write(JsonUtil.useGson().toJson(data));
+
+        } catch (SQLException e) {
+            System.err.println("Error retrieving notifications" + e.getMessage());
+        }
     }
 }

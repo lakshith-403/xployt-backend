@@ -101,11 +101,32 @@ public class NotificationDAO {
                 notification.setUrl(rs.getString("url"));
                 notifications.add(notification);
             }
+
+            System.out.println("No of Notifications for user " + userId + " : " + notifications.size());
         } catch (SQLException e) {
             System.err.println("SQL Exception: " + e.getMessage());
             throw e;
         }
 
         return notifications;
+    }
+
+    public void markAsRead(int notificationId) throws SQLException {
+        String sql = "UPDATE Notifications SET isRead = true WHERE id = ?";
+
+        ServletContext servletContext = ContextManager.getContext("DBConnection");
+        Connection conn = (Connection) servletContext.getAttribute("DBConnection");
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, notificationId);
+            var rs = stmt.executeUpdate();
+
+            if (rs > 0) {
+                System.out.println("Notification marked as read successfully");
+            }
+        }catch (SQLException e){
+            System.err.println("SQL Exception: " + e.getMessage());
+            throw e;
+        }
     }
 }
