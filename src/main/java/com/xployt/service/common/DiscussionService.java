@@ -75,4 +75,14 @@ public class DiscussionService {
         }
         return new GenericResponse(null, false, "Failed to delete message", null);
     }
+
+    public Discussion[] getRelevantDiscussions(String projectId, String userId) throws SQLException {
+        logger.log(Level.INFO, "Getting relevant discussions for projectId: {0} and userId: {1}", new Object[]{projectId, userId});
+        List<Discussion> allDiscussions = discussionDAO.getDiscussionsByProjectId(projectId);
+        
+        return allDiscussions.stream()
+                .filter(discussion -> discussion.getParticipants().stream()
+                        .anyMatch(participant -> participant.getUserId().equals(userId)))
+                .toArray(Discussion[]::new);
+    }
 }
