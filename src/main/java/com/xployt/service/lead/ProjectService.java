@@ -2,23 +2,27 @@ package com.xployt.service.lead;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.xployt.dao.common.DiscussionDAO;
-import com.xployt.dao.common.NotificationDAO;
-import com.xployt.dao.common.ProjectTeamDAO;
+
 import com.xployt.dao.lead.ProjectConfigDAO;
 import com.xployt.dao.lead.ProjectConfigInfoDAO;
 import com.xployt.dao.lead.ProjectDAO;
+import com.xployt.model.GenericResponse;
+import com.xployt.model.ProjectConfig;
+import com.xployt.model.ProjectConfigInfo;
+import com.xployt.service.common.DiscussionService;
+
+
+import com.xployt.dao.common.NotificationDAO;
+import com.xployt.dao.common.ProjectTeamDAO;
+
 import com.xployt.model.*;
+
 import com.xployt.util.CustomLogger;
 import com.xployt.util.JsonUtil;
 import com.xployt.util.ResponseProtocol;
@@ -87,121 +91,20 @@ public class ProjectService {
     }
   }
 
-  public void createValidatorDiscussion(String projectId) {
-    try {
-      logger.info("Creating discussion with validators and lead for project: " + projectId);
-      ProjectTeamDAO projectTeamDAO = new ProjectTeamDAO();
-      ProjectTeam projectTeam = projectTeamDAO.getProjectTeam(projectId);
-
-      // Create a list of participants with the project lead and all validators
-      List<PublicUser> participants = new ArrayList<>();
-      
-      // Add project lead
-      participants.add(new PublicUser(projectTeam.getProjectLead().getUserId(), 
-                                     projectTeam.getProjectLead().getName(),
-                                     projectTeam.getProjectLead().getEmail()));
-      
-      // Add all validators
-      List<PublicUser> validators = projectTeam.getProjectValidators();
-      if (validators != null && !validators.isEmpty()) {
-        for (PublicUser validator : validators) {
-          participants.add(new PublicUser(validator.getUserId(), 
-                                         validator.getName(), 
-                                         validator.getEmail()));
-        }
-        
-        // Create and save the discussion
-        DiscussionDAO discussionDAO = new DiscussionDAO();
-        Discussion discussion = new Discussion(
-            UUID.randomUUID().toString(), 
-            "Validator Team Discussion", 
-            participants, 
-            new Date(),
-            projectId, 
-            new ArrayList<>()
-        );
-        discussionDAO.createDiscussion(discussion);
-        logger.info("Successfully created validator discussion for project: " + projectId);
-      } else {
-        logger.warning("No validators found for project: " + projectId);
-      }
-    } catch (Exception e) {
-      logger.severe("Error creating discussion with validators and lead: " + e.getMessage());
-    }
-  }
-
-  public void createHackerValidatorDiscussion(String projectId, String hackerId, String validatorId) {
-    try {
-      logger.info("Creating discussion between hacker and validator for project: " + projectId);
-      
-      ProjectTeamDAO projectTeamDAO = new ProjectTeamDAO();
-      ProjectTeam projectTeam = projectTeamDAO.getProjectTeam(projectId);
-      
-      // Get hacker and validator information
-      PublicUser hacker = null;
-      PublicUser validator = null;
-      
-      // Find the hacker from the team
-      for (PublicUser h : projectTeam.getProjectHackers()) {
-        if (h.getUserId().equals(hackerId)) {
-          hacker = h;
-          break;
-        }
-      }
-      
-      // Find the validator from the team
-      for (PublicUser v : projectTeam.getProjectValidators()) {
-        if (v.getUserId().equals(validatorId)) {
-          validator = v;
-          break;
-        }
-      }
-      
-      if (hacker != null && validator != null) {
-        // Create the list of participants
-        List<PublicUser> participants = new ArrayList<>();
-        participants.add(hacker);
-        participants.add(validator);
-        
-        // Create and save the discussion
-        DiscussionDAO discussionDAO = new DiscussionDAO();
-        Discussion discussion = new Discussion(
-            UUID.randomUUID().toString(),
-            "Hacker-Validator Discussion",
-            participants,
-            new Date(),
-            projectId,
-            new ArrayList<>()
-        );
-        discussionDAO.createDiscussion(discussion);
-        logger.info("Successfully created hacker-validator discussion for project: " + projectId);
-      } else {
-        logger.warning("Hacker or validator not found for project: " + projectId);
-      }
-    } catch (Exception e) {
-      logger.severe("Error creating discussion between hacker and validator: " + e.getMessage());
-    }
-  }
-
   public void acceptProject(String projectId, HttpServletResponse response, HttpServletRequest request)
       throws IOException {
     ProjectDAO projectDAO = new ProjectDAO();
 
     // create a discussion and add to the project and send notification
     try {
+
+      // Create a lead-client discussion using the DiscussionService
+      DiscussionService discussionService = new DiscussionService();
+      discussionService.createLeadClientDiscussion(projectId);
+
       ProjectTeamDAO projectTeamDAO = new ProjectTeamDAO();
       ProjectTeam projectTeam = projectTeamDAO.getProjectTeam(projectId);
 
-      List<PublicUser> participants = new ArrayList<>();
-      participants.add(new PublicUser(projectTeam.getClient().getUserId(), projectTeam.getClient().getName(),
-          projectTeam.getClient().getEmail()));
-      participants.add(new PublicUser(projectTeam.getProjectLead().getUserId(), projectTeam.getProjectLead().getName(),
-          projectTeam.getProjectLead().getEmail()));
-
-      DiscussionDAO discussionDAO = new DiscussionDAO();
-      Discussion discussion = new Discussion(UUID.randomUUID().toString(), "Init Project", participants, new Date(),
-          projectId, new ArrayList<>());
-      discussionDAO.createDiscussion(discussion);
 
       //    Notification
       NotificationDAO notificationDAO = new NotificationDAO();
@@ -211,6 +114,7 @@ public class ProjectService {
               "Project accepted by " + projectTeam.getProjectLead().getName(),
               "/projects/" + projectId
       );
+
 
     } catch (Exception e) {
       logger.severe("Error creating discussion with client and lead: " + e.getMessage());
