@@ -14,6 +14,7 @@ import javax.servlet.http.HttpSession;
 import com.xployt.model.Discussion;
 import com.xployt.model.GenericResponse;
 import com.xployt.service.common.DiscussionService;
+import com.xployt.util.AuthUtil;
 import com.xployt.util.CustomLogger;
 import com.xployt.util.JsonUtil;
 
@@ -49,8 +50,15 @@ public class ProjectDiscussionServlet extends HttpServlet {
         GenericResponse res;
         try {
             // Use the new method to get only discussions relevant to this user
-            Discussion[] discussions = discussionService.getRelevantDiscussions(projectId, userId);
-            res = new GenericResponse(discussions, true, null, null);
+            boolean isAdmin = AuthUtil.isAdmin(request);
+            System.out.println("isAdmin: " + isAdmin);
+            if (isAdmin) {
+                Discussion[] discussions = discussionService.fetchDiscussions(projectId);
+                res = new GenericResponse(discussions, true, null, null);
+            } else {
+                Discussion[] discussions = discussionService.getRelevantDiscussions(projectId, userId);
+                res = new GenericResponse(discussions, true, null, null);
+            }
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error fetching discussions", e);
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error fetching discussions: " + e.getMessage());

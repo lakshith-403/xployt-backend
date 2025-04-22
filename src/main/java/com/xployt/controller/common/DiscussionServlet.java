@@ -15,6 +15,7 @@ import com.xployt.model.Discussion;
 import com.xployt.model.GenericResponse;
 import com.xployt.model.PublicUser;
 import com.xployt.service.common.DiscussionService;
+import com.xployt.util.AuthUtil;
 import com.xployt.util.CustomLogger;
 import com.xployt.util.JsonUtil;
 
@@ -52,8 +53,12 @@ public class DiscussionServlet extends HttpServlet {
         try {
             discussionResponse = discussionService.fetchDiscussionById(discussionId);
             
-            // Verify user is a participant in the discussion
-            if (discussionResponse.isIs_successful() && discussionResponse.getData() != null) {
+            // Check if user is admin - admins can access all discussions
+            boolean isAdmin = AuthUtil.isAdmin(request);
+            System.out.println("isAdmin: " + isAdmin);
+            
+            // Verify user is a participant in the discussion (unless admin)
+            if (!isAdmin && discussionResponse.isIs_successful() && discussionResponse.getData() != null) {
                 Discussion discussion = (Discussion) discussionResponse.getData();
                 boolean isAuthorized = false;
                 for (PublicUser participant : discussion.getParticipants()) {
