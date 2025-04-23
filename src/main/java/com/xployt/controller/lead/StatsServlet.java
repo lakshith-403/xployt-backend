@@ -49,6 +49,41 @@ public class StatsServlet extends HttpServlet {
           case "vuln":
             procedureCall = "{CALL GetValidatedVulnerabilityCounts(?)}";
             break;
+          case "saved": {
+            // --- 1. Fetch feedback from LeadReport ---
+            String[] feedbackSQL = new String[] {
+              "SELECT vulnerabilityType, suggestions FROM LeadReport WHERE projectId = ?"
+            };
+            List<Object[]> feedbackParams = new ArrayList<>();
+            feedbackParams.add(new Object[] { projectId });
+
+            List<Map<String, Object>> feedbackData = DatabaseActionUtils.executeSQL(feedbackSQL, feedbackParams);
+
+            // --- 2. Fetch summary from LeadSummary ---
+            String[] summarySQL = new String[] {
+              "SELECT summary FROM LeadSummary WHERE projectId = ?"
+            };
+            List<Object[]> summaryParams = new ArrayList<>();
+            summaryParams.add(new Object[] { projectId });
+
+            List<Map<String, Object>> summaryResult = DatabaseActionUtils.executeSQL(summarySQL, summaryParams);
+
+            String summaryText = "";
+            if (!summaryResult.isEmpty() && summaryResult.get(0).get("summary") != null) {
+              summaryText = summaryResult.get(0).get("summary").toString();
+            }
+
+            // --- 3. Send Combined Response ---
+            ResponseProtocol.sendSuccess(request, response, this,
+                "Loaded saved report",
+                Map.of(
+                  "feedback", feedbackData,
+                  "summary", summaryText
+                ),
+                HttpServletResponse.SC_OK);
+            return;
+          }
+
           default:
             ResponseProtocol.sendError(request, response, this, "Invalid report type: " + type,
                 Map.of("error", "Supported types are: project, validator"),
