@@ -77,4 +77,56 @@ public class StatsServlet extends HttpServlet {
           HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
   }
+
+  
+  @Override
+  protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    System.out.println("\n\n------------ StatsServlet | doPost ------------");
+
+    try {
+      pathParams = RequestProtocol.parsePathParams(request);
+      int projectId = Integer.parseInt(pathParams.get(0));
+      
+      requestBody = RequestProtocol.parseRequest(request);
+      System.out.println("Request body: " + requestBody);
+
+      String summary = requestBody.get("summary").toString();
+      @SuppressWarnings("unchecked")
+      Map<String, Object> feedbackMap = (Map<String, Object>) requestBody.get("feedback");
+
+      // ✅ 1. Prepare and insert/update summary using executeSQL
+      String[] sqlStatements = new String[] {
+        "INSERT INTO LeadSummary (projectId, summary) VALUES (?, ?) ON DUPLICATE KEY UPDATE summary = VALUES(summary)"
+      };
+      List<Object[]> summaryParams = new ArrayList<>();
+      summaryParams.add(new Object[] { projectId, summary });
+
+      DatabaseActionUtils.executeSQL(sqlStatements, summaryParams);
+
+      // ✅ 2. Insert/update feedback in batch using executeBatchSQL
+      String feedbackSQL = "INSERT INTO LeadReport (projectId, vulnerabilityType, suggestions) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE suggestions = VALUES(suggestions)";
+      List<Object[]> feedbackParams = new ArrayList<>();
+
+      for (Map.Entry<String, Object> entry : feedbackMap.entrySet()) {
+        String vulnType = entry.getKey();
+        String suggestion = entry.getValue().toString();
+        feedbackParams.add(new Object[] { projectId, vulnType, suggestion });
+      }
+
+      DatabaseActionUtils.executeBatchSQL(feedbackSQL, feedbackParams);
+
+      // ✅ Success response
+      ResponseProtocol.sendSuccess(request, response, this,
+          "Lead report submitted successfully",
+          Map.of("status", "success"),
+          HttpServletResponse.SC_CREATED);
+
+    } catch (Exception e) {
+      System.out.println("Error submitting lead report: " + e.getMessage());
+
+      ResponseProtocol.sendError(request, response, this,
+          "Error submitting lead report", e.getMessage(),
+            HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+    }
+  }
 }
