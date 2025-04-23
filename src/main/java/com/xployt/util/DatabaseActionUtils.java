@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.sql.ResultSetMetaData;
 import java.util.HashMap;
-
+import java.sql.CallableStatement;
 public class DatabaseActionUtils {
 
   // private static List<Map<String, Object>> resultList = new ArrayList<>(); // ✅
@@ -208,4 +208,35 @@ public class DatabaseActionUtils {
       }
     }
   }
+
+  public static List<Map<String, Object>> callProcedure(String procedureCall, Object[] params)
+    throws SQLException {
+
+  List<Map<String, Object>> resultList = new ArrayList<>();
+  ResultSet rs = null;
+  Connection conn = null;
+  CallableStatement stmt = null;
+
+  try {
+    conn = DatabaseConfig.getConnection();
+    stmt = conn.prepareCall(procedureCall);
+    setParameters(stmt, params);
+
+    boolean hasResults = stmt.execute();
+    if (hasResults) {
+      rs = stmt.getResultSet();
+      resultList = getResults(rs, resultList);
+    }
+
+    return resultList;
+
+  } catch (SQLException e) {
+    throw new SQLException("Procedure call failed: " + e.getMessage());
+  } finally {
+    if (rs != null) try { rs.close(); } catch (SQLException ignore) {}
+    if (stmt != null) try { stmt.close(); } catch (SQLException ignore) {}
+    if (conn != null) try { conn.close(); } catch (SQLException ignore) {}
+  }
+}
+
 }
