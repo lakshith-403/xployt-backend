@@ -316,4 +316,26 @@ public class ProjectConfigServlet extends HttpServlet {
       System.err.println("Cleanup failed for projectId " + projectId + ": " + ex.getMessage());
     }
   }
+
+  @Override
+  protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    System.out.println("\n------------ ProjectConfigServlet | doDelete ------------");
+
+    try {
+      String projectId = RequestProtocol.parsePathParams(request).get(0);
+      System.out.println("Project ID: " + projectId);
+      System.out.println("Project Closed");
+
+      String sqlStatement = "UPDATE Projects SET state = 'Closed' WHERE projectId = ?";
+      List<Object[]> sqlParams = new ArrayList<>();
+      sqlParams.add(new Object[] { Integer.parseInt(projectId) });
+      DatabaseActionUtils.executeSQL(new String[] { sqlStatement }, sqlParams);
+
+      ResponseProtocol.sendSuccess(request, response, this, "Project closed successfully",
+          Map.of("projectId", projectId), HttpServletResponse.SC_OK);
+    } catch (Exception e) {
+      System.out.println("Error closing project: " + e.getMessage());
+      ResponseProtocol.sendError(request, response, this, "Error closing project", e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+    }
+  }
 }
