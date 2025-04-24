@@ -53,16 +53,13 @@ public class ProjectFinanceServlet extends HttpServlet {
         try {
             int projectId = Integer.parseInt(pathParts[1]);
             
-            // Get payment information for all reports in a project
-            List<Map<String, Object>> reportPayments = projectFinanceService.getProjectReportPayments(projectId);
+            // Get payment information for all reports in a project with project details
+            Map<String, Object> projectData = projectFinanceService.getProjectReportPaymentsWithDetails(projectId);
             
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
-            Map<String, Object> responseMap = new HashMap<>();
-            responseMap.put("projectId", projectId);
-            responseMap.put("reports", reportPayments);
-
-            GenericResponse genericResponse = new GenericResponse(responseMap, true, "Success", null);
+            
+            GenericResponse genericResponse = new GenericResponse(projectData, true, "Success", null);
             response.getWriter().write(JsonUtil.toJson(genericResponse));
             
         } catch (NumberFormatException e) {

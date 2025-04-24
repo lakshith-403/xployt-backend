@@ -216,4 +216,34 @@ public class ProjectFinanceDAO {
             }
         }
     }
+
+    public Map<String, Object> getProjectFinanceDetails(int projectId) throws SQLException {
+        Map<String, Object> projectDetails = new HashMap<>();
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = DatabaseConfig.getConnection();
+            String sql = "SELECT projectId, totalExpenditure FROM ProjectConfigs WHERE projectId = ?";
+
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, projectId);
+            rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                projectDetails.put("projectId", rs.getInt("projectId"));
+                projectDetails.put("totalExpenditure", rs.getDouble("totalExpenditure"));
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error fetching project finance details: {0}", e.getMessage());
+            throw e;
+        } finally {
+            if (rs != null) try { rs.close(); } catch (SQLException e) { }
+            if (stmt != null) try { stmt.close(); } catch (SQLException e) { }
+            if (conn != null) try { conn.close(); } catch (SQLException e) { }
+        }
+
+        return projectDetails;
+    }
 } 

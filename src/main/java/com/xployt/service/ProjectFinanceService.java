@@ -1,6 +1,7 @@
 package com.xployt.service;
 
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -80,5 +81,33 @@ public class ProjectFinanceService {
             logger.log(Level.SEVERE, "Error processing report payment: {0}", e.getMessage());
             return new GenericResponse(null, false, null, "Error processing payment: " + e.getMessage());
         }
+    }
+
+    public Map<String, Object> getProjectFinanceDetails(int projectId) throws SQLException {
+        logger.log(Level.INFO, "Getting project finance details for project ID: {0}", projectId);
+        return projectFinanceDAO.getProjectFinanceDetails(projectId);
+    }
+
+    public Map<String, Object> getProjectReportPaymentsWithDetails(int projectId) throws SQLException {
+        logger.log(Level.INFO, "Getting report payments with details for project ID: {0}", projectId);
+        
+        Map<String, Object> result = new HashMap<>();
+        
+        // Get reports payment data
+        List<Map<String, Object>> reports = projectFinanceDAO.getProjectReportPayments(projectId);
+        result.put("reports", reports);
+        
+        // Get project finance details
+        Map<String, Object> projectDetails = getProjectFinanceDetails(projectId);
+        
+        // Add project details to the result
+        result.put("projectId", projectId);
+        if (projectDetails.containsKey("totalExpenditure")) {
+            result.put("totalExpenditure", projectDetails.get("totalExpenditure"));
+        } else {
+            result.put("totalExpenditure", 0.0);
+        }
+        
+        return result;
     }
 } 
