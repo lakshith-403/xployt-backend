@@ -58,7 +58,6 @@ public class FinanceDAO {
         
         try {
             conn = DatabaseConfig.getConnection();
-            conn.setAutoCommit(false);
             
             // Update user balance
             String updateBalanceSql = "UPDATE UserFinance SET balance = balance + ? WHERE userId = ?";
@@ -82,7 +81,6 @@ public class FinanceDAO {
             insertStmt.setString(4, description);
             insertStmt.executeUpdate();
             
-            conn.commit();
             logger.info("Added funds to user: " + userId + ", amount: " + amount);
         } catch (SQLException e) {
             if (conn != null) {
@@ -102,8 +100,6 @@ public class FinanceDAO {
         
         try {
             conn = DatabaseConfig.getConnection();
-            conn.setAutoCommit(false);
-            
             // Check if user has sufficient balance
             double currentBalance = getUserBalance(userId);
             if (currentBalance < amount) {
@@ -126,7 +122,6 @@ public class FinanceDAO {
             insertStmt.setString(4, description);
             insertStmt.executeUpdate();
             
-            conn.commit();
             logger.info("Withdrawn funds from user: " + userId + ", amount: " + amount);
         } catch (SQLException e) {
             if (conn != null) {

@@ -1,7 +1,6 @@
 package com.xployt.controller;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,10 +18,7 @@ import com.xployt.model.GenericResponse;
 import com.xployt.service.FinanceService;
 import com.xployt.service.ProjectFinanceService;
 import com.xployt.util.CustomLogger;
-import com.xployt.util.DatabaseActionUtils;
 import com.xployt.util.JsonUtil;
-import com.xployt.util.RequestProtocol;
-import com.xployt.util.ResponseProtocol;
 
 @WebServlet("/api/project-finance/*")
 public class ProjectFinanceServlet extends HttpServlet {
