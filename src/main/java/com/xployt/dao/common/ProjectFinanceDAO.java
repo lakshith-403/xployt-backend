@@ -246,4 +246,54 @@ public class ProjectFinanceDAO {
 
         return projectDetails;
     }
+
+    public List<Map<String, Object>> getHackerReportPayments(int projectId, int hackerId) throws SQLException {
+        List<Map<String, Object>> reports = new ArrayList<>();
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = DatabaseConfig.getConnection();
+
+            // SQL to fetch report details with payment information for a specific hacker
+            String sql = "SELECT r.reportId, r.hackerId, r.severity, r.vulnerabilityType, r.title, r.createdAt, r.status, " +
+                    "pla.amount AS payment_amount, " +
+                    "CASE WHEN pp.paymentId IS NULL THEN false ELSE true END AS paid " +
+                    "FROM BugReports r " +
+                    "JOIN Projects p ON r.projectId = p.projectId " +
+                    "JOIN PaymentLevelAmounts pla ON p.projectId = pla.projectId AND r.severity = pla.level " +
+                    "LEFT JOIN ProjectPayments pp ON r.reportId = pp.reportId " +
+                    "WHERE r.projectId = ? AND r.hackerId = ? " +
+                    "ORDER BY r.createdAt DESC";
+
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, projectId);
+            stmt.setInt(2, hackerId);
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Map<String, Object> report = new HashMap<>();
+                report.put("reportId", rs.getInt("reportId"));
+                report.put("hackerId", rs.getInt("hackerId"));
+                report.put("severity", rs.getString("severity"));
+                report.put("vulnerabilityType", rs.getString("vulnerabilityType"));
+                report.put("title", rs.getString("title"));
+                report.put("createdAt", rs.getTimestamp("createdAt").toString());
+                report.put("status", rs.getString("status"));
+                report.put("payment_amount", rs.getDouble("payment_amount"));
+                report.put("paid", rs.getBoolean("paid"));
+                reports.add(report);
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error fetching hacker report payments: {0}", e.getMessage());
+            throw e;
+        } finally {
+            if (rs != null) try { rs.close(); } catch (SQLException e) { }
+            if (stmt != null) try { stmt.close(); } catch (SQLException e) { }
+            if (conn != null) try { conn.close(); } catch (SQLException e) { }
+        }
+
+        return reports;
+    }
 } 
