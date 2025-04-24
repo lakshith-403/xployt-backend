@@ -5,6 +5,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.ArrayList;
@@ -15,10 +16,10 @@ import java.util.stream.Collectors;
 import java.sql.SQLException;
 // import java.util.Arrays;
 
-import com.xployt.util.ResponseProtocol;
-import com.xployt.util.RequestProtocol;
-import com.xployt.util.DatabaseActionUtils;
-import com.xployt.util.PasswordUtil;
+import com.google.gson.reflect.TypeToken;
+import com.google.gson.Gson;
+import com.xployt.model.Attachment;
+import com.xployt.util.*;
 
 @WebServlet("/api/validator/manage")
 public class ManageValidatorServlet extends HttpServlet {
@@ -33,13 +34,22 @@ public class ManageValidatorServlet extends HttpServlet {
 
     int validatorId = 0;
     try {
-      Map<String, Object> requestBody = RequestProtocol.parseRequest(request);
-      System.out.println("Request body: " + requestBody);
+      FileUploadUtil.UploadResult uploadResult = FileUploadUtil.processMultipartRequest(request, response);
+        if (uploadResult == null) {
+            System.err.println("Upload result is null");
+            return;
+        }
+
+        // Check if the request contains the "application" form field
+     Gson gson = JsonUtil.useGson();
+     String requestBodyJson = uploadResult.getFormField("application");
+     Map<String, Object> requestBody = gson.fromJson(requestBodyJson, new TypeToken<Map<String, Object>>() {}.getType());
+     System.out.println("Request body: " + requestBody);
 
       // Extract areaOfExpertise from request body
       List<String> expertiseAreas = new ArrayList<>();
       Object areaOfExpertiseObj = requestBody.get("areaOfExpertise");
-      
+
       if (areaOfExpertiseObj instanceof Map) {
         Map<?, ?> expertiseMap = (Map<?, ?>) areaOfExpertiseObj;
         expertiseAreas = expertiseMap.values()
@@ -95,6 +105,22 @@ public class ManageValidatorServlet extends HttpServlet {
       } else {
         throw new IllegalArgumentException("dateOfBirth is not a valid Map");
       }
+
+        // Extract file data
+        List<Attachment> fileData = extractAttachments(requestBody, "cv", "certificates");
+        System.out.println("FileData: " + fileData);
+
+        List<String> fleIDs = fileData.stream().map(Attachment::getId).collect(Collectors.toList());
+
+//        upload files
+        List<File> uploadedFiles = FileUploadUtil.processAttachments(
+                uploadResult.getFileItems(),
+                fleIDs,
+                getServletContext(),
+                response
+        );
+
+
       // String address = (String) requestBody.get("address");
       String linkedin = (String) requestBody.get("linkedin");
       String skills = (String) requestBody.get("skills");
@@ -103,15 +129,29 @@ public class ManageValidatorServlet extends HttpServlet {
 
       sqlStatements = new String[] {
           "INSERT INTO UserProfiles (userId, firstName, lastName, phone, dob, linkedin) VALUES (?, ?, ?, ?, ?, ?)",
-          "INSERT INTO ValidatorInfo (validatorId, skills, experience, reference) VALUES (?, ?, ?, ?)"
+          "INSERT INTO ValidatorInfo (validatorId, skills, experience, reference, cvId) VALUES (?, ?, ?, ?, ?)",
       };
 
       sqlParams = new ArrayList<>();
       sqlParams.add(new Object[] { validatorId, firstName, lastName, phone, year + "-" + month + "-" + day, linkedin });
-      sqlParams.add(new Object[] { validatorId, skills, relevantExperience, references });
+      sqlParams.add(new Object[] { validatorId, skills, relevantExperience, references, fileData.get(0).getId() });
 
       DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
       System.out.println("Validator created successfully");
+
+        List<Object[]> validatorCertBatchParams = new ArrayList<>();
+        for (int i = 1; i < fileData.size(); i++) {
+            validatorCertBatchParams.add(new Object[] { validatorId, fileData.get(i).getId()});
+        }
+        String certSQL = "INSERT INTO ValidatorCertifications (validatorId, certId) VALUES (?, ?)";
+        DatabaseActionUtils.executeBatchSQL(certSQL, validatorCertBatchParams);
+
+        List<Object[]> attachmentBatchParams = new ArrayList<>();
+        for (Attachment attachment : fileData) {
+            attachmentBatchParams.add(new Object[] { attachment.getId(), attachment.getName(), attachment.getUrl() });
+        }
+        String attachmentSQL = "INSERT INTO Attachment (id, name, url) VALUES (?, ?, ?)";
+        DatabaseActionUtils.executeBatchSQL(attachmentSQL, attachmentBatchParams);
 
 
 
@@ -214,4 +254,45 @@ public class ManageValidatorServlet extends HttpServlet {
         DatabaseActionUtils.executeBatchSQL(insertSql, expertiseParams);
     }
   }
+
+    private List<Attachment> extractAttachments(Map<String, Object> requestBody, String... keys) {
+        List<Attachment> attachments = new ArrayList<>();
+        System.out.println("Extracting attachments for keys: " + String.join(", ", keys));
+
+        for (String key : keys) {
+            Object attachmentObject = requestBody.get(key);
+            System.out.println("Processing key: " + key + ", value: " + attachmentObject);
+
+            if (attachmentObject instanceof Attachment) {
+                attachments.add((Attachment) attachmentObject);
+                System.out.println("Added single attachment: " + attachmentObject);
+            } else if (attachmentObject instanceof List<?>) {
+                List<?> attachmentList = (List<?>) attachmentObject;
+                System.out.println("Processing attachment list for key: " + key);
+                for (Object item : attachmentList) {
+                    System.out.println("Processing list item: " + item);
+                    if (item instanceof Map<?, ?>) {
+                        Map<?, ?> itemMap = (Map<?, ?>) item;
+                        String id = (String) itemMap.get("id");
+                        String name = (String) itemMap.get("name");
+                        String url = (String) itemMap.get("url");
+                        System.out.println("Parsed attachment data - id: " + id + ", name: " + name + ", url: " + url);
+                        if (id != null && name != null && url != null) {
+                            attachments.add(new Attachment(id, name, url));
+                            System.out.println("Added attachment from map: " + itemMap);
+                        } else {
+                            System.err.println("Invalid attachment data: " + item);
+                        }
+                    } else {
+                        System.err.println("Invalid attachment format: " + item);
+                    }
+                }
+            } else {
+                System.err.println("Invalid format for key: " + key + ", value: " + attachmentObject);
+            }
+        }
+
+        System.out.println("Extracted attachments: " + attachments);
+        return attachments;
+    }
 }
