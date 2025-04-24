@@ -9,6 +9,9 @@ import java.util.*;
 import java.sql.SQLException;
 import java.util.stream.Collectors;
 
+import com.xployt.dao.common.NotificationDAO;
+import com.xployt.dao.common.ProjectTeamDAO;
+import com.xployt.model.ProjectTeam;
 import com.xployt.util.RequestProtocol;
 import com.xployt.util.ResponseProtocol;
 import com.xployt.util.DatabaseActionUtils;
@@ -224,6 +227,17 @@ public class ProjectConfigServlet extends HttpServlet {
       List<Object[]> sqlParams = new ArrayList<>();
       sqlParams.add(new Object[] { Integer.parseInt(projectId) });
       DatabaseActionUtils.executeSQL(new String[] { sqlStatement }, sqlParams);
+
+      //      Notification
+      ProjectTeamDAO projectTeamDAO = new ProjectTeamDAO();
+      ProjectTeam projectTeam = projectTeamDAO.getProjectTeam(projectId);
+      NotificationDAO notificationDAO = new NotificationDAO();
+      notificationDAO.createNotification(
+              projectTeam.getProjectLead().getUserId(),
+              "Project #" + projectId,
+              "Client " + projectTeam.getClient().getName() + " has configured the project",
+              "/projects/" + projectId
+      );
 
     } catch (Exception e) {
       System.out.println("Error processing request: " + e.getMessage());

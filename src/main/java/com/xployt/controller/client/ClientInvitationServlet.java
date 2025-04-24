@@ -24,6 +24,8 @@ public class ClientInvitationServlet extends HttpServlet{
         invitationService = new InvitationService();
     }
 
+    // handles GET requests to fetch invited hackers for a specific project (State: Pending).
+//     Returns a PublicUser list of invited hackers.
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException{
         logger.info("Servlet: Fetching invited hackers");

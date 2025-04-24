@@ -48,6 +48,8 @@ public class InvitationServlet extends HttpServlet {
         return jsonMap;
     }
 
+    // Handles GET requests to fetch project invitations for a specific project (State: Pending).
+    // Returns a list of invitations.
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -59,12 +61,12 @@ public class InvitationServlet extends HttpServlet {
         }
         String projectId = pathInfo.substring(1);
 
-        GenericResponse HackerInvitations;
+        GenericResponse ProjectInvitations;
 
         try {
-            logger.info("Trying to fetch hacker invitations for user: " + projectId);
-            HackerInvitations = invitationService.fetchProjectInvitations(projectId);
-            logger.info("project invitations: " + HackerInvitations);
+            logger.info("Trying to fetch hacker invitations for project: " + projectId);
+            ProjectInvitations = invitationService.fetchProjectInvitations(projectId);
+            logger.info("project invitations: " + ProjectInvitations);
         } catch (Exception e) {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error fetching project invitations");
             return;
@@ -73,12 +75,13 @@ public class InvitationServlet extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        String jsonResponse = JsonUtil.toJson(HackerInvitations);
+        String jsonResponse = JsonUtil.toJson(ProjectInvitations);
         logger.info("response: " + jsonResponse);
         response.getWriter().write(jsonResponse);
 
     }
 
+    // Handles POST requests to create a new invitation.
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

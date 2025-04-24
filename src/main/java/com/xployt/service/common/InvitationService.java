@@ -7,13 +7,10 @@ import java.util.logging.Logger;
 
 import com.xployt.dao.common.BlastPointsDAO;
 import com.xployt.dao.common.InvitationDAO;
-import com.xployt.dao.common.ProjectTeamAssignmentDAO;
 import com.xployt.dao.hacker.HackerDAO;
 import com.xployt.model.GenericResponse;
 import com.xployt.model.Hacker;
 import com.xployt.model.Invitation;
-import com.xployt.model.PublicUser;
-import com.xployt.service.lead.ProjectService;
 import com.xployt.util.CustomLogger;
 
 
@@ -37,7 +34,7 @@ public class InvitationService {
 
     public GenericResponse fetchProjectInvitations(String projectId) throws SQLException {
         logger.info("InvitationService: Fetching invitations of project " + projectId);
-        List<Invitation> invitations = invitationDAO.getProjectInvitations(projectId);
+        List<Invitation> invitations = invitationDAO.getProjectInvitations(projectId, true);
         if (!invitations.isEmpty()) {
             return new GenericResponse(invitations, true, null, null);
         }
@@ -46,7 +43,7 @@ public class InvitationService {
 
     public GenericResponse fetchInvitedHackers(String projectId) throws SQLException {
         logger.info("InvitationsService: Fetching invited hackers for project " + projectId);
-        List<Invitation> invitations = invitationDAO.getProjectInvitations(projectId);
+        List<Invitation> invitations = invitationDAO.getProjectInvitations(projectId, true);
         List<Hacker> hackers = new ArrayList<>();
 
         if (invitations.isEmpty()) {
@@ -87,33 +84,6 @@ public class InvitationService {
         
         if (acceptedInvitation != null) {
             logger.info("InvitationService: Success");
-            
-            // Try to find the validator assigned to this hacker
-            try {
-                ProjectTeamAssignmentDAO projectTeamAssignmentDAO = new ProjectTeamAssignmentDAO();
-                String projectId = String.valueOf(invitation.getProjectId());
-                String hackerId = String.valueOf(invitation.getHackerId());
-                
-                ProjectService projectService = new ProjectService();
-                
-                // Get the validator assigned to this hacker if any
-                PublicUser assignedValidator = projectTeamAssignmentDAO.getAssignedValidator(projectId, hackerId);
-                
-                if (assignedValidator != null) {
-                    logger.info("Creating discussion between hacker and assigned validator");
-                    // Create discussion between hacker and assigned validator
-                    projectService.createHackerValidatorDiscussion(
-                        projectId, 
-                        hackerId, 
-                        assignedValidator.getUserId()
-                    );
-                } else {
-                    logger.info("No validator assigned to hacker yet");
-                }
-            } catch (Exception e) {
-                logger.severe("Error creating hacker-validator discussion: " + e.getMessage());
-                // We'll still return success even if discussion creation fails
-            }
             
             return new GenericResponse(invitation, true, null, null);
         }

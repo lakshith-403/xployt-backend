@@ -4,8 +4,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.servlet.ServletContext;
 
 import com.xployt.model.User;
@@ -115,5 +120,78 @@ public class UserDAO {
             throw e;
         }
         return null;
+    }
+
+    public List<Map<String, Object>> getHackerProjects(int hackerId) throws SQLException {
+        List<Map<String, Object>> projects = new ArrayList<>();
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = DatabaseConfig.getConnection();
+            String sql = "SELECT p.projectId, p.title, p.state " +
+                    "FROM Projects p " +
+                    "JOIN ProjectHackers ph ON p.projectId = ph.projectId " +
+                    "WHERE ph.hackerId = ? " +
+                    "AND (p.state = 'Active' OR p.state = 'Completed')";
+            
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, hackerId);
+            rs = stmt.executeQuery();
+            
+            while (rs.next()) {
+                Map<String, Object> project = new HashMap<>();
+                project.put("projectId", rs.getInt("projectId"));
+                project.put("title", rs.getString("title"));
+                project.put("state", rs.getString("state"));
+                projects.add(project);
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error fetching hacker projects: {0}", e.getMessage());
+            throw e;
+        } finally {
+            if (rs != null) try { rs.close(); } catch (SQLException e) { }
+            if (stmt != null) try { stmt.close(); } catch (SQLException e) { }
+            if (conn != null) try { conn.close(); } catch (SQLException e) { }
+        }
+        
+        return projects;
+    }
+    
+    public List<Map<String, Object>> getClientProjects(int clientId) throws SQLException {
+        List<Map<String, Object>> projects = new ArrayList<>();
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = DatabaseConfig.getConnection();
+            String sql = "SELECT projectId, title, state " +
+                    "FROM Projects " +
+                    "WHERE clientId = ? " +
+                    "AND (state = 'Active' OR state = 'Completed')";
+            
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, clientId);
+            rs = stmt.executeQuery();
+            
+            while (rs.next()) {
+                Map<String, Object> project = new HashMap<>();
+                project.put("projectId", rs.getInt("projectId"));
+                project.put("title", rs.getString("title"));
+                project.put("state", rs.getString("state"));
+                projects.add(project);
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error fetching client projects: {0}", e.getMessage());
+            throw e;
+        } finally {
+            if (rs != null) try { rs.close(); } catch (SQLException e) { }
+            if (stmt != null) try { stmt.close(); } catch (SQLException e) { }
+            if (conn != null) try { conn.close(); } catch (SQLException e) { }
+        }
+        
+        return projects;
     }
 }
