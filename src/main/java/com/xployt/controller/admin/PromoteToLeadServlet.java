@@ -35,6 +35,9 @@ public class PromoteToLeadServlet extends HttpServlet {
 
       throws IOException {
     System.out.println("\n------------ PromoteToLeadServlet | doGet ------------");
+    if (!RequestProtocol.authorizeRequest(request, response, new String[] { "Admin" })) {
+      return;
+    }
 
     try {
       // pathParams = RequestProtocol.parsePathParams(request);
@@ -76,6 +79,9 @@ public class PromoteToLeadServlet extends HttpServlet {
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
     System.out.println("\n\n------------ PromoteToLeadServlet | doPost ------------");
+    if (!RequestProtocol.authorizeRequest(request, response, new String[] { "Admin" })) {
+      return;
+    }
 
     try {
       requestBody = RequestProtocol.parseRequest(request);
