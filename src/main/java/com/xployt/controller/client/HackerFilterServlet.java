@@ -24,6 +24,7 @@ public class HackerFilterServlet extends HttpServlet {
         hackerFilterService = new HackerFilterService();
     }
 
+    // handles GET requests to filter hacker suggestions for a specific project
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         System.out.println("HackerFilterServlet: Filtering hackers");

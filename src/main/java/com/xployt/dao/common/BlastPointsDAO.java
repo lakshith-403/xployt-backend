@@ -15,7 +15,7 @@ public class BlastPointsDAO {
 
     public int getBlastPoints(String category, String action) throws SQLException {
         logger.info("BlastPointsDAO: executing getBlastPoints");
-        int blastPoints;
+        int blastPoints = 0;
         String sql = "SELECT * FROM PointsConfig WHERE category = ? && action = ?";
 
         ServletContext servletContext = ContextManager.getContext("DBConnection");
@@ -30,10 +30,12 @@ public class BlastPointsDAO {
 
                 if(rs.next()) {
                     blastPoints = rs.getInt("points");
-                } else {
-                    blastPoints = 0;
                 }
-            logger.info("BlastPointsDAO: Blast points fetched Successfully");
+                if(blastPoints > 0) {
+                    logger.info("BlastPointsDAO: Blast points fetched Successfully");
+                } else {
+                    logger.warning("BlastPointsDAO: No blast points found for category " + category + " and action " + action);
+                }
         } catch (SQLException e) {
             logger.severe("BlastPointsDAO: Error fetching blast points" + e.getMessage());
             throw e;
@@ -57,13 +59,32 @@ public class BlastPointsDAO {
             if (rs.next()) {
                 blastPoints = rs.getInt("points");
             }
-            logger.info("BlastPoints: " + blastPoints);
+            System.out.println("BlastPoints: " + blastPoints);
             logger.info("BlastPointsDAO: Blast points fetched Successfully");
         } catch (SQLException e) {
             logger.severe("BlastPointsDAO: Error fetching blast points" + e.getMessage());
         }
 
         return blastPoints;
+    }
+
+    public void addNewUserBlastPoints(int userId) throws SQLException {
+        logger.info("BlastPointsDAO: executing addNewUserBlastPoints");
+        String sql = "INSERT INTO HackerBlastPoints (userId, points) VALUES (?, ?)";
+
+        ServletContext servletContext = ContextManager.getContext("DBConnection");
+        Connection conn = (Connection) servletContext.getAttribute("DBConnection");
+
+        try(PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            stmt.setInt(2, 0);
+            stmt.executeUpdate();
+            logger.info("BlastPointsDAO: New user blast points added successfully");
+            addUserBlastPoints(userId, "profile", "sign_up");
+        } catch (SQLException e) {
+            logger.severe("BlastPointsDAO: Error adding new user blast points " + e.getMessage());
+            throw e;
+        }
     }
 
     public void addUserBlastPoints(int userId, String category, String action) throws SQLException {
@@ -78,8 +99,12 @@ public class BlastPointsDAO {
         try(PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, blastPoints);
             stmt.setInt(2, userId);
-            stmt.executeUpdate();
-            logger.info("BlastPointsDAO: Blast points added Successfully");
+            int affectedRows = stmt.executeUpdate();
+            if(affectedRows > 0) {
+                logger.info("BlastPointsDAO: User blast points updated successfully");
+            } else {
+                throw new SQLException("BlastPointsDAO: User not found");
+            }
         } catch (SQLException e) {
             logger.severe("BlastPointsDAO: Error adding blast points " + e.getMessage());
             throw e;

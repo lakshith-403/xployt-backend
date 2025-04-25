@@ -9,6 +9,9 @@ import java.util.*;
 import java.sql.SQLException;
 import java.util.stream.Collectors;
 
+import com.xployt.dao.common.NotificationDAO;
+import com.xployt.dao.common.ProjectTeamDAO;
+import com.xployt.model.ProjectTeam;
 import com.xployt.util.RequestProtocol;
 import com.xployt.util.ResponseProtocol;
 import com.xployt.util.DatabaseActionUtils;
@@ -225,6 +228,17 @@ public class ProjectConfigServlet extends HttpServlet {
       sqlParams.add(new Object[] { Integer.parseInt(projectId) });
       DatabaseActionUtils.executeSQL(new String[] { sqlStatement }, sqlParams);
 
+      //      Notification
+      ProjectTeamDAO projectTeamDAO = new ProjectTeamDAO();
+      ProjectTeam projectTeam = projectTeamDAO.getProjectTeam(projectId);
+      NotificationDAO notificationDAO = new NotificationDAO();
+      notificationDAO.createNotification(
+              projectTeam.getProjectLead().getUserId(),
+              "Project #" + projectId,
+              "Client " + projectTeam.getClient().getName() + " has configured the project",
+              "/projects/" + projectId
+      );
+
     } catch (Exception e) {
       System.out.println("Error processing request: " + e.getMessage());
       // Attempt to rollback any inserted data if projectId is available
@@ -300,6 +314,28 @@ public class ProjectConfigServlet extends HttpServlet {
           Collections.singletonList(new Object[] { projectId }));
     } catch (SQLException ex) {
       System.err.println("Cleanup failed for projectId " + projectId + ": " + ex.getMessage());
+    }
+  }
+
+  @Override
+  protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    System.out.println("\n------------ ProjectConfigServlet | doDelete ------------");
+
+    try {
+      String projectId = RequestProtocol.parsePathParams(request).get(0);
+      System.out.println("Project ID: " + projectId);
+      System.out.println("Project Closed");
+
+      String sqlStatement = "UPDATE Projects SET state = 'Closed' WHERE projectId = ?";
+      List<Object[]> sqlParams = new ArrayList<>();
+      sqlParams.add(new Object[] { Integer.parseInt(projectId) });
+      DatabaseActionUtils.executeSQL(new String[] { sqlStatement }, sqlParams);
+
+      ResponseProtocol.sendSuccess(request, response, this, "Project closed successfully",
+          Map.of("projectId", projectId), HttpServletResponse.SC_OK);
+    } catch (Exception e) {
+      System.out.println("Error closing project: " + e.getMessage());
+      ResponseProtocol.sendError(request, response, this, "Error closing project", e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
   }
 }

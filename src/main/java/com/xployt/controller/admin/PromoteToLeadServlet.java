@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
 
+import com.xployt.dao.common.NotificationDAO;
 import com.xployt.util.ResponseProtocol;
 import com.xployt.util.RequestProtocol;
 import com.xployt.util.DatabaseActionUtils;
@@ -93,6 +94,10 @@ public class PromoteToLeadServlet extends HttpServlet {
       
       ResponseProtocol.sendSuccess(request, response, this, "User promoted to Project Lead successfully", 
           Map.of("userId", userId), HttpServletResponse.SC_OK);
+
+      //    Notification
+      NotificationDAO notificationDAO = new NotificationDAO();
+      notificationDAO.createNotification(userId, "Promotion", "You are now a Project Lead", "/dashboard");
 
     } catch (Exception e) {
       System.out.println("Error parsing request: " + e.getMessage());

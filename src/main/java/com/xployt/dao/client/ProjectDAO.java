@@ -4,8 +4,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.logging.Logger;
 import java.sql.ResultSet;
-// import com.xployt.util.SQLLoader;
+import com.xployt.dao.common.NotificationDAO;
+import com.xployt.model.Project;
+import com.xployt.util.ContextManager;
 import com.xployt.util.CustomLogger;
+
+import javax.servlet.ServletContext;
 
 public class ProjectDAO {
 
@@ -101,6 +105,15 @@ public class ProjectDAO {
       preparedStatement3.setInt(1, leadId);
       preparedStatement3.executeUpdate();
 
+//      Notification
+      NotificationDAO notificationDAO = new NotificationDAO();
+      notificationDAO.createNotification(
+              String.valueOf(leadId),
+              "New Project #" + projectId,
+              "A new project has been assigned to you",
+              "/projects/" + projectId
+      );
+
     } catch (Exception e) {
       logger.severe("Error assigning project lead: " + e.getMessage());
       throw new Exception("Error assigning project lead: " + e.getMessage());
@@ -156,5 +169,20 @@ public class ProjectDAO {
       logger.severe("Error getting suited lead: " + e.getMessage());
     }
     return -1;
+  }
+
+  public Project closeProject(int projectId){
+    String sql = "UPDATE Projects SET state = 'CLOSED' WHERE projectId = ?";
+    ServletContext servletContext = ContextManager.getContext("DBConnection");
+    Connection conn = (Connection) servletContext.getAttribute("DBConnection");
+    try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+      preparedStatement.setInt(1, projectId);
+      preparedStatement.executeUpdate();
+      NotificationDAO notificationDAO = new NotificationDAO();
+      notificationDAO.sendNotificationsToProjectTeam(projectId, "Project #" + projectId + " has been closed.");
+    } catch (Exception e) {
+      logger.severe("Error closing project: " + e.getMessage());
+    }
+    return null;
   }
 }

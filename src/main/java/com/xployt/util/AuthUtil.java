@@ -42,7 +42,7 @@ public class AuthUtil {
 
     public static Boolean isAdmin(HttpServletRequest request) {
         User user = getSignedInUser(request);
-        return user != null && user.getRole().equals("admin");
+        return user != null && user.getRole().equals("Admin");
     }
 
     public static Boolean isAllowedRole(HttpServletRequest request, String[] roles) {

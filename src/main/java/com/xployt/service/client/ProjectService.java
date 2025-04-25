@@ -11,6 +11,7 @@ import java.io.BufferedReader;
 import java.util.Map;
 
 import com.xployt.dao.client.ProjectDAO;
+import com.xployt.model.GenericResponse;
 import com.xployt.util.CustomLogger;
 import com.xployt.model.Project;
 import com.xployt.util.ResponseProtocol;
@@ -19,6 +20,7 @@ import com.xployt.util.DatabaseConfig;
 public class ProjectService {
 
   private static final Logger logger = CustomLogger.getLogger();
+
 
   /**
    * Method to create a project from JSON data
@@ -126,5 +128,15 @@ public class ProjectService {
       return -1;
     }
     return projectId;
+  }
+
+  public GenericResponse closeProject(int projectId){
+    logger.info("Closing project " + projectId);
+    ProjectDAO projectDAO = new ProjectDAO();
+    Project project = projectDAO.closeProject(projectId);
+    if(project != null){
+      return new GenericResponse(project, true, "Project closed successfully", null);
+    }
+    return new GenericResponse(null, false, "Failed to close project", null);
   }
 }
