@@ -38,6 +38,9 @@ public class ProjectRequestServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) {
         logger.info("ProjectRequestServlet doPost method called");
         try {
+            if (!RequestProtocol.authorizeRequest(request, response, new String[] { "Client" })) {
+                return;
+            }
             projectService.createProject(request, response);
             // if (projectId == -1) {
             // ResponseProtocol.sendError(request, response, this, "Error creating project",
