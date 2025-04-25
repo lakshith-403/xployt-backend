@@ -434,8 +434,11 @@ public class NewProfileServlet extends HttpServlet {
                     // Handle Hacker skill set update
                     if (requestBody.containsKey("skillSet")) {
                         Object skillSetObj = requestBody.get("skillSet");
+                        logger.info("Received skillSet object: " + skillSetObj);
+                        
                         if (skillSetObj instanceof List) {
                             List<?> skillSetList = (List<?>) skillSetObj;
+                            logger.info("Processing " + skillSetList.size() + " skills");
                             
                             // Delete existing skills first
                             sqlStatements = new String[] {
@@ -444,24 +447,27 @@ public class NewProfileServlet extends HttpServlet {
                             
                             sqlParams.clear();
                             sqlParams.add(new Object[] { userId });
-                            
                             DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
+                            logger.info("Deleted existing skills for hackerId: " + userId);
                             
                             // Insert new skills
+                            int skillsAdded = 0;
                             for (Object skillObj : skillSetList) {
                                 if (skillObj instanceof String) {
                                     String skill = (String) skillObj;
-                                    
-                                    sqlStatements = new String[] {
-                                        "INSERT INTO HackerSkillSet (hackerId, skill) VALUES (?, ?)"
-                                    };
-                                    
-                                    sqlParams.clear();
-                                    sqlParams.add(new Object[] { userId, skill });
-                                    
-                                    DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
+                                    if (!skill.trim().isEmpty()) {
+                                        sqlStatements = new String[] {
+                                            "INSERT INTO HackerSkillSet (hackerId, skill) VALUES (?, ?)"
+                                        };
+                                        
+                                        sqlParams.clear();
+                                        sqlParams.add(new Object[] { userId, skill });
+                                        DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
+                                        skillsAdded++;
+                                    }
                                 }
                             }
+                            logger.info("Added " + skillsAdded + " new skills for hackerId: " + userId);
                         }
                     }
                     break;
