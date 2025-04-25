@@ -146,6 +146,18 @@ public class ProjectService {
 
       ResponseProtocol.sendSuccess(request, response, "Project rejected", null,
           HttpServletResponse.SC_OK);
+
+      //      Notification
+      ProjectTeamDAO projectTeamDAO = new ProjectTeamDAO();
+      ProjectTeam projectTeam = projectTeamDAO.getProjectTeam(projectId);
+      NotificationDAO notificationDAO = new NotificationDAO();
+      notificationDAO.createNotification(
+          projectTeam.getProjectLead().getUserId(),
+          "Project #" + projectId,
+          "Your project was rejected.",
+          "/projects/" + projectId
+      );
+
     } catch (Exception e) {
       logger.severe("Error rejecting project: " + e.getMessage());
       ResponseProtocol.sendError(request, response, "Error rejecting project", e.getMessage(),

@@ -81,23 +81,23 @@ public class ProjectActionServlet extends HttpServlet {
           
           ResponseProtocol.sendSuccess(request, response, this, "Project updated to Active",
               "Project updated to Active", HttpServletResponse.SC_OK);
+
+          //      Notification
+          ProjectTeamDAO projectTeamDAO = new ProjectTeamDAO();
+          ProjectTeam projectTeam = projectTeamDAO.getProjectTeam(projectId);
+          NotificationDAO notificationDAO = new NotificationDAO();
+          notificationDAO.createNotification(
+              projectTeam.getProjectLead().getUserId(),
+              "Project #" + projectId,
+              "The project is now active.",
+              "/projects/" + projectId
+          );
           break;
         default:
           logger.warning("Lead ProjectActionServlet: Unknown action");
           ResponseProtocol.sendError(request, response, this, "Unknown action",
               "Unknown action", HttpServletResponse.SC_BAD_REQUEST);
       }
-
-//      Notification
-      ProjectTeamDAO projectTeamDAO = new ProjectTeamDAO();
-      ProjectTeam projectTeam = projectTeamDAO.getProjectTeam(projectId);
-      NotificationDAO notificationDAO = new NotificationDAO();
-      notificationDAO.createNotification(
-              projectTeam.getProjectLead().getUserId(),
-              "Project #" + projectId,
-              "The project is now active.",
-              "/projects/" + projectId
-      );
 
     } catch (Exception e) {
       logger.severe("Lead ProjectActionServlet: Error processing request");
