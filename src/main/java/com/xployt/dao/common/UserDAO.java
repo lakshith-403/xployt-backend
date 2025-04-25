@@ -194,4 +194,25 @@ public class UserDAO {
         
         return projects;
     }
+
+    // Update user password
+    public void updateUserPassword(String userId, String newPasswordHash) throws SQLException {
+        String sql = "UPDATE Users SET passwordHash = ? WHERE userId = ?";
+        
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, newPasswordHash);
+            stmt.setString(2, userId);
+            
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows == 0) {
+                throw new SQLException("Updating password failed, no user with ID: " + userId);
+            }
+            
+            logger.info("Password updated for user ID: " + userId);
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error updating password: {0}", e.getMessage());
+            throw e;
+        }
+    }
 }
