@@ -311,13 +311,6 @@ public class ManageValidatorServlet extends HttpServlet {
             }
         }
 
-        // Add a dummy attachment if none were found (to prevent null pointer exceptions)
-        if (attachments.isEmpty()) {
-            String dummyId = java.util.UUID.randomUUID().toString();
-            attachments.add(new Attachment(dummyId, "placeholder", dummyId + ".pdf"));
-            System.out.println("Added placeholder attachment with ID: " + dummyId);
-        }
-
         System.out.println("Extracted attachments: " + attachments);
         return attachments;
     }
