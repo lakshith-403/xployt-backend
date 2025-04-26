@@ -107,7 +107,7 @@ public class ManageValidatorServlet extends HttpServlet {
       }
 
         // Extract file data
-        List<Attachment> fileData = extractAttachments(requestBody, "cv");
+        List<Attachment> fileData = extractAttachments(requestBody, "cvProcessed");
         System.out.println("FileData: " + fileData);
 
         // List<String> fleIDs = fileData.stream().map(Attachment::getId).collect(Collectors.toList());
