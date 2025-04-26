@@ -2,6 +2,7 @@ package com.xployt.util;
 
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.net.URLDecoder;
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.xployt.model.User;
 
 public class RequestProtocol {
   private static final Gson gson = new Gson();
@@ -103,4 +105,55 @@ public class RequestProtocol {
 
   }
 
+  public static boolean authorizeRequest(HttpServletRequest request, HttpServletResponse response, String[] roles, boolean isAllowList) throws IOException {
+    User currentUser = AuthUtil.getSignedInUser(request);
+    
+    if (currentUser == null) {
+      ResponseProtocol.sendError(request, response, "Authentication required", null, HttpServletResponse.SC_UNAUTHORIZED);
+      return false;
+    }
+
+    String userRole = currentUser.getRole();
+    
+    if (isAllowList) {
+      // Check if user's role is in the allowed roles list
+      for (String role : roles) {
+        if (role.equals(userRole)) {
+          System.out.println("User with role: " + userRole + " is allowed access to this resource");
+          return true;
+        }
+      }
+      System.out.println("User with role: " + userRole + " is denied access to this resource");
+      ResponseProtocol.sendError(request, response, "Unauthorized access", null, HttpServletResponse.SC_FORBIDDEN);
+      return false;
+    } else {
+      // Check if user's role is in the denied roles list
+      for (String role : roles) {
+        if (role.equals(userRole)) {
+          System.out.println("User with role: " + userRole + " is denied access to this resource");
+          ResponseProtocol.sendError(request, response, "Unauthorized access", null, HttpServletResponse.SC_FORBIDDEN);
+          return false;
+        }
+      }
+      System.out.println("User with role: " + userRole + " is allowed access to this resource");
+      return true;
+    }
+  }
+
+  public static boolean authorizeRequest(HttpServletRequest request, HttpServletResponse response, String[] roles) throws IOException {
+    return authorizeRequest(request, response, roles, true);
+  }
+
+  public static boolean authenticateRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    User currentUser = AuthUtil.getSignedInUser(request);
+    
+    if (currentUser == null) {
+      System.out.println("No authenticated user found in session");
+      ResponseProtocol.sendError(request, response, "Authentication required", null, HttpServletResponse.SC_UNAUTHORIZED);
+      return false;
+    }
+
+    System.out.println("User " + currentUser.getEmail() + " is authenticated");
+    return true;
+  }
 }

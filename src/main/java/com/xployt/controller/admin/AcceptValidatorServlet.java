@@ -29,6 +29,9 @@ public class AcceptValidatorServlet extends HttpServlet {
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     System.out.println("\n------------ AcceptValidatorServlet | doGet ------------");
     try {
+      if (!RequestProtocol.authorizeRequest(request, response, new String[] { "Admin" })) {
+        return;
+      }
 
       sqlStatements = new String[] {
           "SELECT * FROM Users WHERE status = 'inactive' AND role = 'Validator'"
@@ -66,6 +69,10 @@ public class AcceptValidatorServlet extends HttpServlet {
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
     System.out.println("\n\n------------ AcceptValidatorServlet | doPost ------------");
+    if (!RequestProtocol.authorizeRequest(request, response, new String[] { "Admin" })) {
+      return;
+    }
+
 
     int validatorId = 0;
     try {
