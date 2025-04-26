@@ -19,8 +19,8 @@ import com.xployt.util.ResponseProtocol;
 import com.xployt.util.DatabaseActionUtils;
 import com.xployt.util.CustomLogger;
 
-@WebServlet("/api/clientRegister")
-public class ClientSignUpServlet extends HttpServlet {
+@WebServlet("/api/register")
+public class HackerSignUpServlet extends HttpServlet {
     private static final Logger logger = CustomLogger.getLogger();
     private static String[] sqlStatements = {};
     private static List<Object[]> sqlParams = new ArrayList<>();
@@ -28,7 +28,7 @@ public class ClientSignUpServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        logger.info("\n------------ ClientSignUpServlet | doPost ------------");
+        logger.info("\n------------ HackerSignUpServlet | doPost ------------");
         
         try {
             Map<String, Object> requestBody = RequestProtocol.parseRequest(request);
@@ -51,6 +51,8 @@ public class ClientSignUpServlet extends HttpServlet {
             String companyName = (String) requestBody.get("companyName");
             String dob = (String) requestBody.get("dob");
             String linkedIn = (String) requestBody.get("linkedIn");
+            @SuppressWarnings("unchecked")
+            List<String> skills = (List<String>) requestBody.get("skills");
 
             if (email == null || email.trim().isEmpty() || 
                 password == null || password.trim().isEmpty() || 
@@ -96,7 +98,7 @@ public class ClientSignUpServlet extends HttpServlet {
                 email,
                 hashedPassword,
                 firstName + " " + lastName, // Use full name as name
-                "Client" // Set role as Client
+                "Hacker" // Set role as Hacker
             });
             sqlParams.add(new Object[] {}); // Empty params for SELECT query
             
@@ -131,6 +133,26 @@ public class ClientSignUpServlet extends HttpServlet {
             });
             
             DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
+
+            // Insert hacker skills if provided
+            if (skills != null && !skills.isEmpty()) {
+                sqlStatements = new String[] {
+                    "INSERT INTO HackerSkillSet (hackerId, skill) VALUES (?, ?)"
+                };
+                
+                for (String skill : skills) {
+                    sqlParams.clear();
+                    sqlParams.add(new Object[] { userId, skill });
+                    try {
+                        DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
+                        logger.info("Added skill: " + skill + " for hacker: " + userId);
+                    } catch (Exception e) {
+                        logger.warning("Failed to add skill: " + skill + " for hacker: " + userId + " - " + e.getMessage());
+                    }
+                }
+            } else {
+                logger.info("No skills provided for hacker: " + userId);
+            }
 
             ResponseProtocol.sendSuccess(request, response, this, "Registration successful", 
                 Map.of("userId", userId), 
