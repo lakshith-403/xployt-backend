@@ -162,6 +162,8 @@ public class NewProfileServlet extends HttpServlet {
                     break;
                     
                 case "Hacker":
+                    logger.info("Processing Hacker role for userId: " + userId);
+                    
                     // Fetch HackerSkillSet for Hackers
                     sqlStatements = new String[] {
                         "SELECT skill FROM HackerSkillSet WHERE hackerId = ?"
@@ -179,6 +181,34 @@ public class NewProfileServlet extends HttpServlet {
                         }
                         profileData.put("skillSet", skills);
                     }
+
+                    // Fetch Blast Points for Hackers
+                    logger.info("Fetching blast points for userId: " + userId);
+                    String blastPointsQuery = "SELECT points FROM HackerBlastPoints WHERE userId = ?";
+                    logger.info("Blast points query: " + blastPointsQuery);
+                    
+                    sqlStatements = new String[] { blastPointsQuery };
+                    sqlParams.clear();
+                    sqlParams.add(new Object[] { userId });
+                    
+                    logger.info("Executing blast points query with params: " + userId);
+                    List<Map<String, Object>> blastPointsResults = DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
+                    logger.info("Blast points query results: " + blastPointsResults);
+                    
+                    if (!blastPointsResults.isEmpty() && blastPointsResults.get(0) != null) {
+                        Map<String, Object> blastPointsData = blastPointsResults.get(0);
+                        Object points = blastPointsData.get("points");
+                        if (points != null) {
+                            profileData.put("blastPoints", points);
+                            logger.info("Added blast points: " + points + " for userId: " + userId);
+                        } else {
+                            profileData.put("blastPoints", 0);
+                            logger.info("No blast points found, setting to 0 for userId: " + userId);
+                        }
+                    } else {
+                        profileData.put("blastPoints", 0);
+                        logger.info("No blast points record found, setting to 0 for userId: " + userId);
+                    }
                     break;
                     
                 default:
@@ -187,6 +217,7 @@ public class NewProfileServlet extends HttpServlet {
             }
         } catch (Exception e) {
             logger.severe("Error fetching role-specific data: " + e.getMessage());
+            logger.severe("Stack trace: " + e.getStackTrace()[0]);
             // We don't want to fail the entire request if role-specific data fails
             // So just log the error and continue
         }
@@ -237,24 +268,16 @@ public class NewProfileServlet extends HttpServlet {
             
             String role = (String) results.get(0).get("role");
             
-            // Preserve existing values if not in request
-            if (!requestBody.containsKey("name")) {
-                requestBody.put("name", results.get(0).get("name"));
-            }
-            
-            if (!requestBody.containsKey("email")) {
-                requestBody.put("email", results.get(0).get("email"));
-            }
-            
             // Update Users table
             sqlStatements = new String[] {
-                "UPDATE Users SET name = ?, email = ? WHERE userId = ?"
+                "UPDATE Users SET name = ?, email = ?, username = ? WHERE userId = ?"
             };
             
             sqlParams.clear();
             sqlParams.add(new Object[] { 
                 requestBody.get("name"), 
-                requestBody.get("email"), 
+                requestBody.get("email"),
+                requestBody.get("username"),
                 userId 
             });
             
