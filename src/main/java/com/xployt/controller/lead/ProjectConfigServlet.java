@@ -55,6 +55,11 @@ public class ProjectConfigServlet extends HttpServlet {
         // Execute Combined Query
         List<Object[]> sqlParams = new ArrayList<>();
         sqlParams.add(new Object[] { pathParams.get(0) });
+
+        if (!RequestProtocol.isUserRelatedToProject(request, response, Integer.parseInt(pathParams.get(0)))) {
+          return;
+        }
+
         List<Map<String, Object>> combinedResults = DatabaseActionUtils.executeSQL(
             new String[] { sqlCombined }, sqlParams);
 
@@ -96,6 +101,10 @@ public class ProjectConfigServlet extends HttpServlet {
       System.out.println("Request body: " + requestBody);
 
       String projectId = (String) requestBody.get("projectId");
+
+      if (!RequestProtocol.isUserRelatedToProject(request, response, Integer.parseInt(projectId))) {
+        return;
+      }
 
       String update = (String) RequestProtocol.parseQueryParams(request).get("update");
 

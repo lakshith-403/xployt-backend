@@ -51,6 +51,11 @@ public class ProjectActionServlet extends HttpServlet {
 
     String action = pathParts[1];
     String projectId = pathParts[2];
+
+    if (!RequestProtocol.isUserRelatedToProject(request, response, Integer.parseInt(projectId))) {
+      return;
+    }
+
     Map<String, Object> requestBody = RequestProtocol.parseRequest(request);
     int projectLeadId = ((Number) requestBody.get("projectLeadId")).intValue();
 
