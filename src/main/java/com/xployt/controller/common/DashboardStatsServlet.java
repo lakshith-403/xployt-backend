@@ -122,13 +122,13 @@ public class DashboardStatsServlet extends HttpServlet {
   private String getRecentProjectsSQL(String userType) throws SQLException {
     switch (userType) {
       case "client":
-        return "SELECT * FROM Projects WHERE clientId = ? ORDER BY projectId DESC LIMIT 5";
+        return "SELECT * FROM Projects WHERE clientId = ? ORDER BY updatedAt DESC LIMIT 5";
       case "projectLead":
-        return "SELECT * FROM Projects WHERE leadId = ? ORDER BY projectId DESC LIMIT 5";
+        return "SELECT * FROM Projects WHERE leadId = ? ORDER BY updatedAt DESC LIMIT 5";
       case "admin":
-        return "SELECT * FROM Projects ORDER BY projectId DESC LIMIT 5";
+        return "SELECT * FROM Projects ORDER BY updatedAt DESC LIMIT 5";
       case "validator":
-        return "SELECT p.* FROM Projects p JOIN ProjectHackers pv ON p.projectId = pv.projectId WHERE pv.assignedValidatorId = ? ORDER BY p.projectId DESC LIMIT 5";
+        return "SELECT DISTINCT p.* FROM Projects p JOIN ProjectHackers pv ON p.projectId = pv.projectId WHERE pv.assignedValidatorId = ? ORDER BY p.updatedAt DESC LIMIT 5";
       default:
         throw new SQLException("Invalid user type");
     }
