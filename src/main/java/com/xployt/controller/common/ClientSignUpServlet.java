@@ -44,7 +44,6 @@ public class ClientSignUpServlet extends HttpServlet {
             // Validate required fields
             String email = (String) requestBody.get("email");
             String password = (String) requestBody.get("password");
-            String username = (String) requestBody.get("username");
             String firstName = (String) requestBody.get("firstName");
             String lastName = (String) requestBody.get("lastName");
             String phone = (String) requestBody.get("phone");
@@ -54,13 +53,12 @@ public class ClientSignUpServlet extends HttpServlet {
 
             if (email == null || email.trim().isEmpty() || 
                 password == null || password.trim().isEmpty() || 
-                username == null || username.trim().isEmpty() || 
                 firstName == null || firstName.trim().isEmpty() || 
                 lastName == null || lastName.trim().isEmpty() || 
                 phone == null || phone.trim().isEmpty() || 
                 dob == null || dob.trim().isEmpty()) {
                 ResponseProtocol.sendError(request, response, this, "Missing required fields", 
-                    Map.of("required", List.of("email", "password", "username", "firstName", "lastName", "phone", "dob")), 
+                    Map.of("required", List.of("email", "password", "firstName", "lastName", "phone", "dob")), 
                     HttpServletResponse.SC_BAD_REQUEST);
                 return;
             }
@@ -114,14 +112,13 @@ public class ClientSignUpServlet extends HttpServlet {
 
             // Insert into UserProfiles table
             sqlStatements = new String[] {
-                "INSERT INTO UserProfiles (userId, username, firstName, lastName, phone, companyName, dob, linkedIn) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+                "INSERT INTO UserProfiles (userId, firstName, lastName, phone, companyName, dob, linkedIn) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?)"
             };
             
             sqlParams.clear();
             sqlParams.add(new Object[] { 
                 userId,
-                username,
                 firstName,
                 lastName,
                 phone,
