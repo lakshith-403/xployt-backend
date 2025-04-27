@@ -1,25 +1,35 @@
 package com.xployt.controller.common;
 
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
+
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Logger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.nio.charset.StandardCharsets;
+import org.apache.commons.fileupload.FileItem;
 
-import com.xployt.util.RequestProtocol;
-import com.xployt.util.ResponseProtocol;
-import com.xployt.util.DatabaseActionUtils;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.xployt.util.CustomLogger;
+import com.xployt.util.DatabaseActionUtils;
+import com.xployt.util.FileUploadUtil;
+import com.xployt.util.FileUploadUtil.UploadResult;
+import com.xployt.util.ResponseProtocol;
 
 @WebServlet("/api/register")
+@MultipartConfig
 public class HackerSignUpServlet extends HttpServlet {
     private static final Logger logger = CustomLogger.getLogger();
     private static String[] sqlStatements = {};
@@ -31,38 +41,67 @@ public class HackerSignUpServlet extends HttpServlet {
         logger.info("\n------------ HackerSignUpServlet | doPost ------------");
         
         try {
-            Map<String, Object> requestBody = RequestProtocol.parseRequest(request);
+            // Process multipart request
+            UploadResult uploadResult = FileUploadUtil.processMultipartRequest(request, response);
+            if (uploadResult == null) {
+                return; // Error already sent to client
+            }
+            
+            Map<String, String> formFields = uploadResult.getFormFields();
+            Map<String, Object> requestBody = new HashMap<>();
+            
+            // Extract form fields directly
+            String email = formFields.get("email");
+            String password = formFields.get("password");
+            String username = formFields.get("username");
+            String firstName = formFields.get("firstName");
+            String lastName = formFields.get("lastName");
+            String phone = formFields.get("phone");
+            String companyName = formFields.get("companyName");
+            String dob = formFields.get("dob");
+            String linkedIn = formFields.get("linkedIn");
+            
+            // Convert form fields to requestBody map
+            requestBody.put("email", email);
+            requestBody.put("password", password);
+            requestBody.put("username", username != null ? username : email); // Use email as username if not provided
+            requestBody.put("firstName", firstName);
+            requestBody.put("lastName", lastName);
+            requestBody.put("phone", phone);
+            requestBody.put("companyName", companyName);
+            requestBody.put("dob", dob);
+            requestBody.put("linkedIn", linkedIn);
+            
+            // Parse skills if provided
+            String skillsStr = formFields.get("skills");
+            List<String> skills = new ArrayList<>();
+            if (skillsStr != null && !skillsStr.isEmpty()) {
+                if (skillsStr.startsWith("[") && skillsStr.endsWith("]")) {
+                    // It's a JSON array
+                    Type listType = new TypeToken<List<String>>() {}.getType();
+                    skills = new Gson().fromJson(skillsStr, listType);
+                } else {
+                    // It's a comma-separated string
+                    String[] skillsArray = skillsStr.split(",");
+                    for (String skill : skillsArray) {
+                        if (!skill.trim().isEmpty()) {
+                            skills.add(skill.trim());
+                        }
+                    }
+                }
+            }
+            requestBody.put("skills", skills);
+            
             logger.info("Request body: " + requestBody);
             
-            if (requestBody.isEmpty()) {
-                ResponseProtocol.sendError(request, response, this, "Request body is empty", 
-                    Map.of(), 
-                    HttpServletResponse.SC_BAD_REQUEST);
-                return;
-            }
-
-            // Validate required fields
-            String email = (String) requestBody.get("email");
-            String password = (String) requestBody.get("password");
-            String username = (String) requestBody.get("username");
-            String firstName = (String) requestBody.get("firstName");
-            String lastName = (String) requestBody.get("lastName");
-            String phone = (String) requestBody.get("phone");
-            String companyName = (String) requestBody.get("companyName");
-            String dob = (String) requestBody.get("dob");
-            String linkedIn = (String) requestBody.get("linkedIn");
-            @SuppressWarnings("unchecked")
-            List<String> skills = (List<String>) requestBody.get("skills");
-
             if (email == null || email.trim().isEmpty() || 
                 password == null || password.trim().isEmpty() || 
-                username == null || username.trim().isEmpty() || 
                 firstName == null || firstName.trim().isEmpty() || 
                 lastName == null || lastName.trim().isEmpty() || 
                 phone == null || phone.trim().isEmpty() || 
                 dob == null || dob.trim().isEmpty()) {
                 ResponseProtocol.sendError(request, response, this, "Missing required fields", 
-                    Map.of("required", List.of("email", "password", "username", "firstName", "lastName", "phone", "dob")), 
+                    Map.of("required", List.of("email", "password", "firstName", "lastName", "phone", "dob")), 
                     HttpServletResponse.SC_BAD_REQUEST);
                 return;
             }
@@ -133,6 +172,50 @@ public class HackerSignUpServlet extends HttpServlet {
             });
             
             DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
+
+            // Process certificates if provided
+            List<FileItem> certificateItems = new ArrayList<>();
+            for (FileItem item : uploadResult.getFileItems()) {
+                if ("certificates".equals(item.getFieldName())) {
+                    certificateItems.add(item);
+                }
+            }
+            
+            if (!certificateItems.isEmpty()) {
+                // Create list of certificate IDs (use userId + timestamps to ensure uniqueness)
+                List<String> certificateIds = new ArrayList<>();
+                for (int i = 0; i < certificateItems.size(); i++) {
+                    certificateIds.add("cert_" + userId + "_" + System.currentTimeMillis() + "_" + i);
+                }
+                
+                // Process certificate uploads
+                List<File> uploadedCertificates = FileUploadUtil.processAttachments(
+                    certificateItems,
+                    certificateIds,
+                    getServletContext(), 
+                    response
+                );
+                
+                // Save certificate information in database
+                if (!uploadedCertificates.isEmpty()) {
+                    sqlStatements = new String[] {
+                        "INSERT INTO HackerCertificates (hackerId, certificatePath) VALUES (?, ?)"
+                    };
+                    
+                    for (File certificate : uploadedCertificates) {
+                        sqlParams.clear();
+                        sqlParams.add(new Object[] { userId, certificate.getName() });
+                        try {
+                            DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
+                            logger.info("Added certificate: " + certificate.getName() + " for hacker: " + userId);
+                        } catch (Exception e) {
+                            logger.warning("Failed to add certificate: " + certificate.getName() + " for hacker: " + userId + " - " + e.getMessage());
+                        }
+                    }
+                }
+            } else {
+                logger.info("No certificates provided for hacker: " + userId);
+            }
 
             // Insert hacker skills if provided
             if (skills != null && !skills.isEmpty()) {
