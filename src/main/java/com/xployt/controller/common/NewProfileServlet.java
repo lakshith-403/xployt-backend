@@ -1,6 +1,7 @@
 package com.xployt.controller.common;
 
 import javax.servlet.annotation.WebServlet;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -9,15 +10,19 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.HashMap;
 import java.util.logging.Logger;
+import java.io.File;
 
 import com.xployt.util.RequestProtocol;
 import com.xployt.util.ResponseProtocol;
-import com.xployt.util.DatabaseActionUtils; 
+import com.xployt.util.DatabaseActionUtils;
 import com.xployt.util.CustomLogger;
+import com.xployt.util.FileUploadUtil;
+import com.google.gson.Gson;
+import com.xployt.util.JsonUtil;
 
 @WebServlet("/api/new-profile/*")
+@MultipartConfig
 public class NewProfileServlet extends HttpServlet {
     private static final Logger logger = CustomLogger.getLogger();
     private static String[] sqlStatements = {};
@@ -239,7 +244,21 @@ public class NewProfileServlet extends HttpServlet {
         
         try {
             int userId = Integer.parseInt(pathParams.get(0));
-            Map<String, Object> requestBody = RequestProtocol.parseRequest(request);
+            
+            // Process multipart request
+            FileUploadUtil.UploadResult uploadResult = FileUploadUtil.processMultipartRequest(request, response);
+            if (uploadResult == null) {
+                return;
+            }
+
+            String profileJson = uploadResult.getFormField("profile");
+            if (profileJson == null) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Profile data is required");
+                return;
+            }
+
+            Gson gson = JsonUtil.useGson();
+            Map<String, Object> requestBody = gson.fromJson(profileJson, Map.class);
             logger.info("Request body: " + requestBody);
             
             if (requestBody.isEmpty()) {
@@ -248,7 +267,7 @@ public class NewProfileServlet extends HttpServlet {
                     HttpServletResponse.SC_BAD_REQUEST);
                 return;
             }
-            
+
             // First check if user exists and get role
             sqlStatements = new String[] {
                 "SELECT userId, role, name, email FROM Users WHERE userId = ?"
@@ -267,6 +286,15 @@ public class NewProfileServlet extends HttpServlet {
             }
             
             String role = (String) results.get(0).get("role");
+            
+            // Preserve existing values if not in request
+            if (!requestBody.containsKey("name")) {
+                requestBody.put("name", results.get(0).get("name"));
+            }
+            
+            if (!requestBody.containsKey("email")) {
+                requestBody.put("email", results.get(0).get("email"));
+            }
             
             // Update Users table
             sqlStatements = new String[] {
@@ -375,7 +403,7 @@ public class NewProfileServlet extends HttpServlet {
             }
             
             // Update role-specific data
-            updateRoleSpecificData(userId, role, requestBody);
+            updateRoleSpecificData(userId, role, requestBody, uploadResult);
             
             ResponseProtocol.sendSuccess(request, response, this, "Profile updated successfully", 
                 Map.of("userId", userId), 
@@ -397,7 +425,7 @@ public class NewProfileServlet extends HttpServlet {
     /**
      * Updates role-specific data for a user
      */
-    private void updateRoleSpecificData(int userId, String role, Map<String, Object> requestBody) {
+    private void updateRoleSpecificData(int userId, String role, Map<String, Object> requestBody, FileUploadUtil.UploadResult uploadResult) {
         logger.info("Updating role-specific data for userId: " + userId + ", role: " + role);
         
         try {
@@ -491,6 +519,53 @@ public class NewProfileServlet extends HttpServlet {
                             }
                             logger.info("Added " + skillsAdded + " new skills for hackerId: " + userId);
                         }
+                    }
+
+                    // Handle certificate files
+                    if (uploadResult != null && uploadResult.getFileItems() != null && !uploadResult.getFileItems().isEmpty()) {
+                        logger.info("Processing certificate files for hackerId: " + userId);
+                        
+                        // Delete existing certificates first
+                        sqlStatements = new String[] {
+                            "DELETE FROM HackerCertificates WHERE hackerId = ?"
+                        };
+                        
+                        sqlParams.clear();
+                        sqlParams.add(new Object[] { userId });
+                        DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
+                        logger.info("Deleted existing certificates for hackerId: " + userId);
+
+                        // Process uploaded files
+                        List<File> uploadedFiles = FileUploadUtil.processAttachments(
+                            uploadResult.getFileItems(),
+                            new ArrayList<>(), // No attachment IDs needed for certificates
+                            getServletContext(),
+                            null // No response needed here
+                        );
+
+                        // Insert new certificates
+                        int certificatesAdded = 0;
+                        for (File file : uploadedFiles) {
+                            if (file != null && file.exists()) {
+                                sqlStatements = new String[] {
+                                    "INSERT INTO HackerCertificates (hackerId, fileName, fileType, fileData) " +
+                                    "VALUES (?, ?, ?, ?)"
+                                };
+                                
+                                sqlParams.clear();
+                                sqlParams.add(new Object[] { 
+                                    userId,
+                                    file.getName(),
+                                    "application/octet-stream", // Default type
+                                    java.nio.file.Files.readAllBytes(file.toPath())
+                                });
+                                
+                                DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
+                                certificatesAdded++;
+                                logger.info("Added certificate: " + file.getName() + " for hackerId: " + userId);
+                            }
+                        }
+                        logger.info("Added " + certificatesAdded + " new certificates for hackerId: " + userId);
                     }
                     break;
                     
