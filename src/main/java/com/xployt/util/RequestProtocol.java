@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.List;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -155,5 +156,63 @@ public class RequestProtocol {
 
     System.out.println("User " + currentUser.getEmail() + " is authenticated");
     return true;
+  }
+
+  public static boolean isUserRelatedToProject(HttpServletRequest request, HttpServletResponse response, int projectId) throws IOException {
+    User currentUser = AuthUtil.getSignedInUser(request);
+    
+    if (currentUser == null) {
+      ResponseProtocol.sendError(request, response, "User not authenticated for this project", null, HttpServletResponse.SC_UNAUTHORIZED);
+      return false;
+    }
+
+    String userRole = currentUser.getRole();
+    
+    // Admin gets free pass
+    if ("Admin".equals(userRole)) {
+      return true;
+    }
+
+    String userId = currentUser.getUserId();
+    String query = getProjectRelationQuery(userRole);
+    
+    if (query == null) {
+      ResponseProtocol.sendError(request, response, "User role not supported for this project", null, HttpServletResponse.SC_FORBIDDEN);
+      return false;
+    }
+
+    try {
+      List<Object[]> params = new ArrayList<>();
+      params.add(new Object[] { projectId, Integer.parseInt(userId) });
+      
+      List<Map<String, Object>> results = DatabaseActionUtils.executeSQL(new String[] { query }, params);
+      boolean isRelated = !results.isEmpty() && Integer.parseInt(results.get(0).get("count").toString()) > 0;
+      
+      if (!isRelated) {
+        ResponseProtocol.sendError(request, response, "User not related to this project", null, HttpServletResponse.SC_FORBIDDEN);
+      }
+      System.out.println("User " + userId + " is related to project " + projectId + ": " + isRelated);
+      return isRelated;
+
+    } catch (Exception e) {
+      System.out.println("Error checking project relationship: " + e.getMessage());
+      ResponseProtocol.sendError(request, response, "Error checking project relationship", null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+      return false;
+    }
+  }
+
+  private static String getProjectRelationQuery(String userRole) {
+    switch (userRole) {
+      case "Client":
+        return "SELECT COUNT(*) as count FROM projects WHERE projectId = ? AND clientId = ?";
+      case "ProjectLead":
+        return "SELECT COUNT(*) as count FROM projects WHERE projectId = ? AND leadId = ?";
+      case "Hacker":
+        return "SELECT COUNT(*) as count FROM projecthackers WHERE projectId = ? AND hackerId = ?";
+      case "Validator":
+        return "SELECT COUNT(*) as count FROM projecthackers WHERE projectId = ? AND assignedValidatorId = ?";
+      default:
+        return null;
+    }
   }
 }
