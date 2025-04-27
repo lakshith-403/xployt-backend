@@ -270,14 +270,13 @@ public class NewProfileServlet extends HttpServlet {
             
             // Update Users table
             sqlStatements = new String[] {
-                "UPDATE Users SET name = ?, email = ?, username = ? WHERE userId = ?"
+                "UPDATE Users SET name = ?, email = ? WHERE userId = ?"
             };
             
             sqlParams.clear();
             sqlParams.add(new Object[] { 
                 requestBody.get("name"), 
                 requestBody.get("email"),
-                requestBody.get("username"),
                 userId 
             });
             
@@ -334,39 +333,39 @@ public class NewProfileServlet extends HttpServlet {
                 
                 sqlStatements = new String[] {
                     "UPDATE UserProfiles SET " +
-                    "phone = ?, username = ?, firstName = ?, " +
-                    "lastName = ?, companyName = ?, dob = ?, " +
-                    "linkedIn = ? WHERE profileId = ?"
+                    "username = ?, firstName = ?, lastName = ?, " +
+                    "phone = ?, companyName = ?, dob = ?, " +
+                    "linkedIn = ? WHERE userId = ?"
                 };
                 
                 sqlParams.clear();
                 sqlParams.add(new Object[] { 
-                    requestBody.get("phone"),
                     requestBody.get("username"),
                     requestBody.get("firstName"),
                     requestBody.get("lastName"),
+                    requestBody.get("phone"),
                     requestBody.get("companyName"),
                     requestBody.get("dob") != null ? handleDateConversion(requestBody.get("dob")) : null,
                     requestBody.get("linkedIn"),
-                    profileId
+                    userId
                 });
                 
                 DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
             } else {
                 // Insert new profile
                 sqlStatements = new String[] {
-                    "INSERT INTO UserProfiles (userId, phone, username, " +
-                    "firstName, lastName, companyName, dob, linkedIn) " +
+                    "INSERT INTO UserProfiles (userId, username, firstName, lastName, " +
+                    "phone, companyName, dob, linkedIn) " +
                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
                 };
                 
                 sqlParams.clear();
                 sqlParams.add(new Object[] { 
                     userId,
-                    requestBody.get("phone"),
                     requestBody.get("username"),
                     requestBody.get("firstName"),
                     requestBody.get("lastName"),
+                    requestBody.get("phone"),
                     requestBody.get("companyName"),
                     requestBody.get("dob") != null ? handleDateConversion(requestBody.get("dob")) : null,
                     requestBody.get("linkedIn")
