@@ -331,6 +331,12 @@ public class ProjectConfigServlet extends HttpServlet {
       sqlParams.add(new Object[] { Integer.parseInt(projectId) });
       DatabaseActionUtils.executeSQL(new String[] { sqlStatement }, sqlParams);
 
+      NotificationDAO notificationDAO = new NotificationDAO();
+      notificationDAO.sendNotificationsToProjectTeam(
+              Integer.parseInt(projectId),
+              "Project #" + projectId + " has been closed by Project Lead."
+      );
+
       ResponseProtocol.sendSuccess(request, response, this, "Project closed successfully",
           Map.of("projectId", projectId), HttpServletResponse.SC_OK);
     } catch (Exception e) {
