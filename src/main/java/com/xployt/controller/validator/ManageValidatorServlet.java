@@ -1,28 +1,33 @@
 package com.xployt.controller.validator;
 
+import java.io.IOException;
+import java.security.SecureRandom;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.stream.Collectors;
-import java.sql.SQLException;
-// import java.util.Arrays;
-
-import com.google.gson.reflect.TypeToken;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.xployt.model.Attachment;
-import com.xployt.util.*;
+import com.xployt.util.DatabaseActionUtils;
+import com.xployt.util.FileUploadUtil;
+import com.xployt.util.JsonUtil;
+import com.xployt.util.PasswordUtil;
+import com.xployt.util.ResponseProtocol;
 
 @WebServlet("/api/validator/manage")
 public class ManageValidatorServlet extends HttpServlet {
+  private static final SecureRandom random = new SecureRandom();
+  private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
 
   /*
    * Create a new validator when a validator applicatin is submitted
@@ -59,6 +64,9 @@ public class ManageValidatorServlet extends HttpServlet {
         System.out.println("Expertise Areas: " + expertiseAreas);
       }
 
+      // Generate a secure random password for initial setup
+      String temporaryPassword = generateRandomPassword(12);
+      
       String[] sqlStatements = {
           "INSERT INTO Users (email, passwordHash, name, role, status) VALUES (?, ?, ?, 'Validator', 'inactive')",
           "SELECT userId FROM Users WHERE email = ?"
@@ -67,7 +75,7 @@ public class ManageValidatorServlet extends HttpServlet {
       List<Object[]> sqlParams = new ArrayList<>();
 
       sqlParams.add(new Object[] { requestBody.get("email"),
-          PasswordUtil.hashPassword("password"),
+          PasswordUtil.hashPassword(temporaryPassword),
           requestBody.get("name") });
 
       sqlParams.add(new Object[] { requestBody.get("email") });
@@ -107,18 +115,18 @@ public class ManageValidatorServlet extends HttpServlet {
       }
 
         // Extract file data
-        List<Attachment> fileData = extractAttachments(requestBody, "cv", "certificates");
+        List<Attachment> fileData = extractAttachments(requestBody, "cvProcessed");
         System.out.println("FileData: " + fileData);
 
-        List<String> fleIDs = fileData.stream().map(Attachment::getId).collect(Collectors.toList());
+        // List<String> fleIDs = fileData.stream().map(Attachment::getId).collect(Collectors.toList());
 
-//        upload files
-        List<File> uploadedFiles = FileUploadUtil.processAttachments(
-                uploadResult.getFileItems(),
-                fleIDs,
-                getServletContext(),
-                response
-        );
+// //        upload files
+//         List<File> uploadedFiles = FileUploadUtil.processAttachments(
+//                 uploadResult.getFileItems(),
+//                 fleIDs,
+//                 getServletContext(),
+//                 response
+//         );
 
 
       // String address = (String) requestBody.get("address");
@@ -134,26 +142,29 @@ public class ManageValidatorServlet extends HttpServlet {
 
       sqlParams = new ArrayList<>();
       sqlParams.add(new Object[] { validatorId, firstName, lastName, phone, year + "-" + month + "-" + day, linkedin });
-      sqlParams.add(new Object[] { validatorId, skills, relevantExperience, references, fileData.get(0).getId() });
+      
+      // Process CV file attachment
+      String cvId = null;
+      if (!fileData.isEmpty()) {
+          cvId = fileData.get(0).getId();
+      }
+      
+      sqlParams.add(new Object[] { validatorId, skills, relevantExperience, references, cvId });
 
       DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
       System.out.println("Validator created successfully");
 
-        List<Object[]> validatorCertBatchParams = new ArrayList<>();
-        for (int i = 1; i < fileData.size(); i++) {
-            validatorCertBatchParams.add(new Object[] { validatorId, fileData.get(i).getId()});
-        }
-        String certSQL = "INSERT INTO ValidatorCertifications (validatorId, certId) VALUES (?, ?)";
-        DatabaseActionUtils.executeBatchSQL(certSQL, validatorCertBatchParams);
-
-        List<Object[]> attachmentBatchParams = new ArrayList<>();
-        for (Attachment attachment : fileData) {
-            attachmentBatchParams.add(new Object[] { attachment.getId(), attachment.getName(), attachment.getUrl() });
-        }
-        String attachmentSQL = "INSERT INTO Attachment (id, name, url) VALUES (?, ?, ?)";
-        DatabaseActionUtils.executeBatchSQL(attachmentSQL, attachmentBatchParams);
-
-
+      // Process attachments - first save them to the Attachment table
+      if (!fileData.isEmpty()) {
+          List<Object[]> attachmentBatchParams = new ArrayList<>();
+          for (Attachment attachment : fileData) {
+              attachmentBatchParams.add(new Object[] { attachment.getId(), attachment.getName(), attachment.getUrl() });
+          }
+          String attachmentSQL = "INSERT INTO Attachment (id, name, url) VALUES (?, ?, ?)";
+          DatabaseActionUtils.executeBatchSQL(attachmentSQL, attachmentBatchParams);
+          
+          System.out.println("Saved " + fileData.size() + " attachments to database");
+      }
 
       // After creating the validator and ValidatorInfo entry, insert expertise areas
       if (!expertiseAreas.isEmpty()) {
@@ -255,7 +266,20 @@ public class ManageValidatorServlet extends HttpServlet {
     }
   }
 
-    private List<Attachment> extractAttachments(Map<String, Object> requestBody, String... keys) {
+  /**
+   * Generates a random password with the specified length
+   * @param length The length of the password to generate
+   * @return A randomly generated password
+   */
+  private String generateRandomPassword(int length) {
+    StringBuilder password = new StringBuilder(length);
+    for (int i = 0; i < length; i++) {
+      password.append(CHARACTERS.charAt(random.nextInt(CHARACTERS.length())));
+    }
+    return password.toString();
+  }
+
+  private List<Attachment> extractAttachments(Map<String, Object> requestBody, String... keys) {
         List<Attachment> attachments = new ArrayList<>();
         System.out.println("Extracting attachments for keys: " + String.join(", ", keys));
 
@@ -263,23 +287,39 @@ public class ManageValidatorServlet extends HttpServlet {
             Object attachmentObject = requestBody.get(key);
             System.out.println("Processing key: " + key + ", value: " + attachmentObject);
 
-            if (attachmentObject instanceof Attachment) {
-                attachments.add((Attachment) attachmentObject);
-                System.out.println("Added single attachment: " + attachmentObject);
-            } else if (attachmentObject instanceof List<?>) {
+            if (attachmentObject == null) {
+                System.out.println("No attachment found for key: " + key);
+                continue;
+            }
+
+            // Handle case where attachmentObject is directly a Map (single attachment)
+            if (attachmentObject instanceof Map<?, ?>) {
+                Map<?, ?> itemMap = (Map<?, ?>) attachmentObject;
+                String id = itemMap.get("id") != null ? itemMap.get("id").toString() : null;
+                String name = itemMap.get("name") != null ? itemMap.get("name").toString() : null;
+                String url = itemMap.get("url") != null ? itemMap.get("url").toString() : null;
+                
+                System.out.println("Parsed attachment data - id: " + id + ", name: " + name + ", url: " + url);
+                if (id != null && name != null && url != null) {
+                    attachments.add(new Attachment(id, name, url));
+                    System.out.println("Added single attachment from map: " + itemMap);
+                }
+            } 
+            // Handle case where attachmentObject is a List of attachments
+            else if (attachmentObject instanceof List<?>) {
                 List<?> attachmentList = (List<?>) attachmentObject;
                 System.out.println("Processing attachment list for key: " + key);
                 for (Object item : attachmentList) {
-                    System.out.println("Processing list item: " + item);
                     if (item instanceof Map<?, ?>) {
                         Map<?, ?> itemMap = (Map<?, ?>) item;
-                        String id = (String) itemMap.get("id");
-                        String name = (String) itemMap.get("name");
-                        String url = (String) itemMap.get("url");
+                        String id = itemMap.get("id") != null ? itemMap.get("id").toString() : null;
+                        String name = itemMap.get("name") != null ? itemMap.get("name").toString() : null;
+                        String url = itemMap.get("url") != null ? itemMap.get("url").toString() : null;
+                        
                         System.out.println("Parsed attachment data - id: " + id + ", name: " + name + ", url: " + url);
                         if (id != null && name != null && url != null) {
                             attachments.add(new Attachment(id, name, url));
-                            System.out.println("Added attachment from map: " + itemMap);
+                            System.out.println("Added attachment from list item: " + itemMap);
                         } else {
                             System.err.println("Invalid attachment data: " + item);
                         }

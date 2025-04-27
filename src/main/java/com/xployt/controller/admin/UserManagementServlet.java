@@ -38,6 +38,10 @@ public class UserManagementServlet extends HttpServlet {
       throws IOException {
 
     System.out.println("\n------------ UserManagementServlet | doGet ------------");
+    if (!RequestProtocol.authorizeRequest(request, response, new String[] { "Admin" })) {
+      return;
+    }
+
     try {
 
       pathParams = RequestProtocol.parsePathParams(request);

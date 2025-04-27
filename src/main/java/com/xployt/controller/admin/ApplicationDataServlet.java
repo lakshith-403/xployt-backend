@@ -34,6 +34,9 @@ public class ApplicationDataServlet extends HttpServlet {
 
       throws IOException {
     System.out.println("\n------------ ApplicationDataServlet | doGet ------------");
+    if (!RequestProtocol.authorizeRequest(request, response, new String[] { "Admin" })) {
+      return;
+    }
 
     try {
       pathParams = RequestProtocol.parsePathParams(request);

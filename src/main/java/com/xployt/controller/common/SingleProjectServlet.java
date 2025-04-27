@@ -40,6 +40,10 @@ public class SingleProjectServlet extends HttpServlet {
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     System.out.println("\n------------ SingleProjectServlet | doGet ------------");
+    if (!RequestProtocol.authenticateRequest(request, response)) {
+      return;
+    }
+
     try {
       List<String> pathParams = RequestProtocol.parsePathParams(request);
       String projectId = pathParams.size() > 0 ? pathParams.get(0) : null;

@@ -44,6 +44,10 @@ public class NewProjectServlet extends HttpServlet {
       pathParams.clear();
       pathParams.addAll(RequestProtocol.parsePathParams(request));
 
+      if (!RequestProtocol.authenticateRequest(request, response)) {
+        return;
+      }
+
       if (!pathParams.isEmpty()) {
         String userType = pathParams.get(0);
         String userId = (userType.equalsIgnoreCase("admin")) ? null : (pathParams.size() > 1 ? pathParams.get(1) : null);

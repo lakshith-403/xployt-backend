@@ -21,6 +21,9 @@ public class ProjectFetchServlet extends HttpServlet {
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     try {
+      if (!RequestProtocol.authenticateRequest(request, response)) {
+        return;
+      }
       // Retrieve the projectId from the query parameters
       String projectIdParam = (String) RequestProtocol.parsePathParams(request).get(0);
       if (projectIdParam == null || projectIdParam.isEmpty()) {
