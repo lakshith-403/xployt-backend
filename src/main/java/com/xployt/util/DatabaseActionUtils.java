@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.sql.ResultSetMetaData;
 import java.util.HashMap;
+import java.lang.StringBuilder;
+
 import java.sql.CallableStatement;
 public class DatabaseActionUtils {
 
@@ -192,21 +194,41 @@ public class DatabaseActionUtils {
     if (params == null)
       return;
 
+    StringBuilder paramLog = new StringBuilder("SQL Parameters: [");
     for (int i = 0; i < params.length; i++) {
+      if (i > 0) paramLog.append(", ");
+      
       if (params[i] instanceof Integer) {
         stmt.setInt(i + 1, (Integer) params[i]);
+        paramLog.append("Int: ").append(params[i]);
       } else if (params[i] instanceof String) {
         stmt.setString(i + 1, (String) params[i]);
+        paramLog.append("String: '").append(params[i]).append("'");
       } else if (params[i] instanceof Double) {
         stmt.setDouble(i + 1, (Double) params[i]);
+        paramLog.append("Double: ").append(params[i]);
       } else if (params[i] instanceof Boolean) {
         stmt.setBoolean(i + 1, (Boolean) params[i]);
+        paramLog.append("Boolean: ").append(params[i]);
+      } else if (params[i] instanceof java.sql.Date) {
+        stmt.setDate(i + 1, (java.sql.Date) params[i]);
+        paramLog.append("SqlDate: ").append(params[i]);
+      } else if (params[i] instanceof java.util.Date) {
+        java.sql.Date sqlDate = new java.sql.Date(((java.util.Date) params[i]).getTime());
+        stmt.setDate(i + 1, sqlDate);
+        paramLog.append("UtilDate: ").append(sqlDate);
       } else if (params[i] == null) {
         stmt.setNull(i + 1, java.sql.Types.NULL);
+        paramLog.append("NULL");
       } else {
-        throw new SQLException("Unsupported parameter type: " + params[i].getClass().getName());
+        String typeName = params[i].getClass().getName();
+        paramLog.append("UNSUPPORTED(").append(typeName).append("): ").append(params[i]);
+        System.err.println("Unsupported parameter type: " + typeName + " for parameter at index " + (i + 1));
+        throw new SQLException("Unsupported parameter type: " + typeName);
       }
     }
+    paramLog.append("]");
+    System.out.println(paramLog.toString());
   }
 
   public static List<Map<String, Object>> callProcedure(String procedureCall, Object[] params)
