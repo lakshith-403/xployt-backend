@@ -76,7 +76,7 @@ public class ManageValidatorServlet extends HttpServlet {
 
       sqlParams.add(new Object[] { requestBody.get("email"),
           PasswordUtil.hashPassword(temporaryPassword),
-          requestBody.get("name") });
+          requestBody.get("firstName") + " " + requestBody.get("lastName") });
 
       sqlParams.add(new Object[] { requestBody.get("email") });
 
@@ -87,8 +87,8 @@ public class ManageValidatorServlet extends HttpServlet {
         System.out.println("Validator ID: " + validatorId);
       }
 
-      String firstName = ((String) requestBody.get("name")).split(" ")[0];
-      String lastName = ((String) requestBody.get("name")).split(" ")[1];
+      String firstName = ((String) requestBody.get("firstName"));
+      String lastName = ((String) requestBody.get("lastName"));
       System.out.println("First Name: " + firstName);
       System.out.println("Last Name: " + lastName);
 
