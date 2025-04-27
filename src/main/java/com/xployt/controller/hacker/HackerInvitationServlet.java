@@ -135,10 +135,6 @@ public class HackerInvitationServlet extends HttpServlet {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error accepting invitation");
             return;
         }
-
-        // Send response with updated invitation status
-        response.setContentType("application/json");
-        response.getWriter().write(new Gson().toJson(updatedInvitation));
         
         // Check if we need to assign a validator (only if invitation was accepted)
         if (Boolean.TRUE.equals(accepted)) {
@@ -347,6 +343,9 @@ public class HackerInvitationServlet extends HttpServlet {
                 // Continue processing as this is not critical for the invitation acceptance
             }
         }
+        
+        System.out.println("Updated invitation: " + updatedInvitation);
+
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write(JsonUtil.toJson(updatedInvitation));
