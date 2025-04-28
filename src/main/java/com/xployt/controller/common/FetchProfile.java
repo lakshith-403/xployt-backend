@@ -126,13 +126,13 @@ public class FetchProfile extends HttpServlet {
         return "SELECT u.userId, u.email, u.name, u.role, u.createdAt, u.updatedAt, u.status, up.username, up.firstName, up.lastName, up.phone, up.companyName, up.dob FROM Users u LEFT JOIN UserProfiles up ON u.userId = up.userId WHERE u.userId = ?";
       case "lead":
       case "ProjectLead":
-        return "SELECT u.userId, u.email, u.name, u.role, u.createdAt, u.updatedAt, u.status, up.username, up.firstName, up.lastName, up.phone, up.companyName, up.dob, up.linkedIn, vi.skills, vi.experience, vi.cvLink, vi.reference, vi.activeProjectCount FROM Users u LEFT JOIN UserProfiles up ON u.userId = up.userId LEFT JOIN ValidatorInfo vi ON u.userId = vi.validatorId WHERE u.userId = ?";
+        return "SELECT u.userId, u.email, u.name, u.role, u.createdAt, u.updatedAt, u.status, up.username, up.firstName, up.lastName, up.phone, up.companyName, up.dob, up.linkedIn, vi.skills, vi.experience, vi.cvId, vi.reference, vi.activeProjectCount FROM Users u LEFT JOIN UserProfiles up ON u.userId = up.userId LEFT JOIN ValidatorInfo vi ON u.userId = vi.validatorId WHERE u.userId = ?";
       case "admin":
       case "Admin":
         return "SELECT u.userId, u.email, u.name, u.role, u.createdAt, u.updatedAt, u.status, up.username, up.firstName, up.lastName, up.phone, up.companyName, up.dob FROM Users u LEFT JOIN UserProfiles up ON u.userId = up.userId WHERE u.userId = ?";
       case "validator":
       case "Validator":
-        return "SELECT u.userId, u.email, u.name, u.role, u.createdAt, u.updatedAt, u.status, up.username, up.firstName, up.lastName, up.phone, up.companyName, up.dob, up.linkedIn, vi.skills, vi.experience, vi.cvLink, vi.reference, vi.activeProjectCount FROM Users u LEFT JOIN UserProfiles up ON u.userId = up.userId LEFT JOIN ValidatorInfo vi ON u.userId = vi.validatorId WHERE u.userId = ?";
+        return "SELECT u.userId, u.email, u.name, u.role, u.createdAt, u.updatedAt, u.status, up.username, up.firstName, up.lastName, up.phone, up.companyName, up.dob, up.linkedIn, vi.skills, vi.experience, vi.cvId, vi.reference, vi.activeProjectCount FROM Users u LEFT JOIN UserProfiles up ON u.userId = up.userId LEFT JOIN ValidatorInfo vi ON u.userId = vi.validatorId WHERE u.userId = ?";
     }
     return null;
   }
