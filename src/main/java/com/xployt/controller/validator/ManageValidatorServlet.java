@@ -1,28 +1,33 @@
 package com.xployt.controller.validator;
 
+import java.io.IOException;
+import java.security.SecureRandom;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-// import java.io.File;
-import java.io.IOException;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.stream.Collectors;
-import java.sql.SQLException;
-// import java.util.Arrays;
-
-import com.google.gson.reflect.TypeToken;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.xployt.model.Attachment;
-import com.xployt.util.*;
+import com.xployt.util.DatabaseActionUtils;
+import com.xployt.util.FileUploadUtil;
+import com.xployt.util.JsonUtil;
+import com.xployt.util.PasswordUtil;
+import com.xployt.util.ResponseProtocol;
 
 @WebServlet("/api/validator/manage")
 public class ManageValidatorServlet extends HttpServlet {
+  private static final SecureRandom random = new SecureRandom();
+  private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
 
   /*
    * Create a new validator when a validator applicatin is submitted
@@ -59,6 +64,9 @@ public class ManageValidatorServlet extends HttpServlet {
         System.out.println("Expertise Areas: " + expertiseAreas);
       }
 
+      // Generate a secure random password for initial setup
+      String temporaryPassword = generateRandomPassword(12);
+      
       String[] sqlStatements = {
           "INSERT INTO Users (email, passwordHash, name, role, status) VALUES (?, ?, ?, 'Validator', 'inactive')",
           "SELECT userId FROM Users WHERE email = ?"
@@ -67,8 +75,8 @@ public class ManageValidatorServlet extends HttpServlet {
       List<Object[]> sqlParams = new ArrayList<>();
 
       sqlParams.add(new Object[] { requestBody.get("email"),
-          PasswordUtil.hashPassword("password"),
-          requestBody.get("name") });
+          PasswordUtil.hashPassword(temporaryPassword),
+          requestBody.get("firstName") + " " + requestBody.get("lastName") });
 
       sqlParams.add(new Object[] { requestBody.get("email") });
 
@@ -79,8 +87,8 @@ public class ManageValidatorServlet extends HttpServlet {
         System.out.println("Validator ID: " + validatorId);
       }
 
-      String firstName = ((String) requestBody.get("name")).split(" ")[0];
-      String lastName = ((String) requestBody.get("name")).split(" ")[1];
+      String firstName = ((String) requestBody.get("firstName"));
+      String lastName = ((String) requestBody.get("lastName"));
       System.out.println("First Name: " + firstName);
       System.out.println("Last Name: " + lastName);
 
@@ -258,7 +266,20 @@ public class ManageValidatorServlet extends HttpServlet {
     }
   }
 
-    private List<Attachment> extractAttachments(Map<String, Object> requestBody, String... keys) {
+  /**
+   * Generates a random password with the specified length
+   * @param length The length of the password to generate
+   * @return A randomly generated password
+   */
+  private String generateRandomPassword(int length) {
+    StringBuilder password = new StringBuilder(length);
+    for (int i = 0; i < length; i++) {
+      password.append(CHARACTERS.charAt(random.nextInt(CHARACTERS.length())));
+    }
+    return password.toString();
+  }
+
+  private List<Attachment> extractAttachments(Map<String, Object> requestBody, String... keys) {
         List<Attachment> attachments = new ArrayList<>();
         System.out.println("Extracting attachments for keys: " + String.join(", ", keys));
 
