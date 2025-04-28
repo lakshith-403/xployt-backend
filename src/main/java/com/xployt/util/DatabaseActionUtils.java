@@ -1,17 +1,15 @@
 package com.xployt.util;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.ArrayList;
-import java.sql.ResultSetMetaData;
-import java.util.HashMap;
-import java.lang.StringBuilder;
-
-import java.sql.CallableStatement;
 public class DatabaseActionUtils {
 
   // private static List<Map<String, Object>> resultList = new ArrayList<>(); // ✅
@@ -152,8 +150,9 @@ public class DatabaseActionUtils {
     Connection conn = null;
     PreparedStatement stmt = null;
 
+    System.out.println("Executing batch SQL: " + sql);
+    
     try {
-      System.out.println("Executing batch SQL: " + sql);
       conn = DatabaseConfig.getConnection();
       conn.setAutoCommit(false); // Start transaction
 
