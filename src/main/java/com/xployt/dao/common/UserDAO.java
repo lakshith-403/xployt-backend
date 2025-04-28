@@ -45,7 +45,7 @@ public class UserDAO {
             logger.info("User created successfully. User ID: " + userId);
             conn.commit();
             return new User(userId, user.getEmail(), user.getPasswordHash(), user.getName(), user.getRole(), null,
-                    null);
+                    null, "active");
         } catch (SQLException e) {
             conn.rollback();
             logger.log(Level.SEVERE, "Error creating user: {0}", e.getMessage());
@@ -88,7 +88,8 @@ public class UserDAO {
                         rs.getString("name"),
                         rs.getString("role"),
                         rs.getString("createdAt"),
-                        rs.getString("updatedAt"));
+                        rs.getString("updatedAt"),
+                        rs.getString("status"));
             }
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error fetching user by ID: {0}", e.getMessage());
@@ -113,7 +114,8 @@ public class UserDAO {
                         rs.getString("name"),
                         rs.getString("role"),
                         rs.getString("createdAt"),
-                        rs.getString("updatedAt"));
+                        rs.getString("updatedAt"),
+                        rs.getString("status"));
             }
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error fetching user by email: {0}", e.getMessage());

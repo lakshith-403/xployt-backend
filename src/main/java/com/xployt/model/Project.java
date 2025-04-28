@@ -3,7 +3,7 @@ package com.xployt.model;
 public class Project {
 
   public enum State {
-    Pending, Active, Completed, Unconfigured, Rejected, Closed, Configured
+    Pending, Active, Completed, Unconfigured, Rejected, Closed, Configured, Review
   }
 
   private String projectId;
