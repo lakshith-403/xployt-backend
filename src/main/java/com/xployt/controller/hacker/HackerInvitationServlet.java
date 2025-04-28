@@ -258,6 +258,28 @@ public class HackerInvitationServlet extends HttpServlet {
                                 System.out.println("Selected validator ID: " + validatorId + " with " + matchCount + " matching expertise areas");
                             } else {
                                 System.out.println("No suitable validator found with matching expertise");
+                                
+                                // Fallback: Get the first available validator with lowest active project count
+                                String fallbackValidatorQuery = "SELECT u.userId AS userId, " +
+                                                             "COALESCE(vi.activeProjectCount, 0) AS activeCount " +
+                                                             "FROM Users u " +
+                                                             "LEFT JOIN ValidatorInfo vi ON u.userId = vi.validatorId " +
+                                                             "WHERE u.role = 'Validator' AND u.status = 'active' " +
+                                                             "ORDER BY COALESCE(vi.activeProjectCount, 0) ASC " +
+                                                             "LIMIT 1";
+                                
+                                List<Object[]> fallbackParams = new ArrayList<>();
+                                fallbackParams.add(new Object[0]);
+                                List<Map<String, Object>> fallbackResults = DatabaseActionUtils.executeSQL(
+                                    new String[] { fallbackValidatorQuery },
+                                    fallbackParams
+                                );
+                                
+                                if (!fallbackResults.isEmpty()) {
+                                    Map<String, Object> fallbackRow = fallbackResults.get(0);
+                                    validatorId = Integer.parseInt(fallbackRow.get("userId").toString());
+                                    System.out.println("Assigned fallback validator ID: " + validatorId);
+                                }
                             }
                         } else {
                             System.out.println("No expertise mappings found for scopes");
