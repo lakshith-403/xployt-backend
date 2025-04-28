@@ -65,45 +65,45 @@ public class KickHackersServlet extends HttpServlet {
     }
   }
 
-@Override
-protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-  System.out.println("\n\n------------ KickHackersServlet | doGet ------------");
+  @Override
+  protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    System.out.println("\n\n------------ KickHackersServlet | doGet ------------");
 
-  try {
-    pathParams = RequestProtocol.parsePathParams(request);
-    if (pathParams.size() != 1) {
-      ResponseProtocol.sendError(request, response, "Invalid path parameters", null, HttpServletResponse.SC_BAD_REQUEST);
-      return;
+    try {
+      pathParams = RequestProtocol.parsePathParams(request);
+      if (pathParams.size() != 1) {
+        ResponseProtocol.sendError(request, response, "Invalid path parameters", null, HttpServletResponse.SC_BAD_REQUEST);
+        return;
+      }
+
+      int projectId = Integer.parseInt(pathParams.get(0));
+      System.out.println("Project ID: " + projectId);
+      RequestProtocol.isUserRelatedToProject(request, response, projectId);
+
+      // Get all project hackers
+      String[] sqlStatements = new String[] {
+        "SELECT ph.*, u.name, u.email " +
+        "FROM projecthackers ph " +
+        "JOIN users u ON ph.hackerId = u.userId " +
+        "WHERE ph.projectId = ?"
+      };
+      List<Object[]> sqlParams = new ArrayList<>();
+      sqlParams.add(new Object[] { projectId });
+
+      results = DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
+
+      // Success response
+      ResponseProtocol.sendSuccess(request, response, this,
+          "Project hackers retrieved successfully",
+          Map.of("hackers", results),
+          HttpServletResponse.SC_OK);
+
+    } catch (Exception e) {
+      System.out.println("Error getting project hackers: " + e.getMessage());
+
+      ResponseProtocol.sendError(request, response, this,
+          "Error getting project hackers", e.getMessage(),
+          HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
-
-    int projectId = Integer.parseInt(pathParams.get(0));
-    System.out.println("Project ID: " + projectId);
-    RequestProtocol.isUserRelatedToProject(request, response, projectId);
-
-    // Get all project hackers
-    String[] sqlStatements = new String[] {
-      "SELECT ph.*, u.name, u.email " +
-      "FROM projecthackers ph " +
-      "JOIN users u ON ph.hackerId = u.userId " +
-      "WHERE ph.projectId = ?"
-    };
-    List<Object[]> sqlParams = new ArrayList<>();
-    sqlParams.add(new Object[] { projectId });
-
-    results = DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
-
-    // Success response
-    ResponseProtocol.sendSuccess(request, response, this,
-        "Project hackers retrieved successfully",
-        Map.of("hackers", results),
-        HttpServletResponse.SC_OK);
-
-  } catch (Exception e) {
-    System.out.println("Error getting project hackers: " + e.getMessage());
-
-    ResponseProtocol.sendError(request, response, this,
-        "Error getting project hackers", e.getMessage(),
-        HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
   }
-}
 }
