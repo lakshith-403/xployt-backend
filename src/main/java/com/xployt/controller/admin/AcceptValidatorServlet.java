@@ -107,6 +107,7 @@ public class AcceptValidatorServlet extends HttpServlet {
       if (requestBody.get("status").equals("active")) {
         // Generate a random password for the validator
         String generatedPassword = generateRandomPassword(12);
+        System.out.println("Generated password: " + generatedPassword);
         String passwordHash = PasswordUtil.hashPassword(generatedPassword);
         
         // Update validator status and password hash
