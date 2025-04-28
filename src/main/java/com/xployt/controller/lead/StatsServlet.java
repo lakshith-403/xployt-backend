@@ -150,6 +150,14 @@ public class StatsServlet extends HttpServlet {
 
       DatabaseActionUtils.executeBatchSQL(feedbackSQL, feedbackParams);
 
+      // ✅ 3. Update project state to 'Completed'
+      String[] updateProjectStateSQL = new String[] {
+        "UPDATE Projects SET state = 'Completed' WHERE projectId = ?"
+      };
+      List<Object[]> updateProjectStateParams = new ArrayList<>();
+      updateProjectStateParams.add(new Object[] { projectId });
+      DatabaseActionUtils.executeSQL(updateProjectStateSQL, updateProjectStateParams);
+
       // ✅ Success response
       ResponseProtocol.sendSuccess(request, response, this,
           "Lead report submitted successfully",
