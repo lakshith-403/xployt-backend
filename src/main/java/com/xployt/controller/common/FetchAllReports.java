@@ -46,6 +46,10 @@ public class FetchAllReports extends HttpServlet {
     pathParams = RequestProtocol.parsePathParams(request);
     System.out.println("Path params: " + pathParams);
 
+    if (!RequestProtocol.authenticateRequest(request, response)) {
+      return;
+    }
+
     if (pathParams.size() >= 2) {
       String userRole = pathParams.get(0);
       String userId = pathParams.get(1);

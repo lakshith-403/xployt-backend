@@ -13,6 +13,7 @@ import com.xployt.model.GenericResponse;
 import com.xployt.service.common.ProjectTeamService;
 import com.xployt.util.CustomLogger;
 import com.xployt.util.JsonUtil;
+import com.xployt.util.RequestProtocol;
 /**
  * example: api/project/team/{projectId}
  * ProjectTeamServlet is responsible for handling requests to fetch the team for a specific project.
@@ -40,6 +41,11 @@ public class ProjectTeamServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         logger.info("Fetching project team");
+
+        if (!RequestProtocol.authenticateRequest(request, response)) {
+            return;
+        }
+
         String pathInfo = request.getPathInfo();
         if (pathInfo == null || pathInfo.isEmpty()) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Project ID not provided");

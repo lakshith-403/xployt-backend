@@ -99,7 +99,7 @@ public class ReportActionServlet extends HttpServlet {
                 report.getHackerId(),
                 "Report Submission #" + report.getProjectId(),
                 notificationMessage,
-                "/report/vulnerability/" + report.getProjectId() + "/" + report.getReportId()
+                "/reports/vulnerability/" + report.getProjectId() + "/" + report.getReportId()
         );
 
       } catch (Exception e) {

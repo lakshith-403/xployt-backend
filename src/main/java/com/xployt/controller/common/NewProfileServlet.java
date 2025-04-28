@@ -1,6 +1,7 @@
 package com.xployt.controller.common;
 
 import javax.servlet.annotation.WebServlet;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -9,15 +10,19 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.HashMap;
 import java.util.logging.Logger;
+import java.io.File;
 
 import com.xployt.util.RequestProtocol;
 import com.xployt.util.ResponseProtocol;
-import com.xployt.util.DatabaseActionUtils; 
+import com.xployt.util.DatabaseActionUtils;
 import com.xployt.util.CustomLogger;
+import com.xployt.util.FileUploadUtil;
+import com.google.gson.Gson;
+import com.xployt.util.JsonUtil;
 
 @WebServlet("/api/new-profile/*")
+@MultipartConfig
 public class NewProfileServlet extends HttpServlet {
     private static final Logger logger = CustomLogger.getLogger();
     private static String[] sqlStatements = {};
@@ -162,6 +167,8 @@ public class NewProfileServlet extends HttpServlet {
                     break;
                     
                 case "Hacker":
+                    logger.info("Processing Hacker role for userId: " + userId);
+                    
                     // Fetch HackerSkillSet for Hackers
                     sqlStatements = new String[] {
                         "SELECT skill FROM HackerSkillSet WHERE hackerId = ?"
@@ -179,6 +186,34 @@ public class NewProfileServlet extends HttpServlet {
                         }
                         profileData.put("skillSet", skills);
                     }
+
+                    // Fetch Blast Points for Hackers
+                    logger.info("Fetching blast points for userId: " + userId);
+                    String blastPointsQuery = "SELECT points FROM HackerBlastPoints WHERE userId = ?";
+                    logger.info("Blast points query: " + blastPointsQuery);
+                    
+                    sqlStatements = new String[] { blastPointsQuery };
+                    sqlParams.clear();
+                    sqlParams.add(new Object[] { userId });
+                    
+                    logger.info("Executing blast points query with params: " + userId);
+                    List<Map<String, Object>> blastPointsResults = DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
+                    logger.info("Blast points query results: " + blastPointsResults);
+                    
+                    if (!blastPointsResults.isEmpty() && blastPointsResults.get(0) != null) {
+                        Map<String, Object> blastPointsData = blastPointsResults.get(0);
+                        Object points = blastPointsData.get("points");
+                        if (points != null) {
+                            profileData.put("blastPoints", points);
+                            logger.info("Added blast points: " + points + " for userId: " + userId);
+                        } else {
+                            profileData.put("blastPoints", 0);
+                            logger.info("No blast points found, setting to 0 for userId: " + userId);
+                        }
+                    } else {
+                        profileData.put("blastPoints", 0);
+                        logger.info("No blast points record found, setting to 0 for userId: " + userId);
+                    }
                     break;
                     
                 default:
@@ -187,6 +222,7 @@ public class NewProfileServlet extends HttpServlet {
             }
         } catch (Exception e) {
             logger.severe("Error fetching role-specific data: " + e.getMessage());
+            logger.severe("Stack trace: " + e.getStackTrace()[0]);
             // We don't want to fail the entire request if role-specific data fails
             // So just log the error and continue
         }
@@ -208,7 +244,21 @@ public class NewProfileServlet extends HttpServlet {
         
         try {
             int userId = Integer.parseInt(pathParams.get(0));
-            Map<String, Object> requestBody = RequestProtocol.parseRequest(request);
+            
+            // Process multipart request
+            FileUploadUtil.UploadResult uploadResult = FileUploadUtil.processMultipartRequest(request, response);
+            if (uploadResult == null) {
+                return;
+            }
+
+            String profileJson = uploadResult.getFormField("profile");
+            if (profileJson == null) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Profile data is required");
+                return;
+            }
+
+            Gson gson = JsonUtil.useGson();
+            Map<String, Object> requestBody = gson.fromJson(profileJson, Map.class);
             logger.info("Request body: " + requestBody);
             
             if (requestBody.isEmpty()) {
@@ -217,7 +267,7 @@ public class NewProfileServlet extends HttpServlet {
                     HttpServletResponse.SC_BAD_REQUEST);
                 return;
             }
-            
+
             // First check if user exists and get role
             sqlStatements = new String[] {
                 "SELECT userId, role, name, email FROM Users WHERE userId = ?"
@@ -254,7 +304,7 @@ public class NewProfileServlet extends HttpServlet {
             sqlParams.clear();
             sqlParams.add(new Object[] { 
                 requestBody.get("name"), 
-                requestBody.get("email"), 
+                requestBody.get("email"),
                 userId 
             });
             
@@ -311,39 +361,39 @@ public class NewProfileServlet extends HttpServlet {
                 
                 sqlStatements = new String[] {
                     "UPDATE UserProfiles SET " +
-                    "phone = ?, username = ?, firstName = ?, " +
-                    "lastName = ?, companyName = ?, dob = ?, " +
-                    "linkedIn = ? WHERE profileId = ?"
+                    "username = ?, firstName = ?, lastName = ?, " +
+                    "phone = ?, companyName = ?, dob = ?, " +
+                    "linkedIn = ? WHERE userId = ?"
                 };
                 
                 sqlParams.clear();
                 sqlParams.add(new Object[] { 
-                    requestBody.get("phone"),
                     requestBody.get("username"),
                     requestBody.get("firstName"),
                     requestBody.get("lastName"),
+                    requestBody.get("phone"),
                     requestBody.get("companyName"),
                     requestBody.get("dob") != null ? handleDateConversion(requestBody.get("dob")) : null,
                     requestBody.get("linkedIn"),
-                    profileId
+                    userId
                 });
                 
                 DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
             } else {
                 // Insert new profile
                 sqlStatements = new String[] {
-                    "INSERT INTO UserProfiles (userId, phone, username, " +
-                    "firstName, lastName, companyName, dob, linkedIn) " +
+                    "INSERT INTO UserProfiles (userId, username, firstName, lastName, " +
+                    "phone, companyName, dob, linkedIn) " +
                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
                 };
                 
                 sqlParams.clear();
                 sqlParams.add(new Object[] { 
                     userId,
-                    requestBody.get("phone"),
                     requestBody.get("username"),
                     requestBody.get("firstName"),
                     requestBody.get("lastName"),
+                    requestBody.get("phone"),
                     requestBody.get("companyName"),
                     requestBody.get("dob") != null ? handleDateConversion(requestBody.get("dob")) : null,
                     requestBody.get("linkedIn")
@@ -353,7 +403,7 @@ public class NewProfileServlet extends HttpServlet {
             }
             
             // Update role-specific data
-            updateRoleSpecificData(userId, role, requestBody);
+            updateRoleSpecificData(userId, role, requestBody, uploadResult);
             
             ResponseProtocol.sendSuccess(request, response, this, "Profile updated successfully", 
                 Map.of("userId", userId), 
@@ -375,7 +425,7 @@ public class NewProfileServlet extends HttpServlet {
     /**
      * Updates role-specific data for a user
      */
-    private void updateRoleSpecificData(int userId, String role, Map<String, Object> requestBody) {
+    private void updateRoleSpecificData(int userId, String role, Map<String, Object> requestBody, FileUploadUtil.UploadResult uploadResult) {
         logger.info("Updating role-specific data for userId: " + userId + ", role: " + role);
         
         try {
@@ -434,8 +484,11 @@ public class NewProfileServlet extends HttpServlet {
                     // Handle Hacker skill set update
                     if (requestBody.containsKey("skillSet")) {
                         Object skillSetObj = requestBody.get("skillSet");
+                        logger.info("Received skillSet object: " + skillSetObj);
+                        
                         if (skillSetObj instanceof List) {
                             List<?> skillSetList = (List<?>) skillSetObj;
+                            logger.info("Processing " + skillSetList.size() + " skills");
                             
                             // Delete existing skills first
                             sqlStatements = new String[] {
@@ -444,25 +497,75 @@ public class NewProfileServlet extends HttpServlet {
                             
                             sqlParams.clear();
                             sqlParams.add(new Object[] { userId });
-                            
                             DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
+                            logger.info("Deleted existing skills for hackerId: " + userId);
                             
                             // Insert new skills
+                            int skillsAdded = 0;
                             for (Object skillObj : skillSetList) {
                                 if (skillObj instanceof String) {
                                     String skill = (String) skillObj;
-                                    
-                                    sqlStatements = new String[] {
-                                        "INSERT INTO HackerSkillSet (hackerId, skill) VALUES (?, ?)"
-                                    };
-                                    
-                                    sqlParams.clear();
-                                    sqlParams.add(new Object[] { userId, skill });
-                                    
-                                    DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
+                                    if (!skill.trim().isEmpty()) {
+                                        sqlStatements = new String[] {
+                                            "INSERT INTO HackerSkillSet (hackerId, skill) VALUES (?, ?)"
+                                        };
+                                        
+                                        sqlParams.clear();
+                                        sqlParams.add(new Object[] { userId, skill });
+                                        DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
+                                        skillsAdded++;
+                                    }
                                 }
                             }
+                            logger.info("Added " + skillsAdded + " new skills for hackerId: " + userId);
                         }
+                    }
+
+                    // Handle certificate files
+                    if (uploadResult != null && uploadResult.getFileItems() != null && !uploadResult.getFileItems().isEmpty()) {
+                        logger.info("Processing certificate files for hackerId: " + userId);
+                        
+                        // Delete existing certificates first
+                        sqlStatements = new String[] {
+                            "DELETE FROM HackerCertificates WHERE hackerId = ?"
+                        };
+                        
+                        sqlParams.clear();
+                        sqlParams.add(new Object[] { userId });
+                        DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
+                        logger.info("Deleted existing certificates for hackerId: " + userId);
+
+                        // Process uploaded files
+                        List<File> uploadedFiles = FileUploadUtil.processAttachments(
+                            uploadResult.getFileItems(),
+                            new ArrayList<>(), // No attachment IDs needed for certificates
+                            getServletContext(),
+                            null // No response needed here
+                        );
+
+                        // Insert new certificates
+                        int certificatesAdded = 0;
+                        for (File file : uploadedFiles) {
+                            if (file != null && file.exists()) {
+                                sqlStatements = new String[] {
+                                    "INSERT INTO HackerCertificates (hackerId, fileName, fileType, fileData) " +
+                                    "VALUES (?, ?, ?, ?)"
+                                };
+                                
+                                sqlParams.clear();
+                                sqlParams.add(new Object[] { 
+                                    userId,
+                                    file.getName(),
+                                    "application/octet-stream", // Default type
+                                    java.nio.file.Files.readAllBytes(file.toPath())
+                                });
+                                
+                                DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
+                                certificatesAdded++;
+                                logger.info("Added certificate: " + file.getName() + " for hackerId: " + userId);
+                            }
+                        }
+                        logger.info("Added " + certificatesAdded + " new certificates for hackerId: " + userId);
                     }
                     break;
                     

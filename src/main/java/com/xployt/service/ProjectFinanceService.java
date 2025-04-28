@@ -8,16 +8,20 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.xployt.dao.common.ProjectFinanceDAO;
+import com.xployt.dao.common.SystemEarningsDAO;
 import com.xployt.model.GenericResponse;
 import com.xployt.util.CustomLogger;
 
 public class ProjectFinanceService {
     private ProjectFinanceDAO projectFinanceDAO;
+    private SystemEarningsDAO systemEarningsDAO;
     private FinanceService financeService;
     private static final Logger logger = CustomLogger.getLogger();
+    private static final double COMMISSION_RATE = 0.20; // 20% commission
 
     public ProjectFinanceService() {
         this.projectFinanceDAO = new ProjectFinanceDAO();
+        this.systemEarningsDAO = new SystemEarningsDAO();
         this.financeService = new FinanceService();
         logger.info("ProjectFinanceService initialized");
     }
@@ -56,6 +60,11 @@ public class ProjectFinanceService {
                     "Invalid report data: missing hacker ID or payment amount");
             }
             
+            // Calculate commission amount (20% of payment amount)
+            Double commissionAmount = paymentAmount * COMMISSION_RATE;
+            Double hackerAmount = paymentAmount - commissionAmount;
+            
+            // Client pays the full amount
             String description = "Payment for Bug Report ID: " + reportId;
             GenericResponse withdrawResponse = financeService.withdrawFunds(clientId, paymentAmount, description);
             
@@ -63,7 +72,8 @@ public class ProjectFinanceService {
                 return withdrawResponse;
             }
             
-            GenericResponse depositResponse = financeService.addFunds(hackerId, paymentAmount, description);
+            // Hacker receives the payment minus commission
+            GenericResponse depositResponse = financeService.addFunds(hackerId, hackerAmount, description);
             
             if (!depositResponse.isIs_successful()) {
                 // Rollback the withdrawal
@@ -71,6 +81,11 @@ public class ProjectFinanceService {
                 return depositResponse;
             }
             
+            // Record commission in the system earnings
+            String commissionDescription = "Commission for Bug Report ID: " + reportId;
+            systemEarningsDAO.recordCommission(reportId, clientId, hackerId, commissionAmount, commissionDescription);
+            
+            // Record the payment
             projectFinanceDAO.recordPayment(reportId, hackerId, paymentAmount);
             
             Map<String, Object> updatedReport = projectFinanceDAO.getReportPaymentDetails(reportId);

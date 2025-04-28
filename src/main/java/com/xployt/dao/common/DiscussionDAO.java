@@ -219,7 +219,8 @@ public class DiscussionDAO {
             while (rs.next()) {
                 PublicUser user = new PublicUser(rs.getString("userId"),
                         rs.getString("name"),
-                        rs.getString("email"));
+                        rs.getString("email"),
+                        rs.getString("role"));
                 participants.add(user);
             }
         } catch (SQLException e) {

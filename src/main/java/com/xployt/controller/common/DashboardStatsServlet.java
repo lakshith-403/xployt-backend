@@ -33,6 +33,10 @@ public class DashboardStatsServlet extends HttpServlet {
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     System.out.println("\n------------ DashboardStatsServlet | doGet ------------");
 
+    if (!RequestProtocol.authorizeRequest(request, response, new String[] { "Hacker" }, false)) {
+      return;
+    }
+
     try {
       PATH_PARAMS.clear();
       PATH_PARAMS.addAll(RequestProtocol.parsePathParams(request));
