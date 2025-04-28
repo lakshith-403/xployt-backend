@@ -16,7 +16,7 @@ import com.xployt.util.RequestProtocol;
 import com.xployt.util.ResponseProtocol;
 import com.xployt.util.DatabaseActionUtils;
 
-@WebServlet("/api/new-user/*")
+@WebServlet("/api/  new-user/*")
 public class UserServlet extends HttpServlet {
 
   private static final List<Object[]> sqlParams = new ArrayList<>();
