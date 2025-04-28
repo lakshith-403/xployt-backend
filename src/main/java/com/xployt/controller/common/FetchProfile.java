@@ -9,8 +9,8 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.HashMap;
-import java.sql.SQLException;
+// import java.util.HashMap;
+// import java.sql.SQLException;
 
 
 import com.xployt.util.RequestProtocol;
@@ -29,9 +29,9 @@ public class FetchProfile extends HttpServlet {
   private static String[] sqlStatements = {};
   private static List<Object[]> sqlParams = new ArrayList<>();
   private static List<Map<String, Object>> results = new ArrayList<>();
-  private static Map<String, Object> requestBody = new HashMap<>();
+  // private static Map<String, Object> requestBody = new HashMap<>();
   private static ArrayList<String> pathParams = new ArrayList<>();
-  private static Map<String, Object> queryParams = new HashMap<>();
+  // private static Map<String, Object> queryParams = new HashMap<>();
 
   /**
    * Get a resource - Add a detailed entry
@@ -123,7 +123,7 @@ public class FetchProfile extends HttpServlet {
         return "SELECT u.userId, u.email, u.name, u.role, u.createdAt, u.updatedAt, u.status, up.username, up.firstName, up.lastName, up.phone, up.companyName, up.dob, up.linkedIn, GROUP_CONCAT(hs.skill) as skills FROM Users u LEFT JOIN UserProfiles up ON u.userId = up.userId LEFT JOIN HackerSkillSet hs ON u.userId = hs.hackerId WHERE u.userId = ? GROUP BY u.userId";
       case "client":
       case "Client":
-        return "SELECT u.userId, u.email, u.name, u.role, u.createdAt, u.updatedAt, u.status, up.username, up.firstName, up.lastName, up.phone, up.companyName, up.dob FROM Users u LEFT JOIN UserProfiles up ON u.userId = up.userId WHERE u.userId = ?";
+        return "SELECT u.userId, u.email, u.name, u.role, u.createdAt, u.updatedAt, u.status, up.username, up.firstName, up.lastName, up.phone, up.companyName, up.dob, up.linkedIn FROM Users u LEFT JOIN UserProfiles up ON u.userId = up.userId WHERE u.userId = ?";
       case "lead":
       case "ProjectLead":
         return "SELECT u.userId, u.email, u.name, u.role, u.createdAt, u.updatedAt, u.status, up.username, up.firstName, up.lastName, up.phone, up.companyName, up.dob, up.linkedIn, vi.skills, vi.experience, vi.cvId, vi.reference, vi.activeProjectCount FROM Users u LEFT JOIN UserProfiles up ON u.userId = up.userId LEFT JOIN ValidatorInfo vi ON u.userId = vi.validatorId WHERE u.userId = ?";
