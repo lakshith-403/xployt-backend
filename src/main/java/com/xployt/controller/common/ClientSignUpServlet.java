@@ -36,15 +36,20 @@ public class ClientSignUpServlet extends HttpServlet {
             
             if (requestBody.isEmpty()) {
                 ResponseProtocol.sendError(request, response, this, "Request body is empty", 
-                    Map.of(), 
+                    Map.of("error", "Request body is empty"), 
                     HttpServletResponse.SC_BAD_REQUEST);
                 return;
+            }
+
+            // Log all received fields
+            logger.info("Received fields:");
+            for (Map.Entry<String, Object> entry : requestBody.entrySet()) {
+                logger.info(entry.getKey() + ": " + entry.getValue());
             }
 
             // Validate required fields
             String email = (String) requestBody.get("email");
             String password = (String) requestBody.get("password");
-            String username = (String) requestBody.get("username");
             String firstName = (String) requestBody.get("firstName");
             String lastName = (String) requestBody.get("lastName");
             String phone = (String) requestBody.get("phone");
@@ -54,13 +59,32 @@ public class ClientSignUpServlet extends HttpServlet {
 
             if (email == null || email.trim().isEmpty() || 
                 password == null || password.trim().isEmpty() || 
-                username == null || username.trim().isEmpty() || 
                 firstName == null || firstName.trim().isEmpty() || 
                 lastName == null || lastName.trim().isEmpty() || 
                 phone == null || phone.trim().isEmpty() || 
                 dob == null || dob.trim().isEmpty()) {
                 ResponseProtocol.sendError(request, response, this, "Missing required fields", 
-                    Map.of("required", List.of("email", "password", "username", "firstName", "lastName", "phone", "dob")), 
+                    Map.of("required", List.of("email", "password", "firstName", "lastName", "phone", "dob")), 
+                    HttpServletResponse.SC_BAD_REQUEST);
+                return;
+            }
+
+            // Validate email format
+            if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+                String errorMessage = "Invalid email format";
+                logger.warning(errorMessage);
+                ResponseProtocol.sendError(request, response, this, errorMessage, 
+                    Map.of("error", errorMessage), 
+                    HttpServletResponse.SC_BAD_REQUEST);
+                return;
+            }
+
+            // Validate password strength
+            if (password.length() < 8) {
+                String errorMessage = "Password must be at least 8 characters long";
+                logger.warning(errorMessage);
+                ResponseProtocol.sendError(request, response, this, errorMessage, 
+                    Map.of("error", errorMessage), 
                     HttpServletResponse.SC_BAD_REQUEST);
                 return;
             }
@@ -76,8 +100,13 @@ public class ClientSignUpServlet extends HttpServlet {
             results = DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
             
             if (!results.isEmpty()) {
-                ResponseProtocol.sendError(request, response, this, "Email already registered", 
-                    Map.of("email", email), 
+                String errorMessage = "Email already registered";
+                logger.warning(errorMessage);
+                ResponseProtocol.sendError(request, response, this, errorMessage, 
+                    Map.of(
+                        "error", errorMessage,
+                        "email", email
+                    ), 
                     HttpServletResponse.SC_CONFLICT);
                 return;
             }
@@ -103,8 +132,10 @@ public class ClientSignUpServlet extends HttpServlet {
             results = DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
             
             if (results.isEmpty()) {
-                ResponseProtocol.sendError(request, response, this, "Failed to create user", 
-                    Map.of(), 
+                String errorMessage = "Failed to create user";
+                logger.severe(errorMessage);
+                ResponseProtocol.sendError(request, response, this, errorMessage, 
+                    Map.of("error", errorMessage), 
                     HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 return;
             }
@@ -114,20 +145,19 @@ public class ClientSignUpServlet extends HttpServlet {
 
             // Insert into UserProfiles table
             sqlStatements = new String[] {
-                "INSERT INTO UserProfiles (userId, username, firstName, lastName, phone, companyName, dob, linkedIn) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+                "INSERT INTO UserProfiles (userId, firstName, lastName, phone, companyName, dob, linkedIn) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?)"
             };
             
             sqlParams.clear();
             sqlParams.add(new Object[] { 
                 userId,
-                username,
                 firstName,
                 lastName,
                 phone,
-                companyName,
+                companyName != null ? companyName : "",
                 handleDateConversion(dob),
-                linkedIn
+                linkedIn != null ? linkedIn : ""
             });
             
             DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
@@ -137,9 +167,13 @@ public class ClientSignUpServlet extends HttpServlet {
                 HttpServletResponse.SC_CREATED);
             
         } catch (Exception e) {
-            logger.severe("Error processing request: " + e.getMessage() + " " + e.getStackTrace()[0]);
-            ResponseProtocol.sendError(request, response, this, "Error during registration", 
-                e.getMessage(), 
+            String errorMessage = "Error during registration: " + e.getMessage();
+            logger.severe(errorMessage);
+            ResponseProtocol.sendError(request, response, this, errorMessage, 
+                Map.of(
+                    "error", errorMessage,
+                    "details", e.getMessage()
+                ), 
                 HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
