@@ -11,3 +11,4 @@
 /xployt.session.sql
 .DS_Store
 src/main/webapp/uploads/*
+*.sql
