@@ -8,8 +8,9 @@ public class User {
     private final String role;
     private final String createdAt;
     private final String updatedAt;
+    private final String status;
 
-    public User(String userId, String email, String passwordHash, String name, String role, String createdAt, String updatedAt) {
+    public User(String userId, String email, String passwordHash, String name, String role, String createdAt, String updatedAt, String status) {
         this.userId = userId;
         this.email = email;
         this.passwordHash = passwordHash;
@@ -17,6 +18,7 @@ public class User {
         this.role = role;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.status = status;
     }
 
     public String getUserId() {
@@ -45,5 +47,9 @@ public class User {
 
     public String getUpdatedAt() {
         return updatedAt;
+    }
+
+    public String getStatus() {
+        return status;
     }
 } 

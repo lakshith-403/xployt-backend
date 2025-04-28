@@ -52,7 +52,7 @@ public class AuthServlet extends HttpServlet {
         String role = userData.get("role");
 
         UserDAO userDAO = new UserDAO();
-        User user = new User(null, email, PasswordUtil.hashPassword(password), name, role, null, null);
+        User user = new User(null, email, PasswordUtil.hashPassword(password), name, role, null, null, "active");
         try {
             User createdUser = userDAO.createUser(user);
 
