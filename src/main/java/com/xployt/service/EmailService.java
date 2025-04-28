@@ -65,4 +65,27 @@ public class EmailService {
             return false;
         }
     }
+    
+    public boolean sendPaymentNotification(String recipientEmail, String recipientName, double amount, String description, double newBalance) {
+        String subject = "Payment Received - Xployt";
+        
+        String htmlContent = 
+                "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;'>" +
+                "<div style='text-align: center; margin-bottom: 20px;'>" +
+                "<h1 style='color: #4a4a4a;'>Payment Received</h1>" +
+                "</div>" +
+                "<p>Hello <strong>" + recipientName + "</strong>,</p>" +
+                "<p>Great news! You have received a payment of <strong style='color: #28a745;'>$" + String.format("%.2f", amount) + "</strong>.</p>" +
+                "<div style='background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;'>" +
+                "<p><strong>Payment Details:</strong></p>" +
+                "<p>Description: " + description + "</p>" +
+                "<p>Amount: $" + String.format("%.2f", amount) + "</p>" +
+                "<p>New Balance: $" + String.format("%.2f", newBalance) + "</p>" +
+                "</div>" +
+                "<p>Thank you for your contribution to the Xployt platform!</p>" +
+                "<p>Best regards,<br>The Xployt Team</p>" +
+                "</div>";
+        
+        return sendHtmlEmail(recipientEmail, subject, htmlContent);
+    }
 } 

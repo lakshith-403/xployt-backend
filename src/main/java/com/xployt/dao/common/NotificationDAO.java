@@ -1,16 +1,17 @@
 package com.xployt.dao.common;
 
-import com.xployt.model.Notification;
-import com.xployt.model.ProjectTeam;
-import com.xployt.model.PublicUser;
-import com.xployt.util.ContextManager;
-
-import javax.servlet.ServletContext;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.servlet.ServletContext;
+
+import com.xployt.model.Notification;
+import com.xployt.model.ProjectTeam;
+import com.xployt.model.PublicUser;
+import com.xployt.util.ContextManager;
 
 public class NotificationDAO {
     public NotificationDAO() {}
@@ -39,6 +40,15 @@ public class NotificationDAO {
             System.err.println("SQL Exception: " + e.getMessage());
             throw e;
         }
+    }
+    
+    public void createPaymentNotification(String userId, double amount, String description, double newBalance) throws SQLException {
+        String title = "Payment Received";
+        String message = String.format("You have received a payment of $%.2f. New balance: $%.2f", amount, newBalance);
+        String url = "/dashboard";
+        
+        createNotification(userId, title, message, url);
+        System.out.println("Payment notification sent to user: " + userId);
     }
 
    public void sendNotificationsToProjectTeam(int projectId, String message) {
