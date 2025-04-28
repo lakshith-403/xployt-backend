@@ -1,23 +1,31 @@
 package com.xployt.controller.common;
 
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
-import com.xployt.util.RequestProtocol;
-import com.xployt.util.ResponseProtocol;
-import com.xployt.util.DatabaseActionUtils; 
+import javax.servlet.annotation.MultipartConfig;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest; 
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.fileupload.FileItem;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xployt.util.CustomLogger;
+import com.xployt.util.DatabaseActionUtils;
+import com.xployt.util.FileUploadUtil;
+import com.xployt.util.FileUploadUtil.UploadResult;
+import com.xployt.util.RequestProtocol;
+import com.xployt.util.ResponseProtocol; 
 
 @WebServlet("/api/new-profile/*")
+@MultipartConfig
 public class NewProfileServlet extends HttpServlet {
     private static final Logger logger = CustomLogger.getLogger();
     private static String[] sqlStatements = {};
@@ -224,8 +232,8 @@ public class NewProfileServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPut(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        logger.info("\n------------ NewProfileServlet | doPut ------------");
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        logger.info("\n------------ NewProfileServlet | doPost ------------");
         
         ArrayList<String> pathParams = RequestProtocol.parsePathParams(request);
         logger.info("Path params: " + pathParams);
@@ -239,8 +247,59 @@ public class NewProfileServlet extends HttpServlet {
         
         try {
             int userId = Integer.parseInt(pathParams.get(0));
-            Map<String, Object> requestBody = RequestProtocol.parseRequest(request);
-            logger.info("Request body: " + requestBody);
+            
+            // Process multipart request
+            UploadResult uploadResult = FileUploadUtil.processMultipartRequest(request, response);
+            if (uploadResult == null) {
+                return; // Error already sent to client
+            }
+            
+            Map<String, String> formFields = uploadResult.getFormFields();
+            Map<String, Object> requestBody = new HashMap<>();
+
+            System.out.println("Form fields: " + formFields);
+            
+            // Extract profile data from form fields
+            String profileJson = formFields.get("profile");
+            if (profileJson != null) {
+                try {
+                    ObjectMapper mapper = new ObjectMapper();
+                    Map<String, Object> profileData = mapper.readValue(profileJson, Map.class);
+                    
+                    // Extract fields from profile data
+                    String email = (String) profileData.get("email");
+                    String name = (String) profileData.get("name");
+                    String username = (String) profileData.get("username");
+                    String firstName = (String) profileData.get("firstName");
+                    String lastName = (String) profileData.get("lastName");
+                    String phone = (String) profileData.get("phone");
+                    String companyName = (String) profileData.get("companyName");
+                    String dob = (String) profileData.get("dob");
+                    String linkedIn = (String) profileData.get("linkedIn");
+                    
+                    // Convert form fields to requestBody map
+                    requestBody.put("email", email);
+                    requestBody.put("name", name);
+                    requestBody.put("username", username);
+                    requestBody.put("firstName", firstName);
+                    requestBody.put("lastName", lastName);
+                    requestBody.put("phone", phone);
+                    requestBody.put("companyName", companyName);
+                    requestBody.put("dob", dob);
+                    requestBody.put("linkedIn", linkedIn);
+                    
+                    // Add skillSet if present
+                    if (profileData.containsKey("skillSet")) {
+                        requestBody.put("skillSet", profileData.get("skillSet"));
+                    }
+                } catch (Exception e) {
+                    logger.severe("Error parsing profile JSON: " + e.getMessage());
+                    ResponseProtocol.sendError(request, response, this, "Invalid profile data format", 
+                        e.getMessage(), 
+                        HttpServletResponse.SC_BAD_REQUEST);
+                    return;
+                }
+            }
             
             if (requestBody.isEmpty()) {
                 ResponseProtocol.sendError(request, response, this, "Request body is empty", 
@@ -267,7 +326,8 @@ public class NewProfileServlet extends HttpServlet {
             }
             
             String role = (String) results.get(0).get("role");
-            
+            System.out.println("Tryna update users with");
+            System.out.println(requestBody);
             // Update Users table
             sqlStatements = new String[] {
                 "UPDATE Users SET name = ?, email = ? WHERE userId = ?"
@@ -297,7 +357,6 @@ public class NewProfileServlet extends HttpServlet {
             if (!results.isEmpty() && results.get(0) != null) {
                 // Update existing profile
                 currentProfile = results.get(0);
-                int profileId = (int) currentProfile.get("profileId");
                 
                 // Preserve existing values if not in request
                 if (!requestBody.containsKey("phone") && currentProfile.containsKey("phone")) {
@@ -376,6 +435,52 @@ public class NewProfileServlet extends HttpServlet {
             
             // Update role-specific data
             updateRoleSpecificData(userId, role, requestBody);
+            
+            // Handle certificates for hackers
+            if ("Hacker".equals(role)) {
+                List<FileItem> certificateItems = new ArrayList<>();
+                for (FileItem item : uploadResult.getFileItems()) {
+                    if ("certificates".equals(item.getFieldName())) {
+                        certificateItems.add(item);
+                    }
+                }
+                
+                if (!certificateItems.isEmpty()) {
+                    // Create list of certificate IDs (use userId + timestamps to ensure uniqueness)
+                    List<String> certificateIds = new ArrayList<>();
+                    for (int i = 0; i < certificateItems.size(); i++) {
+                        certificateIds.add("cert_" + userId + "_" + System.currentTimeMillis() + "_" + i);
+                    }
+                    
+                    // Process certificate uploads
+                    List<File> uploadedCertificates = FileUploadUtil.processAttachments(
+                        certificateItems,
+                        certificateIds,
+                        getServletContext(), 
+                        response
+                    );
+                    
+                    // Save certificate information in database
+                    if (!uploadedCertificates.isEmpty()) {
+                        sqlStatements = new String[] {
+                            "INSERT INTO HackerCertificates (hackerId, certificatePath) VALUES (?, ?)"
+                        };
+                        
+                        for (File certificate : uploadedCertificates) {
+                            sqlParams.clear();
+                            sqlParams.add(new Object[] { userId, certificate.getName() });
+                            try {
+                                DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
+                                logger.info("Added certificate: " + certificate.getName() + " for hacker: " + userId);
+                            } catch (Exception e) {
+                                logger.warning("Failed to add certificate: " + certificate.getName() + " for hacker: " + userId + " - " + e.getMessage());
+                            }
+                        }
+                    }
+                } else {
+                    logger.info("No certificates provided for hacker: " + userId);
+                }
+            }
             
             ResponseProtocol.sendSuccess(request, response, this, "Profile updated successfully", 
                 Map.of("userId", userId), 

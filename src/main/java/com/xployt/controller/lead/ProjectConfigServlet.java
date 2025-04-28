@@ -1,20 +1,28 @@
 package com.xployt.controller.lead;
 
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.*;
-import java.sql.SQLException;
-import java.util.stream.Collectors;
 
 import com.xployt.dao.common.NotificationDAO;
 import com.xployt.dao.common.ProjectTeamDAO;
 import com.xployt.model.ProjectTeam;
+import com.xployt.util.DatabaseActionUtils;
 import com.xployt.util.RequestProtocol;
 import com.xployt.util.ResponseProtocol;
-import com.xployt.util.DatabaseActionUtils;
 
 /**
  * Servlet for handling project configuration requests.
@@ -150,6 +158,18 @@ public class ProjectConfigServlet extends HttpServlet {
           for (String item : value.split(",")) {
             item = item.trim();
             if (!item.isEmpty()) {
+              if (level.equals("critical")) {
+                level = "Critical";
+              } else if (level.equals("high")) {
+                level = "High";
+              } else if (level.equals("medium")) {
+                level = "Medium";
+              } else if (level.equals("low")) {
+                level = "Low";
+              } else if (level.equals("informative")) {
+                level = "Informational";
+                System.out.println("Level: " + level);
+              }
               paymentLevelParams.add(new Object[] { Integer.parseInt(projectId), level, item });
             }
           }
@@ -176,6 +196,9 @@ public class ProjectConfigServlet extends HttpServlet {
           }
           if (fundingValue != null && !fundingValue.isEmpty()) {
             // System.out.println("Funding value: " + fundingValue);
+            if (levels[i].equals("informative")) {
+              levels[i] = "Informational";
+            }
             paymentLevelAmountParams.add(new Object[] { Integer.parseInt(projectId), levels[i],
                 fundingValue });
           }
