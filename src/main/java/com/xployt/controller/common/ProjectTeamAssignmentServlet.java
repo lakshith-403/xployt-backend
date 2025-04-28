@@ -51,14 +51,7 @@ public class ProjectTeamAssignmentServlet extends HttpServlet {
         logger.info("Role:" + role + " ProjectId:" + projectId + " UserId:" + userId);
         GenericResponse user;
         try {
-            if(role.equals("validator")){
-                user = teamAssignmentService.getAssignedValidator(projectId, userId);
-            }
-            else if(role.equals("hacker")){
-                user = teamAssignmentService.getAssignedHacker(projectId, userId);
-            } else{
-                throw new Exception("Invalid role");
-            }
+            user = teamAssignmentService.getAssignedUser(projectId, userId, role);
         } catch (Exception e) {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error fetching project team");
             return;
