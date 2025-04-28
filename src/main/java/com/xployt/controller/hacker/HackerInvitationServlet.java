@@ -16,8 +16,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.google.gson.Gson;
+import com.xployt.dao.common.NotificationDAO;
+import com.xployt.dao.common.ProjectTeamDAO;
 import com.xployt.model.GenericResponse;
 import com.xployt.model.Invitation;
+import com.xployt.model.ProjectTeam;
 import com.xployt.service.common.DiscussionService;
 import com.xployt.service.common.InvitationService;
 import com.xployt.util.CustomLogger;
@@ -298,6 +301,17 @@ public class HackerInvitationServlet extends HttpServlet {
                     // Increase the activeProjectCount for the validator
                     String updateValidatorQuery = "UPDATE ValidatorInfo SET activeProjectCount = activeProjectCount + 1 " +
                                                  "WHERE validatorId = ?";
+
+                    //      Notification
+                    ProjectTeamDAO projectTeamDAO = new ProjectTeamDAO();
+                    ProjectTeam projectTeam = projectTeamDAO.getProjectTeam(projectId);
+                    NotificationDAO notificationDAO = new NotificationDAO();
+                    notificationDAO.createNotification(
+                        projectTeam.getProjectLead().getUserId(),
+                        "Project #" + projectId,
+                        "You have been assigned to the hacker " + hackerId + " on project "  + projectId,
+                        "/projects/" + projectId
+                    );
                     
                     List<Object[]> sqlParams = new ArrayList<>();
                     sqlParams.add(new Object[] { validatorId, projectId, hackerId });
