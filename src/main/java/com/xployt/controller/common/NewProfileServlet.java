@@ -142,7 +142,7 @@ public class NewProfileServlet extends HttpServlet {
                 case "ProjectLead":
                     // Fetch ValidatorInfo for Validators and Project Leads
                     sqlStatements = new String[] {
-                        "SELECT skills, experience, cvLink, reference " +
+                        "SELECT skills, experience, cvId, reference " +
                         "FROM ValidatorInfo " +
                         "WHERE validatorId = ?"
                     };
@@ -156,7 +156,7 @@ public class NewProfileServlet extends HttpServlet {
                         Map<String, Object> validatorInfo = validatorResults.get(0);
                         profileData.put("skills", validatorInfo.get("skills"));
                         profileData.put("experience", validatorInfo.get("experience"));
-                        profileData.put("cvLink", validatorInfo.get("cvLink"));
+                        profileData.put("cvId", validatorInfo.get("cvId"));
                         profileData.put("reference", validatorInfo.get("reference"));
                     }
                     break;
@@ -396,7 +396,7 @@ public class NewProfileServlet extends HttpServlet {
                         // Update existing ValidatorInfo
                         sqlStatements = new String[] {
                             "UPDATE ValidatorInfo SET " +
-                            "skills = ?, experience = ?, cvLink = ?, reference = ? " +
+                            "skills = ?, experience = ?, cvId = ?, reference = ? " +
                             "WHERE validatorId = ?"
                         };
                         
@@ -404,7 +404,7 @@ public class NewProfileServlet extends HttpServlet {
                         sqlParams.add(new Object[] { 
                             requestBody.get("skills"),
                             requestBody.get("experience"),
-                            requestBody.get("cvLink"),
+                            requestBody.get("cvId"),
                             requestBody.get("reference"),
                             userId
                         });
@@ -413,7 +413,7 @@ public class NewProfileServlet extends HttpServlet {
                     } else {
                         // Insert new ValidatorInfo
                         sqlStatements = new String[] {
-                            "INSERT INTO ValidatorInfo (validatorId, skills, experience, cvLink, reference) " +
+                            "INSERT INTO ValidatorInfo (validatorId, skills, experience, cvId, reference) " +
                             "VALUES (?, ?, ?, ?, ?)"
                         };
                         
@@ -422,7 +422,7 @@ public class NewProfileServlet extends HttpServlet {
                             userId,
                             requestBody.get("skills"),
                             requestBody.get("experience"),
-                            requestBody.get("cvLink"),
+                            requestBody.get("cvId"),
                             requestBody.get("reference")
                         });
                         
