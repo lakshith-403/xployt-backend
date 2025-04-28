@@ -1,20 +1,20 @@
 package com.xployt.controller.admin;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.HashMap;
-
 import com.xployt.dao.common.NotificationDAO;
-import com.xployt.util.ResponseProtocol;
-import com.xployt.util.RequestProtocol;
 import com.xployt.util.DatabaseActionUtils;
+import com.xployt.util.RequestProtocol;
+import com.xployt.util.ResponseProtocol;
 
 @WebServlet("/api/admin/promoteToLead/")
 public class PromoteToLeadServlet extends HttpServlet {
@@ -97,14 +97,13 @@ public class PromoteToLeadServlet extends HttpServlet {
 
       results = DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
       System.out.println("promoted to lead successfully and added to ProjectLeadInfo");
-      
-      ResponseProtocol.sendSuccess(request, response, this, "User promoted to Project Lead successfully", 
-          Map.of("userId", userId), HttpServletResponse.SC_OK);
 
       //    Notification
       NotificationDAO notificationDAO = new NotificationDAO();
       notificationDAO.createNotification(userId, "Promotion", "You are now a Project Lead", "/dashboard");
 
+      ResponseProtocol.sendSuccess(request, response, this, "User promoted to Project Lead successfully", 
+          Map.of("userId", userId), HttpServletResponse.SC_OK);
     } catch (Exception e) {
       System.out.println("Error parsing request: " + e.getMessage());
       ResponseProtocol.sendError(request, response, this, "Error: Error Message", e.getMessage(),
