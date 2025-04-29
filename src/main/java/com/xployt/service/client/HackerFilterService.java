@@ -87,6 +87,7 @@ public class HackerFilterService {
 
     List<Hacker> selectedHackers = new ArrayList<>(hackers);
     ArrayList<Hacker> filteredHackersProfiles = new ArrayList<>();
+    hackers.sort(Comparator.comparingInt(Hacker::getPoints).reversed());
     if (hackers.size() < MAX_SELECTED_HACKERS) {
       for (Hacker hacker : hackers) {
         filteredHackers.remove(hacker.getUserId());
@@ -96,7 +97,6 @@ public class HackerFilterService {
         filteredHackersProfiles.add(hacker);
       }
 
-      hackers.sort(Comparator.comparingInt(Hacker::getPoints).reversed());
       int step = Math.max(1, hackers.size() / MAX_SELECTED_HACKERS);
       for (int i = 0; i < hackers.size() && selectedHackers.size() < MAX_SELECTED_HACKERS; i += step) {
         selectedHackers.add(filteredHackersProfiles.get(i));
@@ -104,8 +104,6 @@ public class HackerFilterService {
       return selectedHackers;
     }
 
-
-    hackers.sort(Comparator.comparingInt(Hacker::getPoints).reversed());
     int step = Math.max(1, hackers.size() / MAX_SELECTED_HACKERS);
     for (int i = 0; i < hackers.size() && selectedHackers.size() < MAX_SELECTED_HACKERS; i += step) {
       selectedHackers.add(hackers.get(i));
