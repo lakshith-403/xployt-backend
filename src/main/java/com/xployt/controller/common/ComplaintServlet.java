@@ -22,6 +22,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.xployt.dao.common.ComplaintDAO;
 import com.xployt.dao.common.DiscussionDAO;
+import com.xployt.dao.common.NotificationDAO;
 import com.xployt.dao.common.ProjectTeamDAO;
 import com.xployt.dao.common.UserDAO;
 import com.xployt.model.Complaint;
@@ -30,6 +31,7 @@ import com.xployt.model.GenericResponse;
 import com.xployt.model.ProjectTeam;
 import com.xployt.model.PublicUser;
 import com.xployt.model.User;
+import com.xployt.service.EmailService;
 import com.xployt.util.AuthUtil;
 import com.xployt.util.CustomLogger;
 import com.xployt.util.JsonUtil;
@@ -42,6 +44,8 @@ public class ComplaintServlet extends HttpServlet {
     private DiscussionDAO discussionDAO;
     private ProjectTeamDAO projectTeamDAO;
     private UserDAO userDAO;
+    private NotificationDAO notificationDAO;
+    private EmailService emailService;
     private Gson gson;
 
     @Override
@@ -50,6 +54,8 @@ public class ComplaintServlet extends HttpServlet {
         discussionDAO = new DiscussionDAO();
         projectTeamDAO = new ProjectTeamDAO();
         userDAO = new UserDAO();
+        notificationDAO = new NotificationDAO();
+        emailService = new EmailService();
         gson = JsonUtil.useGson();
     }
 
@@ -151,7 +157,7 @@ public class ComplaintServlet extends HttpServlet {
             String discussionId = createComplaintDiscussion(title, projectId, user, teamMembers);
             
             Complaint complaint = new Complaint(
-             0,    
+                0,    
                 title,
                 notes,
                 projectId,
@@ -163,10 +169,13 @@ public class ComplaintServlet extends HttpServlet {
             
             complaintDAO.createComplaint(complaint);
             
+            // Send notifications and emails to all team members
+            sendComplaintNotifications(complaint, user);
+            
             // Send success response with appropriate GenericResponse constructor
             GenericResponse genericResponse = new GenericResponse(
-            "",    
-            true,         // is_successful is true
+                "",    
+                true,         // is_successful is true
                 "Complaint created successfully",  // message
                 null          // no error
             );
@@ -215,6 +224,60 @@ public class ComplaintServlet extends HttpServlet {
         
         discussionDAO.createDiscussion(discussion);
         return discussionId;
+    }
+
+    private void sendComplaintNotifications(Complaint complaint, User creator) {
+        try {
+            ProjectTeam projectTeam = projectTeamDAO.getProjectTeam(complaint.getProjectId());
+            List<PublicUser> allMembers = new ArrayList<>();
+            
+            // Add project lead to notification list
+            if (projectTeam.getProjectLead() != null) {
+                allMembers.add(projectTeam.getProjectLead());
+            }
+            
+            // Add selected team members to notification list
+            for (String memberId : complaint.getTeamMembers()) {
+                try {
+                    User member = userDAO.getUserById(memberId);
+                    if (member != null) {
+                        allMembers.add(new PublicUser(member.getUserId(), member.getName(), member.getEmail()));
+                    }
+                } catch (SQLException e) {
+                    logger.log(Level.WARNING, "Unable to find team member with ID: " + memberId, e);
+                }
+            }
+            
+            // Create notification message
+            String notificationTitle = "New Complaint - " + complaint.getTitle();
+            String notificationMessage = "A new complaint has been filed by " + creator.getName();
+            String url = "/complaints/" + complaint.getDiscussionId();
+            
+            // Send in-app notifications using NotificationDAO
+            notificationDAO.sendNotificationToMultipleUsers(allMembers, notificationTitle, notificationMessage, url);
+            
+            // Send email notifications
+            for (PublicUser member : allMembers) {
+                try {
+                    String emailSubject = "New Complaint on Xployt: " + complaint.getTitle();
+                    String emailContent = "Hello " + member.getName() + ",\n\n" +
+                             "A new complaint has been filed by " + creator.getName() + ".\n\n" +
+                             "Title: " + complaint.getTitle() + "\n" +
+                             "Notes: " + complaint.getNotes() + "\n\n" +
+                             "Please login to the Xployt platform to view and respond to this complaint.\n\n" +
+                             "Best regards,\n" +
+                             "Xployt Team";
+                    
+                    emailService.sendEmail(member.getEmail(), emailSubject, emailContent);
+                } catch (Exception e) {
+                    logger.log(Level.WARNING, "Failed to send email to: " + member.getEmail(), e);
+                }
+            }
+            
+            logger.info("Notifications and emails sent for complaint: " + complaint.getTitle());
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error sending complaint notifications: " + e.getMessage(), e);
+        }
     }
 
     private void sendJsonResponse(HttpServletResponse response, Object data) throws IOException {
