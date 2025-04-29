@@ -2,6 +2,7 @@ package com.xployt.controller.hacker;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -78,6 +79,22 @@ public class HackerInvitationServlet extends HttpServlet {
         String requestBody = sb.toString();
         Gson gson = new Gson();
         return gson.fromJson(requestBody, Map.class);
+    }
+
+    private int getFirstValidator() {
+        String query = "SELECT userId FROM Users WHERE role = 'Validator' LIMIT 1";
+        List<Object[]> params = new ArrayList<>();
+        List<Map<String, Object>> results;
+        try {
+            results = DatabaseActionUtils.executeSQL(new String[] { query }, params);
+        } catch (SQLException ex) {
+            logger.severe("Error fetching first validator: " + ex.getMessage());
+            return 0;
+        }
+        if (results.isEmpty()) {
+            return 0;
+        }
+        return Integer.parseInt(results.get(0).get("userId").toString());
     }
 
     @Override
@@ -291,7 +308,7 @@ public class HackerInvitationServlet extends HttpServlet {
                         System.out.println("No scopes found for project: " + projectId);
                     }
                 }
-                
+                validatorId = getFirstValidator();
                 // Common integration logic for the selected validator
                 if (validatorId > 0) {
                     // Update ProjectHackers record with the selected validator
