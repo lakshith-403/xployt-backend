@@ -1,14 +1,15 @@
 package com.xployt.dao.common;
 
-import com.xployt.util.ContextManager;
-import com.xployt.util.CustomLogger;
-
-import javax.servlet.ServletContext;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.logging.Logger;
+
+import javax.servlet.ServletContext;
+
+import com.xployt.util.ContextManager;
+import com.xployt.util.CustomLogger;
 
 public class BlastPointsDAO {
     private final Logger logger = CustomLogger.getLogger();
@@ -91,11 +92,19 @@ public class BlastPointsDAO {
         logger.info("BlastPointsDAO: executing addUserBlastPoints");
         int blastPoints = getBlastPoints(category, action);
 
-        String sql = "UPDATE HackerBlastPoints SET points = points + ? WHERE userId = ?";
-
+        String checkUserSql = "SELECT userId FROM HackerBlastPoints WHERE userId = ?";
         ServletContext servletContext = ContextManager.getContext("DBConnection");
         Connection conn = (Connection) servletContext.getAttribute("DBConnection");
 
+        try (PreparedStatement checkStmt = conn.prepareStatement(checkUserSql)) {
+            checkStmt.setInt(1, userId);
+            ResultSet rs = checkStmt.executeQuery();
+            if (!rs.next()) {
+                addNewUserBlastPoints(userId);
+            }
+        }
+
+        String sql = "UPDATE HackerBlastPoints SET points = points + ? WHERE userId = ?";
         try(PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, blastPoints);
             stmt.setInt(2, userId);

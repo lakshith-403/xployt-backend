@@ -1,6 +1,8 @@
 package com.xployt.service.common;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Logger;
 
 import com.xployt.dao.common.ProjectTeamAssignmentDAO;
@@ -23,9 +25,9 @@ public class ProjectTeamAssignmentService {
             
     //         if (assignedValidators.isEmpty()) {
     //             return new GenericResponse(
-    //                 null, 
-    //                 false, 
-    //                 "No validators available", 
+    //                 null,
+    //                 false,
+    //                 "No validators available",
     //                 "Could not find any validators to assign"
     //             );
     //         }
@@ -38,8 +40,8 @@ public class ProjectTeamAssignmentService {
     //         }
     
     //         return new GenericResponse(
-    //             assignedValidators, 
-    //             true, 
+    //             assignedValidators,
+    //             true,
     //             "Successfully assigned " + assignedValidators.size() + " validators to project",
     //             null
     //         );
@@ -47,30 +49,23 @@ public class ProjectTeamAssignmentService {
     //     } catch (Exception e) {
     //         logger.severe("Error in assignValidators: " + e.getMessage());
     //         return new GenericResponse(
-    //             null, 
-    //             false, 
-    //             "Failed to assign validators", 
+    //             null,
+    //             false,
+    //             "Failed to assign validators",
     //             e.getMessage()
     //         );
     //     }
     // }
 
-    public GenericResponse getAssignedValidator(String hackerId, String projectId){
-        logger.info("Getting assigned validator for project");
-        PublicUser validator = teamAssignmentDAO.getAssignedValidator(hackerId, projectId);
-        if (validator != null) {
-            return new GenericResponse(validator, true, null, null);
+    public GenericResponse getAssignedUser(String validatorId, String projectId, String requiredRole){
+        List<PublicUser> users = new ArrayList<>();
+        if(Objects.equals(requiredRole, "hacker")){
+            users = teamAssignmentDAO.getAssignedHacker(validatorId, projectId);
+        } else if(Objects.equals(requiredRole, "validator")){
+            users = teamAssignmentDAO.getAssignedValidator(validatorId, projectId);
+        } else{
+            return new GenericResponse(null, false, "Invalid role", "Invalid role");
         }
-        return new GenericResponse(null, false, "No validator assigned", "No validator assigned to project");
-
-    }
-    public GenericResponse getAssignedHacker(String validatorId, String projectId){
-        logger.info("Getting assigned validator for project");
-        PublicUser hacker = teamAssignmentDAO.getAssignedHacker(validatorId, projectId);
-        if (hacker != null) {
-            return new GenericResponse(hacker, true, null, null);
-        }
-        return new GenericResponse(null, false, "No validator assigned", "No validator assigned to project");
-
+        return new GenericResponse(users, true, "Successfully fetched assigned users", null);
     }
 }
