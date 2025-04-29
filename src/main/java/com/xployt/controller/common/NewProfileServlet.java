@@ -2,6 +2,7 @@ package com.xployt.controller.common;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,7 +54,7 @@ public class NewProfileServlet extends HttpServlet {
             sqlStatements = new String[] {
                 "SELECT u.userId, u.name, u.email, u.role, up.phone, " +
                 "up.username, up.firstName, up.lastName, up.companyName, " +
-                "up.dob, up.linkedIn " +
+                "up.dob, up.linkedIn, up.profilePicture " +
                 "FROM Users u " +
                 "LEFT JOIN UserProfiles up ON u.userId = up.userId " +
                 "WHERE u.userId = ?"
@@ -72,6 +73,13 @@ public class NewProfileServlet extends HttpServlet {
             }
             
             Map<String, Object> profileData = results.get(0);
+            
+            // Debug logging to check profile picture
+            if (profileData.containsKey("profilePicture")) {
+                logger.info("Profile picture value: " + profileData.get("profilePicture"));
+            } else {
+                logger.info("No profile picture found in query results");
+            }
             
             // Fetch role-specific data
             String role = (String) profileData.get("role");
@@ -107,7 +115,7 @@ public class NewProfileServlet extends HttpServlet {
             sqlStatements = new String[] {
                 "SELECT u.userId, u.name, u.email, u.role, up.phone, " +
                 "up.username, up.firstName, up.lastName, up.companyName, " +
-                "up.dob, up.linkedIn " +
+                "up.dob, up.linkedIn, up.profilePicture " +
                 "FROM Users u " +
                 "LEFT JOIN UserProfiles up ON u.userId = up.userId"
             };
@@ -387,6 +395,11 @@ public class NewProfileServlet extends HttpServlet {
                     requestBody.put("linkedIn", currentProfile.get("linkedIn"));
                 }
                 
+                // Preserve the existing profilePicture value when updating
+                if (!requestBody.containsKey("profilePicture") && currentProfile.containsKey("profilePicture")) {
+                    requestBody.put("profilePicture", currentProfile.get("profilePicture"));
+                }
+                
                 // Log what we're trying to update
                 logger.info("Updating profile with values: " + requestBody);
                 
@@ -394,7 +407,7 @@ public class NewProfileServlet extends HttpServlet {
                     "UPDATE UserProfiles SET " +
                     "username = ?, firstName = ?, lastName = ?, " +
                     "phone = ?, companyName = ?, dob = ?, " +
-                    "linkedIn = ? WHERE userId = ?"
+                    "linkedIn = ?, profilePicture = ? WHERE userId = ?"
                 };
                 
                 sqlParams.clear();
@@ -406,6 +419,7 @@ public class NewProfileServlet extends HttpServlet {
                     requestBody.get("companyName"),
                     requestBody.get("dob") != null ? handleDateConversion(requestBody.get("dob")) : null,
                     requestBody.get("linkedIn"),
+                    requestBody.get("profilePicture"),
                     userId
                 });
                 
@@ -414,8 +428,8 @@ public class NewProfileServlet extends HttpServlet {
                 // Insert new profile
                 sqlStatements = new String[] {
                     "INSERT INTO UserProfiles (userId, username, firstName, lastName, " +
-                    "phone, companyName, dob, linkedIn) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+                    "phone, companyName, dob, linkedIn, profilePicture) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
                 };
                 
                 sqlParams.clear();
@@ -427,7 +441,8 @@ public class NewProfileServlet extends HttpServlet {
                     requestBody.get("phone"),
                     requestBody.get("companyName"),
                     requestBody.get("dob") != null ? handleDateConversion(requestBody.get("dob")) : null,
-                    requestBody.get("linkedIn")
+                    requestBody.get("linkedIn"),
+                    null  // Default null for profilePicture initially
                 });
                 
                 DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
@@ -435,6 +450,64 @@ public class NewProfileServlet extends HttpServlet {
             
             // Update role-specific data
             updateRoleSpecificData(userId, role, requestBody);
+            
+            // Handle profile picture upload if present
+            List<FileItem> profilePictureItems = new ArrayList<>();
+            for (FileItem item : uploadResult.getFileItems()) {
+                if ("profilePicture".equals(item.getFieldName())) {
+                    profilePictureItems.add(item);
+                    break; // Just take the first one if multiple are somehow sent
+                }
+            }
+            
+            if (!profilePictureItems.isEmpty()) {
+                FileItem profilePictureItem = profilePictureItems.get(0);
+                String originalFilename = profilePictureItem.getName();
+                String fileExtension = "";
+                int lastDot = originalFilename.lastIndexOf('.');
+                if (lastDot > 0) {
+                    fileExtension = originalFilename.substring(lastDot);
+                }
+                
+                // Create a unique filename
+                String profilePicFilename = "profile_" + userId + "_" + System.currentTimeMillis() + fileExtension;
+                
+                // Get upload directory
+                String uploadPath = getServletContext().getRealPath("/uploads");
+                File uploadDir = new File(uploadPath);
+                if (!uploadDir.exists()) {
+                    uploadDir.mkdirs();
+                }
+                
+                logger.info("Upload directory: " + uploadPath);
+                
+                // Save the file
+                File profilePictureFile = new File(uploadDir, profilePicFilename);
+                logger.info("Saving profile picture to: " + profilePictureFile.getAbsolutePath());
+                try (InputStream inputStream = profilePictureItem.getInputStream()) {
+                    java.nio.file.Files.copy(
+                        inputStream, 
+                        profilePictureFile.toPath(), 
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING
+                    );
+                    
+                    logger.info("Saved profile picture: " + profilePicFilename + " for user: " + userId);
+                    
+                    // Update the profile picture path in database
+                    sqlStatements = new String[] {
+                        "UPDATE UserProfiles SET profilePicture = ? WHERE userId = ?"
+                    };
+                    
+                    sqlParams.clear();
+                    sqlParams.add(new Object[] { profilePicFilename, userId });
+                    
+                    DatabaseActionUtils.executeSQL(sqlStatements, sqlParams);
+                    
+                } catch (Exception e) {
+                    logger.severe("Error saving profile picture: " + e.getMessage());
+                    // Don't fail the entire request if profile picture upload fails
+                }
+            }
             
             // Handle certificates for hackers
             if ("Hacker".equals(role)) {
